@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@mui/x-data-grid": "^7.26.0",
     "axios": "^1.7.9",
     "next": "15.1.6",
     "react": "^19.0.0",
@@ -16,10 +17,14 @@
     "samut": "file:"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^20.17.17",
+    "@types/numeral": "^2.0.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/uuid": "^10.0.0",
     "postcss": "^8",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "tailwind-merge": "^3.0.1",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }
