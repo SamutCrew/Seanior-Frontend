@@ -2,15 +2,30 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image"; // Import Image
-import { Briefcase, HomeIcon, Icon, Lock, LucideIcon, Search, Settings, User, Users, LucideHome } from "lucide-react"; // Correct import from lucide-react
+import { Briefcase, HomeIcon, Icon, Lock, LucideIcon, Search, Settings, User, Users, LucideHome, X, Check, BookOpenCheck, School, LogOut, MessageCircleQuestion, ChevronUp, ChevronDown, AlertCircle, ShieldAlert, AlertTriangle, AlertOctagon, Layers3 } from "lucide-react"; // Correct import from lucide-react
 import { usePathname } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/app/redux";
+import { setIsSidebarCollapsed } from "@/state";
 
 const Sidebar = () => {
   const [showProject, setShowProject] = useState(true);
   const [showPriority, setShowPriority] = useState(true);
 
-  const sidebarClassNames = `fixed flex flex-col h-full justify-between shadow-xl transition-all duration-300 z-40 dark:bg-black overflow-y-auto bg-white w-64`;
+  const dispatch = useAppDispatch();
+  const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed);
+
+  // Dummy user data
+  const dummyUser = {
+    username: "John Doe",
+    profilePictureUrl: "", // Leave empty to show default icon
+  };
+
+  const handleSignOut = () => {
+    alert("Signed out!"); // Replace this with actual sign-out logic
+  };
+
+  const sidebarClassNames = `fixed flex flex-col h-full justify-between shadow-xl transition-all duration-300 z-40 dark:bg-black overflow-y-auto bg-white 
+  ${isSidebarCollapsed ? "w-0" : "w-64"}`;
 
   return (
     <div className={sidebarClassNames}>
@@ -18,16 +33,26 @@ const Sidebar = () => {
         {/* Top Logo */}
         <div className="z-50 flex min-h-[56px] w-64 items-center justify-between bg-white px-6 pt-3 dark:bg-black">
           <div className="text-xl font-bold text-gray-800 dark:text-white">
-            Samut
-          </div>
+            Sea Nior
+          </div> 
+          {isSidebarCollapsed ? null : (
+            <button
+              className="py-3"
+              onClick={() => {
+                dispatch(setIsSidebarCollapsed(!isSidebarCollapsed));
+              }}
+            >
+              <X className="h-6 w-6 text-gray-800 hover:text-gray-500 dark:text-white" />
+            </button>
+          )}
         </div>
 
         {/* Team Section */}
         <div className="flex items-center gap-5 border-y-[1.5px] border-gray-200 px-8 py-4 dark:border-gray-700">
-          <Image src="/logo.svg" alt="Logo" width={40} height={40} />
+          <Image src="/SeaNoir_Logo_DarkBg.png" alt="Logo" width={40} height={40} />
           <div>
             <h2 className="text-md font-bold tracking-wide dark:text-gray-200">
-              Samut Team
+              Sea Nior Team
             </h2>
             <div className="mt-1 flex items-start gap-2">
               <Lock className="mt-[0.1rem] h-3 w-3 text-gray-500 dark:text-gray-400" />
@@ -38,10 +63,83 @@ const Sidebar = () => {
         {/* Navbar Link */}
         <nav className="z-10 w-full">
           <SidebarLink icon={LucideHome} label="Home" href="/" />
+          <SidebarLink icon={BookOpenCheck} label="Find Course" href="/" />
+          <SidebarLink icon={School} label="My Course" href="/" />
+          <SidebarLink icon={MessageCircleQuestion} label="Support" href="/" />
+          <SidebarLink icon={Settings} label="Setting" href="/" />
+          <SidebarLink icon={LogOut} label="Logout" href="/" />
         </nav>
 
+
+        {/* PRIORITIES LINKS */}
+        <button
+          onClick={() => setShowPriority((prev) => !prev)}
+          className="flex w-full items-center justify-between px-8 py-3 text-gray-500"
+        >
+          <span className="">Coach class</span>
+          {showPriority ? (
+            <ChevronUp className="h-5 w-5" />
+          ) : (
+            <ChevronDown className="h-5 w-5" />
+          )}
+        </button>
+        {showPriority && (
+          <>
+            <SidebarLink
+              icon={AlertCircle}
+              label="Class 1"
+              href="/priority/urgent"
+            />
+            <SidebarLink
+              icon={ShieldAlert}
+              label="Class 2"
+              href="/priority/high"
+            />
+            <SidebarLink
+              icon={AlertTriangle}
+              label="Class 3"
+              href="/priority/medium"
+            />
+            <SidebarLink 
+              icon={AlertOctagon} 
+              label="Class 4" 
+              href="/priority/low" 
+            />
+            
+            <SidebarLink
+              icon={Layers3}
+              label="Class 5"
+              href="/priority/backlog"
+            />
+          </>
+        )}
       </div>
+      <div className="z-10 mt-32 flex w-full flex-col items-center gap-4 bg-white px-8 py-4 dark:bg-black md:block">  {/* Changed md:hidden to md:block */}
+        <div className="flex w-full items-center">
+          <div className="align-center flex h-9 w-9 justify-center">
+            {dummyUser.profilePictureUrl ? (
+            <Image
+            src={dummyUser.profilePictureUrl}
+            alt={dummyUser.username || "User Profile Picture"}
+            width={100}
+            height={50}
+            className="h-full rounded-full object-cover"
+          />
+        ) : (
+        <User className="h-6 w-6 cursor-pointer self-center rounded-full dark:text-white" />
+      )}
     </div>
+    <span className="mx-3 text-gray-800 dark:text-white">{dummyUser.username}</span>
+    <button
+      className="self-start rounded h-auto bg-blue-400 px-4 py-2 text-xs font-bold text-white hover:bg-blue-500 md:block"
+      onClick={handleSignOut}
+    >
+      Sign out
+    </button>
+  </div>
+</div>
+  </div>
+
   );
 };
 
@@ -49,27 +147,21 @@ interface SidebarLinkProps{
   href: string
   icon: LucideIcon,
   label : string
-  // isCollapsed : boolean;
 }
 
 const SidebarLink = ({
   href,
   icon: Icon,
   label,
-  // isCollapsed
 }: SidebarLinkProps) =>{
   const pathname = usePathname();
   const isActive = pathname === href || (pathname === "/" && href === "/dashboard")
-  const sreenWidth = window.innerWidth;
-
-  const dispatch = useAppDispatch();
-  const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed)
 
 
 return(
   <Link href={href} className="w-full">
     <div
-        className={`relative flex cursor-pointer items-center gap-3 transition-colors hover:bg-gray-100 dark:bg-black dark:hover:bg-gray-700 ${
+        className={`relative flex cursor-pointer items-center gap-3 transition-colors hover:bg-gray-200 dark:bg-black dark:hover:bg-gray-700 ${
           isActive ? "bg-gray-100 text-white dark:bg-gray-600" : ""
         } justify-start px-8 py-3`}
       >
