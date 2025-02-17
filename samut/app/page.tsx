@@ -1,14 +1,11 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import Link from "next/link";
 
+import HomePage from "./Home/page";
 
-  export default function Home() {
-    <div>
-      Hellooo
-      </div>
-
-  }
-
-
+export default function Home() {
+  return (
+    <div className="flex min-h-screen flex-col item-center justify-between p-24 dark:bg-black dark:text-white">
+      <HomePage />;
+    </div>
+  );
+}
