@@ -67,7 +67,6 @@ const Sidebar = () => {
           <SidebarLink icon={School} label="My Course" href="/" />
           <SidebarLink icon={MessageCircleQuestion} label="Support" href="/" />
           <SidebarLink icon={Settings} label="Setting" href="/" />
-          <SidebarLink icon={LogOut} label="Logout" href="/" />
         </nav>
 
 
@@ -114,31 +113,32 @@ const Sidebar = () => {
           </>
         )}
       </div>
-      <div className="z-10 mt-32 flex w-full flex-col items-center gap-4 bg-white px-8 py-4 dark:bg-black md:block">  {/* Changed md:hidden to md:block */}
-        <div className="flex w-full items-center">
-          <div className="align-center flex h-9 w-9 justify-center">
-            {dummyUser.profilePictureUrl ? (
-            <Image
-            src={dummyUser.profilePictureUrl}
-            alt={dummyUser.username || "User Profile Picture"}
-            width={100}
-            height={50}
-            className="h-full rounded-full object-cover"
-          />
-        ) : (
+      <div className="z-10 mt-40 flex w-full flex-col items-center gap-4 bg-white px-6 py-2 dark:bg-black md:block h-screen">
+  {/* User Profile Section (Top) */}
+  <div className="flex w-full items-center">
+    <div className="align-center flex h-9 w-9 justify-center">
+      {dummyUser.profilePictureUrl ? (
+        <Image
+          src={dummyUser.profilePictureUrl}
+          alt={dummyUser.username || "User Profile Picture"}
+          width={100}
+          height={50}
+          className="h-full rounded-full object-cover"
+        />
+      ) : (
         <User className="h-6 w-6 cursor-pointer self-center rounded-full dark:text-white" />
       )}
     </div>
     <span className="mx-3 text-gray-800 dark:text-white">{dummyUser.username}</span>
-    <button
-      className="self-start rounded h-auto bg-blue-400 px-4 py-2 text-xs font-bold text-white hover:bg-blue-500 md:block"
-      onClick={handleSignOut}
-    >
-      Sign out
-    </button>
   </div>
+
+  {/* Spacer to push the Logout button to the bottom */}
+  <div className="flex-grow"></div>
+
+  {/* Logout Button (Bottom) */}
+  <SidebarLink icon={LogOut} label="Logout" href="/" />
 </div>
-  </div>
+</div>
 
   );
 };
