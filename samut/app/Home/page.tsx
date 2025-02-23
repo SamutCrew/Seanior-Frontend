@@ -1,60 +1,127 @@
-export default function LandingPage() {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
-        {/* Hero Section */}
-        <section className="text-center max-w-3xl px-4">
-          <h1 className="text-5xl font-extrabold leading-tight">
-            Welcome to <span className="text-blue-600">Your App</span>
-          </h1>
-          <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
-            A seamless way to manage your tasks, collaborate, and boost productivity.
-          </p>
-          <div className="mt-6">
-            <button className="px-6 py-3 bg-blue-600 text-white rounded-lg text-lg font-medium hover:bg-blue-700">
-              Get Started
-            </button>
-            <button className="ml-4 px-6 py-3 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-lg font-medium hover:bg-gray-400 dark:hover:bg-gray-600">
-              Learn More
-            </button>
-          </div>
-        </section>
+import { useRef } from 'react';
+import Image from 'next/image';
+import { ChevronDown } from 'lucide-react';
+import { motion } from "framer-motion";
+
+
+export default function Home() {
+  const nextSectionRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToNextSection = () => {
+    if (nextSectionRef.current) {
+      const targetY = nextSectionRef.current.offsetTop;
+      const startY = window.scrollY;
+      const distance = targetY - startY;
+      let startTime: number | null = null;
   
-        {/* Features Section */}
-        <section className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl">
-          <FeatureCard
-            title="Fast & Efficient"
-            description="Experience a smooth, optimized workflow for all your tasks."
-          />
-          <FeatureCard
-            title="Secure & Reliable"
-            description="Your data is protected with the latest security measures."
-          />
-          <FeatureCard
-            title="Easy to Use"
-            description="An intuitive interface designed for productivity and ease."
-          />
-        </section>
+      const duration = 1500; // Increase duration (in ms) for a slower effect
   
-        {/* Footer */}
-        <footer className="mt-16 text-gray-600 dark:text-gray-400 text-sm">
-          © 2024 Your Company. All rights reserved.
-        </footer>
-      </div>
-    );
-  }
+      const animateScroll = (timestamp: number) => {
+        if (!startTime) startTime = timestamp;
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1);
   
-  type FeatureCardProps = {
-    title: string;
-    description: string;
+        window.scrollTo(0, startY + distance * easeOutQuad(progress));
+  
+        if (progress < 1) {
+          requestAnimationFrame(animateScroll);
+        }
+      };
+  
+      const easeOutQuad = (t: number) => 1 - (1 - t) * (1 - t);
+  
+      requestAnimationFrame(animateScroll);
+    }
   };
   
-  function FeatureCard({ title, description }: FeatureCardProps) {
-    return (
-      <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg text-center">
-        <h3 className="text-xl font-bold">{title}</h3>
-        <p className="mt-2 text-gray-600 dark:text-gray-300">{description}</p>
+
+  return (
+    <div className="relative h-screen w-full">
+      {/* Hero Section */}
+      <div className="absolute inset-0 z-0">
+        <Image 
+          src="/SwimmimgLanding.jpg" 
+          alt="Underwater swimmer" 
+          layout="fill" 
+          objectFit="cover" 
+          objectPosition="center"
+          className="opacity-90"
+        />
       </div>
-    );
-  }
+
+      {/* Content should be on top of the image */}
+      <div className="relative z-10 flex flex-col items-center justify-center h-full text-white text-center px-12 mx-12">
+        <h1 className="text-4xl md:text-6xl font-bold">
+          Dive into a <br/>
+          <span className="text-blue-300">World of Swimming Excellence!</span>
+        </h1>
+        <p className="mt-2 text-lg md:text-xl text-gray-200 px-12 mx-12 pt-2">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit
+        </p>
+        <div className="mt-6 flex space-x-4">
+          <button className="bg-white text-black px-6 py-3 rounded-full shadow-lg">▶ Watch Video</button>
+          <button className="bg-blue-500 text-white px-6 py-3 rounded-full shadow-lg">Learn more →</button>
+        </div>
+      </div>
+
+      {/* Wave Divider */}
   
-  
+
+
+      {/* Scroll Down Button */}
+      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-50">
+            <button
+          onClick={scrollToNextSection}
+          className="absolute left-1/2 transform -translate-x-1/2 -top-6 bg-white-500  p-3 rounded-full shadow-md  transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110 hover:bg-blue-400"
+        >
+          <ChevronDown className="text-white w-6 h-6 " />
+        </button>
+      </div>
+
+      
+      {/* Event Section */}
+      <section ref={nextSectionRef} className="relative h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-800 text-white w-screen">
+        {/* Top Wave */}
+        <div className="absolute top-0 left-0 w-full overflow-hidden leading-none">
+          <svg className="w-full h-24 sm:h-32 lg:h-48" viewBox="0 0 1440 320">
+            <path
+              fill="#ffffff"
+              d="M0,128L60,112C120,96,240,64,360,85.3C480,107,600,181,720,197.3C840,213,960,171,1080,149.3C1200,128,1320,128,1380,128L1440,128V0H1380C1320,0,1200,0,1080,0C960,0,840,0,720,0C600,0,480,0,360,0C240,0,120,0,60,0H0Z"
+            ></path>
+          </svg>
+        </div>
+
+        {/* Event Content */}
+        <div className="relative z-10 text-center w-full max-w-4xl px-6">
+          <motion.h2
+            className="text-5xl font-bold drop-shadow-md"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+          >
+            Event Available Now
+          </motion.h2>
+          <p className="mt-4 text-lg text-gray-200">
+            Join us for an exclusive event featuring insightful sessions and networking opportunities.
+          </p>
+          <motion.button
+            className="mt-6 px-6 py-3 text-lg font-medium bg-white text-blue-600 rounded-full shadow-lg transition-transform hover:scale-110"
+            whileHover={{ scale: 1.1 }}
+          >
+            Learn More
+          </motion.button>
+        </div>
+
+        {/* Bottom Wave */}
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
+          <svg className="w-full h-24 sm:h-32 lg:h-48" viewBox="0 0 1440 320">
+            <path
+              fill="#ffffff"
+              d="M0,160L60,165.3C120,171,240,181,360,197.3C480,213,600,235,720,234.7C840,235,960,213,1080,186.7C1200,160,1320,128,1380,112L1440,96V320H1380C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320H0Z"
+            ></path>
+          </svg>
+        </div>
+      </section>
+    </div>
+  );
+}

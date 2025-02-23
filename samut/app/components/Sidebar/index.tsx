@@ -24,14 +24,14 @@ const Sidebar = () => {
     alert("Signed out!"); // Replace this with actual sign-out logic
   };
 
-  const sidebarClassNames = `fixed flex flex-col h-full justify-between shadow-xl transition-all duration-300 z-40 dark:bg-black overflow-y-auto bg-white 
-  ${isSidebarCollapsed ? "w-0" : "w-64"}`;
+  const sidebarClassNames = `fixed top-0 left-0 flex flex-col h-full justify-between shadow-xl transition-all duration-300 z-50 dark:bg-black overflow-y-auto bg-white 
+${isSidebarCollapsed ? "w-0" : "w-64 z-50"}`;
 
   return (
     <div className={sidebarClassNames}>
       <div className="flex h-full w-full flex-col justify-start">
         {/* Top Logo */}
-        <div className="z-50 flex min-h-[56px] w-64 items-center justify-between bg-white px-6 pt-3 dark:bg-black">
+        <div className="z-10 flex min-h-[56px] w-64 items-center justify-between bg-white px-6 pt-3 dark:bg-black">
           <div className="text-xl font-bold text-gray-800 dark:text-white">
             Sea Nior
           </div> 
