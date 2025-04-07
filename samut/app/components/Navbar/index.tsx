@@ -1,13 +1,25 @@
+"use client";
 import { useAppDispatch, useAppSelector } from '@/app/redux';
 import { setIsDarkmode, setIsSidebarCollapsed } from '@/state';
 import { Link, LucideIcon, Menu, Moon, Search, Sun, BookOpen, GraduationCap, Info, LifeBuoy } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import React from 'react';
+import React, { useEffect, useState } from "react";
+import { getAuthUser } from '@/app/context/authToken';
 
-
-
+interface User {
+  email: string;
+}
 
 const Navbar = () => {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const user = await getAuthUser();
+      setUser(user as User);
+    };
+    fetchUser();
+  }, []);
   const dispatch = useAppDispatch();
   const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed)
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
@@ -54,9 +66,12 @@ const Navbar = () => {
             <Moon className="h-6 w-6 cursor-pointer dark:text-white" />
           )}
         </button>
-      <div className="cursor-pointer text-black dark:text-white flex items-center">
-        Userrrrrrrrr →
-      </div>
+      {user ? user.email : "User"}
+      <a href="/auth/Login" className="cursor-pointer">
+        <button className="rounded p-2 hover:bg-gray-100">
+          <LifeBuoy className="h-6 w-6 cursor-pointer dark:text-white" />
+        </button>
+      </a>
       </div>
     </nav>
   );

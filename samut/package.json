@@ -10,18 +10,25 @@
   },
   "dependencies": {
     "@mui/x-data-grid": "^7.26.0",
+    "@prisma/client": "^6.4.1",
     "@reduxjs/toolkit": "^2.5.1",
     "axios": "^1.7.9",
+    "bcrypt": "^5.1.1",
     "dotenv": "^16.4.7",
+    "firebase": "^11.3.1",
+    "firebase-admin": "^13.1.0",
     "lucide-react": "^0.475.0",
     "next": "15.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hot-toast": "^2.5.2",
+    "react-i18next": "^15.4.1",
     "react-redux": "^9.2.0",
     "redux-persist": "^6.0.0",
     "samut": "file:"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "@types/node": "^20.17.17",
     "@types/numeral": "^2.0.5",
     "@types/react": "^19",
@@ -29,6 +36,7 @@
     "@types/uuid": "^10.0.0",
     "postcss": "^8",
     "prettier-plugin-tailwindcss": "^0.6.11",
+    "prisma": "^6.4.1",
     "tailwind-merge": "^3.0.1",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
