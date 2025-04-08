@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from 'react';
-
+import CarouselEvent from '../components/CarouselEvents';
 
 export default function Home() {
   const nextSectionRef = useRef<HTMLDivElement | null>(null);
@@ -55,6 +55,7 @@ export default function Home() {
   ];
   
   const [currentSlide, setCurrentSlide] = useState(0);
+  
   
   // Auto-slide every 5 seconds
   useEffect(() => {
@@ -123,27 +124,7 @@ export default function Home() {
 
         {/* Event Content */}
         <div className="relative z-10 text-center w-full max-w-4xl px-6">
-        <motion.div
-  key={currentSlide} // re-animate when slide changes
-  className="relative z-10 text-center w-full max-w-4xl px-6"
-  initial={{ opacity: 0, y: 30 }}
-  animate={{ opacity: 1, y: 0 }}
-  exit={{ opacity: 0, y: -30 }}
-  transition={{ duration: 0.8 }}
->
-  <h2 className="text-5xl font-bold drop-shadow-md">
-    {slides[currentSlide].title}
-  </h2>
-  <p className="mt-4 text-lg text-gray-200">
-    {slides[currentSlide].description}
-  </p>
-  <motion.button
-    className="mt-6 px-6 py-3 text-lg font-medium bg-white text-blue-600 rounded-full shadow-lg transition-transform hover:scale-110"
-    whileHover={{ scale: 1.1 }}
-  >
-    {slides[currentSlide].buttonText}
-  </motion.button>
-</motion.div>
+        <CarouselEvent></CarouselEvent>
         </div>
 
         {/* Bottom Wave */}
