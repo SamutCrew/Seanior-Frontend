@@ -1,0 +1,14 @@
+{
+    "TemplateDescription": "คุณสามารถเลือก Template ในแต่ละรูปแบบที่คุณต้องการได้ที่นี่ ซึ่งในแต่ละ Template จะประกอบไปด้วย Workflow สำเร็จรูปที่คุณสามารถนำไปใช้งานร่วมกับ Dataset ของคุณได้ทันที",
+    "Template": "เริ่มต้นกับ Template ที่มีมาให้",
+    "Template Description": "คุณสามารถเลือก Template ในแต่ละรูปแบบที่คุณต้องการได้ที่นี่ ซึ่งในแต่ละ Template จะประกอบไปด้วย Workflow สำเร็จรูปที่คุณสามารถนำไปใช้งานร่วมกับ Dataset ของคุณได้ทันที",
+    "Linear Regression": "Linear Regression",
+    "Hyperparameter Tuning": "Hyperparameter Tuning",
+    "House Price Prediction": "ทำนายราคาบ้าน",
+    "Deep Learning": "Deep Learning",
+    "Select Template": "ใช้ Template นี้",
+    "Coming Soon": "เร็วๆนี้",
+    "New Template Coming Soon": "เตรียมพบกับ Template ใหม่ เร็วๆนี้",
+    "Find Template": "ค้นหา Template",
+    "Systems Templates": "แทมเพลตของระบบ"
+}
