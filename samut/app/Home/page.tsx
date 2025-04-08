@@ -1,12 +1,14 @@
 import { useRef } from 'react';
 import Image from 'next/image';
 import { ChevronDown } from 'lucide-react';
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from 'react';
 
 
 export default function Home() {
   const nextSectionRef = useRef<HTMLDivElement | null>(null);
 
+  
   const scrollToNextSection = () => {
     if (nextSectionRef.current) {
       const targetY = nextSectionRef.current.offsetTop;
@@ -34,6 +36,34 @@ export default function Home() {
     }
   };
   
+  const slides = [
+    {
+      title: "Event Available Now",
+      description: "Join us for an exclusive event featuring insightful sessions and networking opportunities.",
+      buttonText: "Learn More"
+    },
+    {
+      title: "Summer Swim Fest",
+      description: "Splash into summer fun with our exciting swim events, games, and prizes!",
+      buttonText: "Join Now"
+    },
+    {
+      title: "Advanced Training",
+      description: "Upgrade your skills with our professional-level swimming bootcamp.",
+      buttonText: "Register Today"
+    },
+  ];
+  
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  // Auto-slide every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+  
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="relative h-screen w-full">
@@ -93,23 +123,27 @@ export default function Home() {
 
         {/* Event Content */}
         <div className="relative z-10 text-center w-full max-w-4xl px-6">
-          <motion.h2
-            className="text-5xl font-bold drop-shadow-md"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-          >
-            Event Available Now
-          </motion.h2>
-          <p className="mt-4 text-lg text-gray-200">
-            Join us for an exclusive event featuring insightful sessions and networking opportunities.
-          </p>
-          <motion.button
-            className="mt-6 px-6 py-3 text-lg font-medium bg-white text-blue-600 rounded-full shadow-lg transition-transform hover:scale-110"
-            whileHover={{ scale: 1.1 }}
-          >
-            Learn More
-          </motion.button>
+        <motion.div
+  key={currentSlide} // re-animate when slide changes
+  className="relative z-10 text-center w-full max-w-4xl px-6"
+  initial={{ opacity: 0, y: 30 }}
+  animate={{ opacity: 1, y: 0 }}
+  exit={{ opacity: 0, y: -30 }}
+  transition={{ duration: 0.8 }}
+>
+  <h2 className="text-5xl font-bold drop-shadow-md">
+    {slides[currentSlide].title}
+  </h2>
+  <p className="mt-4 text-lg text-gray-200">
+    {slides[currentSlide].description}
+  </p>
+  <motion.button
+    className="mt-6 px-6 py-3 text-lg font-medium bg-white text-blue-600 rounded-full shadow-lg transition-transform hover:scale-110"
+    whileHover={{ scale: 1.1 }}
+  >
+    {slides[currentSlide].buttonText}
+  </motion.button>
+</motion.div>
         </div>
 
         {/* Bottom Wave */}
