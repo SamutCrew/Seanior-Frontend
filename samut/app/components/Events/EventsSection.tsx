@@ -1,54 +1,66 @@
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Autoplay } from 'swiper/modules';
-import { EventCard } from './EventCard';
-import { SectionTitle } from '../Common/SectionTitle';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/autoplay';
+// components/EventSection.jsx
+import React from 'react';
+import EventCard from './EventCard';
 
-interface Event {
-  title: string;
-  date: string;
-  location: string;
-  image: string;
-}
+const EventSection = () => {
+  // Event data directly in the component
+  const events = [
+    {
+      id: 1,
+      title: 'Tech Conference 2023',
+      description: 'Join us for the biggest tech conference of the year with industry leaders and innovators.',
+      date: 'Oct 15, 2023',
+      time: '9:00 AM - 5:00 PM',
+      location: 'Convention Center, San Francisco',
+      category: 'Conference',
+      imageUrl: '/images/tech-conference.jpg',
+    },
+    {
+      id: 2,
+      title: 'Web Development Workshop',
+      description: 'Hands-on workshop covering the latest in web development technologies and best practices.',
+      date: 'Nov 5, 2023',
+      time: '10:00 AM - 2:00 PM',
+      location: 'Online Event',
+      category: 'Workshop',
+      imageUrl: '/images/web-dev-workshop.jpg',
+    },
+    {
+      id: 3,
+      title: 'Startup Networking Mixer',
+      description: 'Connect with fellow entrepreneurs and investors in a casual networking environment.',
+      date: 'Dec 2, 2023',
+      time: '6:00 PM - 9:00 PM',
+      location: 'Downtown Lounge, NYC',
+      category: 'Networking',
+      imageUrl: '/images/startup-mixer.jpg',
+    },
+  ];
 
-interface EventsSectionProps {
-  events: Event[];
-}
-
-export const EventsSection = ({ events }: EventsSectionProps) => {
   return (
-    <section className="py-16 bg-blue-500 text-white">
-      <div className="max-w-6xl mx-auto px-4">
-        <SectionTitle>Upcoming Events</SectionTitle>
-        <Swiper
-          modules={[Navigation, Autoplay]}
-          spaceBetween={24}
-          slidesPerView={1}
-          breakpoints={{
-            640: { slidesPerView: 1.5 },
-            768: { slidesPerView: 2 },
-            1024: { slidesPerView: 3 }
-          }}
-          navigation
-          autoplay={{ 
-            delay: 3000,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true
-          }}
-          loop={true}
-          speed={800}
-          centeredSlides={false}
-          className="pb-8"
-        >
-          {events.map((event, index) => (
-            <SwiperSlide key={index} className="h-auto">
-              <EventCard event={event} />
-            </SwiperSlide>
+    <section className="py-12 bg-gray-50">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">Upcoming Events</h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Join our community events to learn, network, and grow with industry experts.
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {events.map((event) => (
+            <EventCard key={event.id} event={event} />
           ))}
-        </Swiper>
+        </div>
+        
+        <div className="text-center mt-10">
+          <button className="border border-primary-500 text-primary-500 hover:bg-primary-500 hover:text-white px-6 py-3 rounded-md font-medium transition-colors duration-300">
+            View All Events
+          </button>
+        </div>
       </div>
     </section>
   );
 };
+
+export default EventSection;

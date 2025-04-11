@@ -4,9 +4,11 @@ import { HeroSection } from '../components/Hero/HeroSection';
 import { ScrollDownButton } from '../components/Hero/ScrollDownButton';
 import { SectionTitle } from '../components/Common/SectionTitle';
 import { FunctionCards } from '../components/Functions/FunctionCards';
-import { EventsSection } from '../components/Events/EventsSection';
+
 import { TeachersSection } from '../components/Teachers/TeachersSection';
 import { CTASection } from '../components/CTA/CTASection';
+import  EventCard  from '../components/Events/EventCard';
+import EventSection from '../components/Events/EventsSection';
 
 export default function Home() {
   const nextSectionRef = useRef<HTMLDivElement | null>(null);
@@ -39,22 +41,22 @@ export default function Home() {
 
   const events = [
     {
-      title: "Summer Swim Fest",
-      date: "June 15-17, 2024",
-      location: "National Aquatic Center",
-      image: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+      title: "Siempre Son Flores Live",
+      date: "June 15, 2024",
+      location: "Buenos Aires, Argentina",
+      image: "/images/concert1.jpg"
     },
     {
-      title: "Youth Championship",
-      date: "July 5-7, 2024",
-      location: "City Sports Complex",
-      image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+      title: "Music Festival",
+      date: "July 22, 2024",
+      location: "Madrid, Spain",
+      image: "/images/concert2.jpg"
     },
     {
-      title: "Adult Beginners Class",
-      date: "June 22, 2024",
-      location: "Community Pool",
-      image: "https://images.unsplash.com/photo-1530549387789-4c1017266635?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+      title: "Acoustic Sessions",
+      date: "August 5, 2024",
+      location: "Mexico City, Mexico",
+      image: "/images/concert3.jpg"
     }
   ];
 
@@ -80,7 +82,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="">
       <HeroSection
         title="Swim with Confidence"
         subtitle="Connect with top-rated swimming instructors and improve your skills"
@@ -98,17 +100,21 @@ export default function Home() {
 
       {/* Functions Section */}
       <section ref={nextSectionRef} className="py-16 px-4 max-w-6xl mx-auto">
-        <SectionTitle>Get Started</SectionTitle>
+        <SectionTitle className="my-custom-class" description="This is a section description">
+          My Section Title
+        </SectionTitle>
         <FunctionCards cards={functions} />
       </section>
 
       {/* Events Section */}
-      <EventsSection events={events} />
+      <section ref={nextSectionRef} className="py-16 px-4 max-w-6xl mx-auto">
+      <EventSection />
+      </section>
 
+      
       {/* Teachers Section */}
       <TeachersSection teachers={teachers} />
-      
-      {/* CTA Section */}
+
       <CTASection
         title="Ready to Dive In?"
         description="Join hundreds of students improving their swimming skills today"
