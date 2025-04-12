@@ -1,6 +1,7 @@
 // components/EventSection.jsx
 import React from 'react';
 import EventCard from './EventCard';
+import EventsCarousels from './EventsCarousels';
 
 const EventSection = () => {
   // Event data directly in the component
@@ -39,7 +40,11 @@ const EventSection = () => {
 
   return (
     <section className="py-12 bg-gray-50">
+    
       <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 mb-8">
+          <EventsCarousels/>
+        </div>
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {events.map((event) => (
             <EventCard key={event.id} event={event} />

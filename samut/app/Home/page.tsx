@@ -78,19 +78,14 @@ export default function Home() {
       <ScrollDownButton onClick={scrollToNextSection} />
 
       {/* Functions Section */}
-      <section ref={nextSectionRef} className="mt-10 px-4 max-w-6xl mx-auto">
-
-        <FunctionCards
-          cards={[
-            { title: 'Dashboard', link: '/dashboard' },
-            { title: 'Users', link: '/users' },
-            { title: 'Settings', link: '/settings' },
-          ]}
-      />
+      <section ref={nextSectionRef} className=" bg-sky-100">
+        <div ref={nextSectionRef} className="mt-10 px-4 max-w-6xl mx-auto bg-sky-100">
+        <FunctionCards/>
+        </div>
       </section>
 
       {/* Events Section */}
-      <section ref={nextSectionRef} className="px-4 max-w-6xl mx-auto">
+      <section ref={nextSectionRef} className="px-4 max-w-6xl mx-auto mt-10">
       <SectionTitle className="my-custom-class" description="Join our community events to learn, network, and grow with industry experts.">
           Event Avilable
         </SectionTitle>
