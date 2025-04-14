@@ -1,34 +1,46 @@
-import Image from 'next/image';
-import { Star } from 'lucide-react';
+"use client"
 
-interface TeacherCardProps {
-  teacher: {
-    name: string;
-    specialty: string;
-    rating: string;
-    image: string;
-  };
+import { FaChalkboardTeacher, FaStar } from 'react-icons/fa';
+
+interface Teacher {
+  id: number;
+  name: string;
+  subject: string;
+  rating: number;
+  experience: number;
+  image: string;
+  bio: string;
 }
 
-export const TeacherCard = ({ teacher }: TeacherCardProps) => {
+const TeacherCard = ({ teacher }: { teacher: Teacher }) => {
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <div className="h-64 relative">
-        <Image
-          src={teacher.image}
-          alt={teacher.name}
-          fill
-          className="object-cover"
-        />
-      </div>
+    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
       <div className="p-6">
-        <h3 className="text-xl font-semibold">{teacher.name}</h3>
-        <p className="text-gray-600 mb-2">{teacher.specialty}</p>
-        <div className="flex items-center">
-          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500 mr-1" />
-          <span>{teacher.rating}</span>
+        <div className="flex items-center mb-4">
+          <div className="bg-blue-100 p-3 rounded-full mr-4">
+            <FaChalkboardTeacher className="text-blue-600 text-xl" />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg">{teacher.name}</h3>
+            <p className="text-gray-600">{teacher.subject}</p>
+          </div>
         </div>
+        <p className="text-sm text-gray-500 mb-4">{teacher.bio}</p>
+        <div className="flex justify-between text-sm text-gray-500 mb-4">
+          <div className="flex items-center">
+            <FaStar className="text-yellow-400 mr-1" />
+            <span>{teacher.rating}</span>
+          </div>
+          <div>
+            <span>{teacher.experience} years experience</span>
+          </div>
+        </div>
+        <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition">
+          View Profile
+        </button>
       </div>
     </div>
   );
 };
+
+export default TeacherCard;

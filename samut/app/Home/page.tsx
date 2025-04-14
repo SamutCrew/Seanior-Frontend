@@ -41,22 +41,31 @@ export default function Home() {
 
   const teachers = [
     {
-      name: "Alex Morgan",
-      specialty: "Competitive Swimming",
-      rating: "4.9",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=774&q=80"
+      id: 1,
+      name: "John Doe",
+      subject: "Mathematics",
+      rating: 4.8,
+      experience: 5,
+      image: "/path/to/image.jpg",
+      bio: "Experienced math teacher with a passion for making complex concepts simple..."
     },
     {
-      name: "Sam Lee",
-      specialty: "Children's Lessons",
-      rating: "4.8",
-      image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=774&q=80"
+      id: 2,
+      name: "John Doe",
+      subject: "Mathematics",
+      rating: 4.8,
+      experience: 5,
+      image: "/path/to/image.jpg",
+      bio: "Experienced math teacher with a passion for making complex concepts simple..."
     },
     {
-      name: "Jordan Smith",
-      specialty: "Adult Beginners",
-      rating: "4.7",
-      image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=774&q=80"
+      id: 3,
+      name: "John Doe",
+      subject: "Mathematics",
+      rating: 4.8,
+      experience: 5,
+      image: "/path/to/image.jpg",
+      bio: "Experienced math teacher with a passion for making complex concepts simple..."
     }
   ];
 

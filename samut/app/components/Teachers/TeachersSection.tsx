@@ -1,18 +1,20 @@
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
-import { TeacherCard } from './TeacherCard';
 import { SectionTitle } from '../Common/SectionTitle';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-
 import 'swiper/css';
 import 'swiper/css/navigation';
+import TeacherCard from './TeacherCard';
 
 interface Teacher {
+  id: number;
   name: string;
-  specialty: string;
-  rating: string;
+  subject: string;
+  rating: number;
+  experience: number;
   image: string;
+  bio: string;
 }
 
 interface TeachersSectionProps {
@@ -35,8 +37,8 @@ export const TeachersSection = ({ teachers }: TeachersSectionProps) => {
         navigation
         className="pb-8"
       >
-        {teachers.map((teacher, index) => (
-          <SwiperSlide key={index}>
+        {teachers.map((teacher) => (
+          <SwiperSlide key={teacher.id}>
             <div className="max-w-sm mx-auto">
               <TeacherCard teacher={teacher} />
             </div>
