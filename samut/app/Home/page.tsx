@@ -71,27 +71,22 @@ export default function Home() {
 
   return (
     <div className="">
-      <HeroSection
-        title="Swim with Confidence"
-        subtitle="Connect with top-rated swimming instructors and improve your skills"
+       <HeroSection
+        title="Find Your Swimming Instructor"
+        subtitle="Connect with certified instructors for all ages and skill levels"
         imageSrc="/SwimmimgLanding.jpg"
         primaryAction={{
-          text: "Find a Teacher",
-          onClick: () => console.log("Find teacher clicked")
+          text: 'Browse Instructors',
+          onClick: () => console.log('Find Tour Clicked'),
         }}
         secondaryAction={{
-          text: "How It Works",
-          onClick: () => console.log("How it works clicked")
+          text: 'How It Works',
+          onClick: () => console.log('How it Works Clicked'),
         }}
       />
-      <ScrollDownButton onClick={scrollToNextSection} />
 
       {/* Functions Section */}
-      <section ref={nextSectionRef} className=" bg-sky-100">
-        <div ref={nextSectionRef} className="mt-10 px-4 max-w-6xl mx-auto bg-sky-100">
-        <FunctionCards/>
-        </div>
-      </section>
+      <FunctionCards/>
 
       {/* Events Section */}
       <section ref={nextSectionRef} className="px-4 max-w-6xl mx-auto mt-10">
