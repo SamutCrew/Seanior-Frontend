@@ -5,7 +5,7 @@ import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import StoreProvider, { useAppSelector } from './redux'
 
-const DashboardLayout = ({ children } : { children: React.ReactNode}) => {
+const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed)
     const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
@@ -15,19 +15,29 @@ const DashboardLayout = ({ children } : { children: React.ReactNode}) => {
         } else {
             document.documentElement.classList.remove("dark");
         }
-    })
+    }, [isDarkMode]) // Added dependency array
+
     return (
-        <div className='flex min-h-screem w-full bg-gray-50 text-gray-900'>
-            {/*sidebar */}<Sidebar/>
-            <main className={`flex w-full flex-col bg-gray-50 dark:bg-dark-bg ${isSidebarCollapsed ? "" : "md:pl-64"}`}>
-                {/*navbar*/}<Navbar/>
+        <div className='flex min-h-screen w-full bg-gray-50 text-gray-900 dark:bg-dark-bg'>
+            {/* Sidebar - now using transform instead of width */}
+            <div className={`fixed inset-y-0 left-0 z-50 flex h-full transition-all duration-300 ease-in-out ${
+                isSidebarCollapsed ? '-translate-x-full' : 'translate-x-0'
+            }`}>
+                <Sidebar />
+            </div>
+            
+            {/* Main content */}
+            <main className={`flex w-full flex-col transition-all duration-300 ease-in-out ${
+                isSidebarCollapsed ? 'pl-0' : 'pl-64'
+            } bg-gray-50 dark:bg-dark-bg`}>
+                <Navbar />
                 {children}
             </main>
         </div>
     );
 };
 
-const DashboardWrapper = ({ children } : { children: React.ReactNode}) => {
+const DashboardWrapper = ({ children }: { children: React.ReactNode }) => {
     return (
         <StoreProvider>
             <DashboardLayout>{children}</DashboardLayout>
