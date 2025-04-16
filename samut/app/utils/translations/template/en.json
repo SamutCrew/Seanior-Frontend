@@ -1,0 +1,14 @@
+{
+  "TemplateDescription": "You can select the template in each format you want here. Each template consists of a ready-to-use workflow that you can use immediately with your dataset.",
+  "Template": "Get started with the included templates.",
+  "Template Description": "You can choose the templates in each format you want here. Each template includes a ready-made workflow that you can use with your dataset immediately.",
+  "Linear Regression": "Linear Regression",
+  "Hyperparameter Tuning": "Hyperparameter Tuning",
+  "House Price Prediction": "House Price Prediction",
+  "Deep Learning": "Deep Learning",
+  "Select Template": "Select Template",
+  "Coming Soon": "Coming Soon",
+  "New Template Coming Soon": "New Template Coming Soon",
+  "Find Template": "Find Template",
+  "Systems Templates": "Systems Templates"
+}
