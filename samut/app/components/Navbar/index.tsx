@@ -83,7 +83,7 @@ const Navbar = () => {
       {user ? user.email : "User"}
       <a href="/auth/Login" className="cursor-pointer">
         <button className="rounded p-2 hover:bg-gray-100">
-          <LifeBuoy className="h-6 w-6 cursor-pointer dark:text-white" />
+          <LifeBuoy className="h-6 w-6 cursor-pointer dark:text-black" />
         </button>
       </a>
 
