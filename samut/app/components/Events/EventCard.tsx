@@ -19,7 +19,7 @@ interface EventCardProps {
 
 const EventCard: React.FC<EventCardProps> = ({ event }) => {
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg ">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg">
       {/* Image on top (vertical layout) */}
       <div className="relative h-48 w-full">
         <Image
