@@ -17,27 +17,7 @@ export default function Home() {
     nextSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Data
-  const events = [
-    {
-      title: "Siempre Son Flores Live",
-      date: "June 15, 2024",
-      location: "Buenos Aires, Argentina",
-      image: "/images/concert1.jpg"
-    },
-    {
-      title: "Music Festival",
-      date: "July 22, 2024",
-      location: "Madrid, Spain",
-      image: "/images/concert2.jpg"
-    },
-    {
-      title: "Acoustic Sessions",
-      date: "August 5, 2024",
-      location: "Mexico City, Mexico",
-      image: "/images/concert3.jpg"
-    }
-  ];
+
 
   const teachers = [
     {
@@ -46,7 +26,7 @@ export default function Home() {
       subject: "Mathematics",
       rating: 4.8,
       experience: 5,
-      image: "/path/to/image.jpg",
+      image: "/Teacher1.jpg",
       bio: "Experienced math teacher with a passion for making complex concepts simple..."
     },
     {
@@ -55,7 +35,7 @@ export default function Home() {
       subject: "Mathematics",
       rating: 4.8,
       experience: 5,
-      image: "/path/to/image.jpg",
+      image: "/Teacher2.jpg",
       bio: "Experienced math teacher with a passion for making complex concepts simple..."
     },
     {
@@ -64,7 +44,16 @@ export default function Home() {
       subject: "Mathematics",
       rating: 4.8,
       experience: 5,
-      image: "/path/to/image.jpg",
+      image: "/Teacher3.jpg",
+      bio: "Experienced math teacher with a passion for making complex concepts simple..."
+    },
+    {
+      id: 4,
+      name: "John Doe",
+      subject: "Mathematics",
+      rating: 4.8,
+      experience: 5,
+      image: "/Teacher4.jpg",
       bio: "Experienced math teacher with a passion for making complex concepts simple..."
     }
   ];
