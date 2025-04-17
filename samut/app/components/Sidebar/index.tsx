@@ -1,8 +1,8 @@
 // "use client";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image"; // Import Image
-import { Briefcase, HomeIcon, Icon, Lock, LucideIcon, Search, Settings, User, Users, LucideHome, X, Check, BookOpenCheck, School, LogOut, MessageCircleQuestion, ChevronUp, ChevronDown, AlertCircle, ShieldAlert, AlertTriangle, AlertOctagon, Layers3 } from "lucide-react"; // Correct import from lucide-react
+import Image from "next/image";
+import { Briefcase, HomeIcon, Icon, Lock, LucideIcon, Search, Settings, User, Users, LucideHome, X, Check, BookOpenCheck, School, LogOut, MessageCircleQuestion, ChevronUp, ChevronDown, AlertCircle, ShieldAlert, AlertTriangle, AlertOctagon, Layers3 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/app/redux";
 import { setIsSidebarCollapsed } from "@/state";
@@ -17,24 +17,23 @@ const Sidebar = () => {
   const dispatch = useAppDispatch();
   const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed);
 
-  // Dummy user data
   const dummyUser = {
     username: "John Doe",
-    profilePictureUrl: "", // Leave empty to show default icon
+    profilePictureUrl: "",
   };
 
   const handleSignOut = () => {
-    alert("Signed out!"); // Replace this with actual sign-out logic
+    alert("Signed out!");
   };
 
-  const sidebarClassNames = `fixed flex flex-col h-full justify-between shadow-xl transition-all duration-300 z-40 dark:bg-black overflow-y-auto bg-white 
-  ${isSidebarCollapsed ? "w-0" : "w-64"}`;
+  const sidebarClassNames = `fixed top-0 left-0 h-full flex flex-col justify-between shadow-xl transition-all duration-300 z-50 dark:bg-black bg-white 
+${isSidebarCollapsed ? "-translate-x-full" : "translate-x-0"} w-64`;
 
   return (
     <div className={sidebarClassNames}>
       <div className="flex h-full w-full flex-col justify-start">
         {/* Top Logo */}
-        <div className="z-50 flex min-h-[56px] w-64 items-center justify-between bg-white px-6 pt-3 dark:bg-black">
+        <div className="z-10 flex min-h-[56px] w-64 items-center justify-between bg-white px-6 pt-3 dark:bg-black">
           <div className="text-xl font-bold text-gray-800 dark:text-white">
             Sea Nior
           </div> 

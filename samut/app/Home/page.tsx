@@ -1,60 +1,102 @@
-export default function LandingPage() {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
-        {/* Hero Section */}
-        <section className="text-center max-w-3xl px-4">
-          <h1 className="text-5xl font-extrabold leading-tight">
-            Welcome to <span className="text-blue-600">Your App</span>
-          </h1>
-          <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
-            A seamless way to manage your tasks, collaborate, and boost productivity.
-          </p>
-          <div className="mt-6">
-            <button className="px-6 py-3 bg-blue-600 text-white rounded-lg text-lg font-medium hover:bg-blue-700">
-              Get Started
-            </button>
-            <button className="ml-4 px-6 py-3 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg text-lg font-medium hover:bg-gray-400 dark:hover:bg-gray-600">
-              Learn More
-            </button>
-          </div>
-        </section>
-  
-        {/* Features Section */}
-        <section className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl">
-          <FeatureCard
-            title="Fast & Efficient"
-            description="Experience a smooth, optimized workflow for all your tasks."
-          />
-          <FeatureCard
-            title="Secure & Reliable"
-            description="Your data is protected with the latest security measures."
-          />
-          <FeatureCard
-            title="Easy to Use"
-            description="An intuitive interface designed for productivity and ease."
-          />
-        </section>
-  
-        {/* Footer */}
-        <footer className="mt-16 text-gray-600 dark:text-gray-400 text-sm">
-          © 2024 Your Company. All rights reserved.
-        </footer>
-      </div>
-    );
-  }
-  
-  type FeatureCardProps = {
-    title: string;
-    description: string;
+// pages/index.tsx
+import { useRef } from 'react';
+import { HeroSection } from '../components/Hero/HeroSection';
+import { ScrollDownButton } from '../components/Hero/ScrollDownButton';
+import { SectionTitle } from '../components/Common/SectionTitle';
+import { FunctionCards } from '../components/Functions/FunctionCards';
+
+import { TeachersSection } from '../components/Teachers/TeachersSection';
+import { CTASection } from '../components/CTA/CTASection';
+import  EventCard  from '../components/Events/EventCard';
+import EventSection from '../components/Events/EventsSection';
+
+export default function Home() {
+  const nextSectionRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToNextSection = () => {
+    nextSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
-  
-  function FeatureCard({ title, description }: FeatureCardProps) {
-    return (
-      <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg text-center">
-        <h3 className="text-xl font-bold">{title}</h3>
-        <p className="mt-2 text-gray-600 dark:text-gray-300">{description}</p>
-      </div>
-    );
-  }
-  
-  
+
+
+
+  const teachers = [
+    {
+      id: 1,
+      name: "John Doe",
+      subject: "Mathematics",
+      rating: 4.8,
+      experience: 5,
+      image: "/Teacher1.jpg",
+      bio: "Experienced math teacher with a passion for making complex concepts simple..."
+    },
+    {
+      id: 2,
+      name: "John Doe",
+      subject: "Mathematics",
+      rating: 4.8,
+      experience: 5,
+      image: "/Teacher2.jpg",
+      bio: "Experienced math teacher with a passion for making complex concepts simple..."
+    },
+    {
+      id: 3,
+      name: "John Doe",
+      subject: "Mathematics",
+      rating: 4.8,
+      experience: 5,
+      image: "/Teacher3.jpg",
+      bio: "Experienced math teacher with a passion for making complex concepts simple..."
+    },
+    {
+      id: 4,
+      name: "John Doe",
+      subject: "Mathematics",
+      rating: 4.8,
+      experience: 5,
+      image: "/Teacher4.jpg",
+      bio: "Experienced math teacher with a passion for making complex concepts simple..."
+    }
+  ];
+
+  return (
+    <div className="">
+       <HeroSection
+        title="Find Your Swimming Instructor"
+        subtitle="Connect with certified instructors for all ages and skill levels"
+        imageSrc="/SwimmimgLanding.jpg"
+        primaryAction={{
+          text: 'Browse Instructors',
+          onClick: () => console.log('Find Tour Clicked'),
+        }}
+        secondaryAction={{
+          text: 'How It Works',
+          onClick: () => console.log('How it Works Clicked'),
+        }}
+      />
+
+      {/* Functions Section */}
+      <FunctionCards/>
+
+      {/* Events Section */}
+      <section ref={nextSectionRef} className="px-4 max-w-6xl mx-auto mt-10">
+      <SectionTitle className="my-custom-class" description="Join our community events to learn, network, and grow with industry experts.">
+          Event Avilable
+        </SectionTitle>
+      <EventSection />
+      </section>
+
+
+      {/* Teachers Section */}
+      <TeachersSection teachers={teachers} />
+
+      <CTASection
+        title="Ready to Dive In?"
+        description="Join hundreds of students improving their swimming skills today"
+        buttonText="Find Your Instructor"
+        onButtonClick={() => console.log("CTA clicked")}
+      />
+    </div>
+
+    
+  );
+}

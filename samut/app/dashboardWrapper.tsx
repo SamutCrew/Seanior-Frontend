@@ -52,17 +52,22 @@ const DashboardLayout = ({
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-gray-50 text-gray-900">
-      <Sidebar />
-      <main
-        className={`flex w-full flex-col bg-gray-50 dark:bg-dark-bg ${
-          isSidebarCollapsed ? "" : "md:pl-64"
-        }`}
-      >
-        <Navbar />
-        {children}
-      </main>
-    </div>
+      <div className='flex min-h-screen w-full bg-gray-50 text-gray-900 dark:bg-dark-bg'>
+          {/* Sidebar - now using transform instead of width */}
+          <div className={`fixed inset-y-0 left-0 z-50 flex h-full transition-all duration-300 ease-in-out ${
+              isSidebarCollapsed ? '-translate-x-full' : 'translate-x-0'
+          }`}>
+              <Sidebar />
+          </div>
+
+          {/* Main content */}
+          <main className={`flex w-full flex-col transition-all duration-300 ease-in-out ${
+              isSidebarCollapsed ? 'pl-0' : 'pl-64'
+          } bg-gray-50 dark:bg-dark-bg`}>
+              <Navbar />
+              {children}
+          </main>
+      </div>
   );
 };
 
