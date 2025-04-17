@@ -15,7 +15,7 @@ const OutfitFonts = Outfit({
 
 
 
-export default function Home() {
+const Home = () => {
   const { user, logOut } = useAuth();
   
   return (

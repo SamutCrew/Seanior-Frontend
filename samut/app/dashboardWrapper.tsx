@@ -8,7 +8,7 @@ import Sidebar from "./components/Sidebar";
 import StoreProvider, { useAppSelector } from "./redux";
 import { LayoutType } from "@/app/types/layout";
 import { useAuth } from "@/app/context/AuthContext";
-import LoadingPage from "./components/common/LoadingPage";
+import LoadingPage from "@/app/components/Common/LoadingPage";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
