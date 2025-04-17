@@ -10,6 +10,7 @@
     "postinstall": "flowbite-react patch"
   },
   "dependencies": {
+    "@heroui/react": "^2.7.6",
     "@mui/x-data-grid": "^7.26.0",
     "@prisma/client": "^6.4.1",
     "@reduxjs/toolkit": "^2.5.1",
