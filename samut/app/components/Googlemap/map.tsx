@@ -29,11 +29,23 @@ const Map = ({ center, zoom, onClick, markers = [] }: MapProps) => {
   }, [center, map]);
 
   if (loadError) {
-    return <div className="h-full w-full bg-gray-200 flex items-center justify-center">{loadError}</div>;
+    return (
+      <div className="h-full w-full bg-gray-200 flex items-center justify-center">
+        Error: {loadError}
+        <br />
+        {loadError.includes("API key") && (
+          <span>Please check your Google Maps API key configuration</span>
+        )}
+      </div>
+    );
   }
 
   if (!isLoaded) {
-    return <div className="h-full w-full bg-gray-200 flex items-center justify-center">Loading map...</div>;
+    return (
+      <div className="h-full w-full bg-gray-200 flex items-center justify-center">
+        Loading map...
+      </div>
+    );
   }
 
   return (
@@ -43,6 +55,7 @@ const Map = ({ center, zoom, onClick, markers = [] }: MapProps) => {
       zoom={zoom}
       onClick={onClick}
       onLoad={(map) => setMap(map)}
+      onUnmount={() => setMap(null)}
     >
       {markers.map((marker, index) => (
         <MarkerF
