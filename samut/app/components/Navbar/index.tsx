@@ -5,23 +5,11 @@ import Image from "next/image";
 import { Link, LucideIcon, Menu, Moon, Search, Sun, BookOpen, GraduationCap, Info, LifeBuoy } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import React, { useEffect, useState } from "react";
-import { getAuthUser } from '@/app/context/authToken';
-
-interface User {
-  email: string;
-}
+import { useAuth } from "@/app/context/AuthContext";
 
 
 const Navbar = () => {
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const user = await getAuthUser();
-      setUser(user as User);
-    };
-    fetchUser();
-  }, []);
+  const { user } = useAuth();
   const dispatch = useAppDispatch();
   const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed);
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode);

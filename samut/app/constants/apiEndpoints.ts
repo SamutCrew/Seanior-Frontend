@@ -4,7 +4,7 @@ export const APIEndpoints = Object.freeze({
     },
     USER: {
         RETRIEVE: {
-        CHECK_ISEXIST: "/api/user/create/checkUser",
+        CHECK_ISEXIST: "/api/user/retrieve/checkUser",
         },
         CREATE: "/api/user/create/createUser",
     },

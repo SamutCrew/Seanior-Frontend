@@ -4,7 +4,8 @@ import HomePage from "./Home/page";
 import { Outfit } from "next/font/google";
 import { useAuth } from "@/app/context/AuthContext";
 import Login from "@/app/auth/Login/page";
-
+import withLayout from "@/app/hocs/WithLayout";
+import { LayoutType } from "@/app/types/layout";
 
 const OutfitFonts = Outfit({
   subsets : ["latin"],
@@ -25,3 +26,5 @@ export default function Home() {
     </div>
   );
 }
+
+export default withLayout(Home, LayoutType.App);

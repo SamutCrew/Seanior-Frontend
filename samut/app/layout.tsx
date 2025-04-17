@@ -1,8 +1,10 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import DashboardWrapper from "./dashboardWrapper";
 import { AuthProvider } from "@/app/context/AuthContext";
+import { HeroUIProvider } from "@heroui/react";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -29,7 +31,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <DashboardWrapper>{children}</DashboardWrapper>
+          <HeroUIProvider>
+            {children}
+          </HeroUIProvider>
         </AuthProvider>
       </body>
     </html>

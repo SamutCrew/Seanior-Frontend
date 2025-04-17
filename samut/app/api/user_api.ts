@@ -11,7 +11,7 @@ export const checkAlreadyHaveUserInDb = async (firebase_uid: string) => {
         console.log("User existence check response:", response.data);
         return response.data;
     } catch (error) {
-        console.error("Error checking user existence:", error);
+        // console.error("Error checking user existence:", error);
         return null;
     }
 }
@@ -34,8 +34,6 @@ export const verifyUserToken = async (): Promise<boolean> => {
     try {
         const token = await getAuthToken();
         const response = await apiClient.post(url, { token });
-        console.log("response.status", response.status);
-        console.log("response.data", response.data);
         return response.status === 200;
     } catch (error) {
         console.error("Error verifying token:", error);
