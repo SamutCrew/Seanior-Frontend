@@ -1,6 +1,6 @@
 "use client"
 
-import { FaChalkboardTeacher, FaStar } from 'react-icons/fa';
+import { FaChalkboardTeacher } from 'react-icons/fa';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation } from 'swiper/modules';
 import { SectionTitle } from '../Common/SectionTitle';
@@ -8,58 +8,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import 'swiper/css';
 import 'swiper/css/navigation';
-import Image from 'next/image';
-
-interface Teacher {
-  id: number;
-  name: string;
-  subject: string;
-  rating: number;
-  experience: number;
-  image: string;
-  bio: string;
-}
-
-const TeacherCard = ({ teacher }: { teacher: Teacher }) => {
-  return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group">
-      {/* Teacher Image */}
-      <div className="relative h-48 overflow-hidden">
-        <Image
-          src={teacher.image}
-          alt={teacher.name}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        />
-        {/* Experience Badge */}
-        <div className="absolute bottom-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
-          {teacher.experience}+ years
-        </div>
-      </div>
-      
-      <div className="p-6">
-        <div className="flex items-start mb-4">
-          <div className="flex-1">
-            <h3 className="font-bold text-xl text-gray-800">{teacher.name}</h3>
-            <p className="text-blue-600 font-medium">{teacher.subject}</p>
-          </div>
-          {/* Rating */}
-          <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
-            <FaStar className="text-yellow-400 mr-1" />
-            <span className="font-semibold text-gray-700">{teacher.rating}</span>
-          </div>
-        </div>
-        
-        <p className="text-gray-600 mb-6 line-clamp-3">{teacher.bio}</p>
-        
-        <button className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-3 px-4 rounded-lg transition-all duration-300 transform hover:-translate-y-1 shadow-md hover:shadow-lg">
-          View Profile
-        </button>
-      </div>
-    </div>
-  );
-};
+import { TeacherCard, Teacher } from '../Teachers/TeacherCard';
 
 interface TeachersSectionProps {
   teachers: Teacher[];

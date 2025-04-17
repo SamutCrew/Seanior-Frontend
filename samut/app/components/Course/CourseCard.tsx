@@ -1,16 +1,25 @@
 "use client"
 
-import { FaBook, FaChalkboardTeacher, FaClock, FaStar, FaUserGraduate } from 'react-icons/fa';
+import { FaBook, FaChalkboardTeacher, FaClock, FaStar, FaUserGraduate, FaMapMarkerAlt } from 'react-icons/fa';
+
+interface Location {
+  lat: number;
+  lng: number;
+  address?: string;
+}
 
 interface Course {
   id: number;
   title: string;
-  subject: string;
+  focus: string;           // <-- Added
   level: string;
   duration: string;
+  schedule: string;        // <-- Added
   instructor: string;
   rating: number;
   students: number;
+  price: number;           // <-- Added
+  location: Location;
 }
 
 const CourseCard = ({ course }: { course: Course }) => {
@@ -23,7 +32,7 @@ const CourseCard = ({ course }: { course: Course }) => {
           </div>
           <div>
             <h3 className="font-bold text-lg">{course.title}</h3>
-            <p className="text-gray-600">{course.subject} • {course.level}</p>
+            <p className="text-gray-600">{course.focus} • {course.level}</p>
           </div>
         </div>
         <div className="space-y-3 mb-4">
@@ -40,6 +49,13 @@ const CourseCard = ({ course }: { course: Course }) => {
             <span>Students: {course.students}</span>
           </div>
         </div>
+
+        {/* Location Section */}
+        <div className="flex items-center text-sm text-gray-500 mb-4">
+          <FaMapMarkerAlt className="mr-2 text-red-500" />
+          <span>{course.location.address || "Location not specified"}</span>
+        </div>
+
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center">
             <FaStar className="text-yellow-400 mr-1" />

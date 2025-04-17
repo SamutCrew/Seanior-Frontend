@@ -1,14 +1,14 @@
 // pages/index.tsx
 import { useRef } from 'react';
-import { HeroSection } from '../components/Hero/HeroSection';
-import { ScrollDownButton } from '../components/Hero/ScrollDownButton';
+import { HeroSection } from '../components/LandingPage/HeroSection';
+import { ScrollDownButton } from '../components/LandingPage/ScrollDownButton';
 import { SectionTitle } from '../components/Common/SectionTitle';
 import { FunctionCards } from '../components/Functions/FunctionCards';
 
-import { TeachersSection } from '../components/Teachers/TeachersSection';
-import { CTASection } from '../components/CTA/CTASection';
+import { TeachersSection } from '../components/LandingPage/TeachersSection';
+import { CTASection } from '../components/LandingPage/CTASection';
 import  EventCard  from '../components/Events/EventCard';
-import EventSection from '../components/Events/EventsSection';
+import EventSection from '../components/LandingPage/EventsSection';
 
 export default function Home() {
   const nextSectionRef = useRef<HTMLDivElement | null>(null);
@@ -20,44 +20,71 @@ export default function Home() {
 
 
   const teachers = [
-    {
-      id: 1,
-      name: "John Doe",
-      subject: "Mathematics",
-      rating: 4.8,
-      experience: 5,
-      image: "/Teacher1.jpg",
-      bio: "Experienced math teacher with a passion for making complex concepts simple..."
+    { 
+      id: 1, 
+      name: 'Michael Phelps', 
+      specialty: 'Competitive Swimming', 
+      styles: ['Freestyle', 'Butterfly'], 
+      levels: ['Intermediate', 'Advanced'], 
+      certification: ['ASCA', 'RedCross'], 
+      rating: 4.9, 
+      experience: 15, 
+      image: '/teacher1.jpg', 
+      bio: 'Olympic gold medalist specializing in competitive swimming techniques', 
+      lessonType: 'Private', 
+      price: 80,
+      location: { lat: 34.0522, lng: -118.2437, address: 'Los Angeles, CA' } 
     },
-    {
-      id: 2,
-      name: "John Doe",
-      subject: "Mathematics",
-      rating: 4.8,
-      experience: 5,
-      image: "/Teacher2.jpg",
-      bio: "Experienced math teacher with a passion for making complex concepts simple..."
+    { 
+      id: 2, 
+      name: 'Michael Phelps', 
+      specialty: 'Competitive Swimming', 
+      styles: ['Freestyle', 'Butterfly'], 
+      levels: ['Intermediate', 'Advanced'], 
+      certification: ['ASCA', 'RedCross'], 
+      rating: 4.9, 
+      experience: 15, 
+      image: '/teacher2.jpg', 
+      bio: 'Olympic gold medalist specializing in competitive swimming techniques', 
+      lessonType: 'Private', 
+      price: 80,
+      location: { lat: 34.0522, lng: -118.2437, address: 'Los Angeles, CA' } 
     },
-    {
-      id: 3,
-      name: "John Doe",
-      subject: "Mathematics",
-      rating: 4.8,
-      experience: 5,
-      image: "/Teacher3.jpg",
-      bio: "Experienced math teacher with a passion for making complex concepts simple..."
+    { 
+      id: 3, 
+      name: 'Michael Phelps', 
+      specialty: 'Competitive Swimming', 
+      styles: ['Freestyle', 'Butterfly'], 
+      levels: ['Intermediate', 'Advanced'], 
+      certification: ['ASCA', 'RedCross'], 
+      rating: 4.9, 
+      experience: 15, 
+      image: '/teacher3.jpg', 
+      bio: 'Olympic gold medalist specializing in competitive swimming techniques', 
+      lessonType: 'Private', 
+      price: 80,
+      location: { lat: 34.0522, lng: -118.2437, address: 'Los Angeles, CA' } 
     },
-    {
-      id: 4,
-      name: "John Doe",
-      subject: "Mathematics",
-      rating: 4.8,
-      experience: 5,
-      image: "/Teacher4.jpg",
-      bio: "Experienced math teacher with a passion for making complex concepts simple..."
+    { 
+      id: 4, 
+      name: 'Michael Phelps', 
+      specialty: 'Competitive Swimming', 
+      styles: ['Freestyle', 'Butterfly'], 
+      levels: ['Intermediate', 'Advanced'], 
+      certification: ['ASCA', 'RedCross'], 
+      rating: 4.9, 
+      experience: 15, 
+      image: '/teacher4.jpg', 
+      bio: 'Olympic gold medalist specializing in competitive swimming techniques', 
+      lessonType: 'Private', 
+      price: 80,
+      location: { lat: 34.0522, lng: -118.2437, address: 'Los Angeles, CA' } 
     }
   ];
+  
 
+
+  
   return (
     <div className="">
        <HeroSection
