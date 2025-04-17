@@ -2,30 +2,39 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/app/context/AuthContext';
+import { AlertType } from "@/app/types";
+import AlertResponse from "@/app/components/Responseback/AlertResponse";
+import withLayout from "@/app/hocs/WithLayout";
+import { LayoutType } from "@/app/types/layout";
+import { SendForgotPassword } from "@/app/provider/EmailProvider";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState(AlertType.INFO);
 
-  const handleSubmit = async (e) => {
+  const onResetPassword = async (e: any) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-    
-    try {
-      // Add your password reset logic here
-      // Example: await sendPasswordResetEmail(email);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setSuccess(true);
-    } catch (err) {
-      setError(err.message || 'Failed to send reset email');
-    } finally {
-      setLoading(false);
+    const email = e.target.email.value;
+    if (!email) {
+      setAlertType(AlertType.ERROR);
+      setAlertMessage("Please enter your email");
+      return;
     }
+
+    await SendForgotPassword(email)
+      .then((res: any) => {
+        setAlertType(AlertType.SUCCESS);
+        setAlertMessage(`Password reset email sent to ${email}`);
+        setSuccess(true);
+      })
+      .catch((error: any) => {
+        setAlertType(AlertType.ERROR);
+        setAlertMessage(error.message);
+      });
   };
 
   return (
@@ -49,13 +58,13 @@ const ForgotPassword = () => {
 
         {!success ? (
           <>
-            {error && (
-              <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
-                {error}
+            {alertMessage && (
+              <div className="mt-2 mb-4">
+                <AlertResponse message={alertMessage} type={alertType} />
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={onResetPassword} className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address
@@ -112,18 +121,12 @@ const ForgotPassword = () => {
                 Resend Email
               </button>
             </div>
-            <div className="mt-4 text-center">
+            <div className="mt-4">
               <p className="text-gray-500 text-sm">
-                Didn't receive the email? Check your spam folder or{' '}
-                <button 
-                  onClick={() => {
-                    setSuccess(false);
-                    setEmail('');
-                  }}
-                  className="text-blue-600 hover:text-blue-500"
-                >
-                  try another email address
-                </button>
+                if you change your mind, 
+                <Link href="/auth/Login" className="text-blue-600 hover:text-blue-500">
+                  Sign in
+                </Link>
               </p>
             </div>
           </div>
@@ -133,4 +136,4 @@ const ForgotPassword = () => {
   );
 };
 
-export default ForgotPassword;
+export default withLayout(ForgotPassword, LayoutType.Auth);

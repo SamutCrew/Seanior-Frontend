@@ -1,8 +1,12 @@
-// authContext.js
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import {
+  EmailProvider,
+  RegisterWithEmail,
+  SendForgotPassword,
+} from "@/app/provider/EmailProvider";
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '@/app/lib/firebase';
 import { GoogleProvider } from '@/app/provider/GoogleProvider';
 import { checkAlreadyHaveUserInDb, createUser, verifyUserToken } from '../api';
@@ -13,32 +17,24 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-    });
-    console.log('User:', user);
-    return () => unsubscribe();
-  }, []);
-
-  const handleNewRegister = async (firebaseUser) => {
+  const handleNewRegister = async (firebaseUser, name) => {
     if (firebaseUser) {
       try {
         let dbUser = await checkAlreadyHaveUserInDb(firebaseUser.uid);
-        if (!dbUser) {
+        if (dbUser === null) {
           const newUser = {
             user_id: firebaseUser.uid,
             firebase_uid: firebaseUser.uid,
-            name: firebaseUser.displayName || "Anonymous",
+            name: name || firebaseUser.displayName || "Anonymous",
             email: firebaseUser.email,
             profile_img: firebaseUser.photoURL || "",
-            user_type : "user",
+            user_type: "user",
           };
 
           dbUser = await createUser(newUser);
         }
 
-        setUser(dbUser);
+        setUser(dbUser); // Set the user state with the database user
 
         const isTokenValid = await verifyUserToken();
         console.log('isTokenValid:', isTokenValid);
@@ -58,6 +54,55 @@ export function AuthProvider({ children }) {
     }
   };
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
+      console.log('onAuthStateChanged: loading = true');
+      try {
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Auth timeout")), 10000) // 10s timeout
+        );
+        if (firebaseUser) {
+          await Promise.race([handleNewRegister(firebaseUser), timeoutPromise]);
+        } else {
+          setUser(null); // Clear user if no Firebase user
+        }
+      } catch (error) {
+        console.error("Error in onAuthStateChanged:", error);
+        setUser(null);
+      } finally {
+        setLoading(false);
+        console.log('onAuthStateChanged: loading = false');
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const signIn = async (email, password) => {
+    setLoading(true);
+    try {
+      const userCredential = await EmailProvider(email, password);
+      await handleNewRegister(userCredential.user);
+    } catch (error) {
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const registerWithEmail = async (email, password, name) => {
+    setLoading(true);
+    try {
+      const result = await RegisterWithEmail(email, password, name);
+      await handleNewRegister(result.user, name);
+    } catch (error) {
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const googleSignIn = async () => {
     setLoading(true);
     try {
@@ -71,12 +116,53 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logOut = () => {
-    return signOut(auth);
+  const logOut = async () => {
+    setLoading(true);
+    try {
+      await auth.signOut();
+      setUser(null);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendForgotPassword = async (email) => {
+    setLoading(true);
+    try {
+      await SendForgotPassword(email);
+    } catch (error) {
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPassword = async (oobCode, newPassword) => {
+    setLoading(true);
+    try {
+      await ResetPassword(oobCode, newPassword);
+    } catch (error) {
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, googleSignIn, logOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        signIn,
+        logOut,
+        registerWithEmail,
+        sendForgotPassword,
+        googleSignIn,
+        loading,
+        resetPassword,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

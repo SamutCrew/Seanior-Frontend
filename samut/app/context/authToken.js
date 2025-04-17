@@ -6,7 +6,6 @@ export const getAuthToken = async () => {
     if (user) {
         return user.getIdToken();
     }
-    console.log(user.getIdToken());
     return null;
 };
 
@@ -16,6 +15,5 @@ export const getAuthUser = () => {
     if (user) {
         return user;
     }
-    console.log(user);
     return null;
 }

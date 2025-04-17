@@ -1,13 +1,16 @@
 // "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image"; // Import Image
 import { Briefcase, HomeIcon, Icon, Lock, LucideIcon, Search, Settings, User, Users, LucideHome, X, Check, BookOpenCheck, School, LogOut, MessageCircleQuestion, ChevronUp, ChevronDown, AlertCircle, ShieldAlert, AlertTriangle, AlertOctagon, Layers3 } from "lucide-react"; // Correct import from lucide-react
 import { usePathname } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/app/redux";
 import { setIsSidebarCollapsed } from "@/state";
+import { useAuth } from "@/app/context/AuthContext";
+
 
 const Sidebar = () => {
+  const { user, logOut } = useAuth();
   const [showProject, setShowProject] = useState(true);
   const [showPriority, setShowPriority] = useState(true);
 
@@ -129,14 +132,22 @@ const Sidebar = () => {
         <User className="h-6 w-6 cursor-pointer self-center rounded-full dark:text-white" />
       )}
     </div>
-    <span className="mx-3 text-gray-800 dark:text-white">{dummyUser.username}</span>
+    <span className="mx-3 text-gray-800 dark:text-white">
+      { user ? user.email : dummyUser.username}
+    </span>
   </div>
 
   {/* Spacer to push the Logout button to the bottom */}
   <div className="flex-grow"></div>
 
   {/* Logout Button (Bottom) */}
-  <SidebarLink icon={LogOut} label="Logout" href="/" />
+  {/* <SidebarLink icon={LogOut} label="Logout" href="/" /> */}
+  <button onClick={logOut} className="w-full">
+    <div className="flex items-center gap-3 rounded-md px-2 py-2 text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">
+      <LogOut className="h-6 w-6" />
+      <span className="font-medium">Logout</span>
+    </div>
+  </button>
 </div>
 </div>
 
