@@ -15,12 +15,16 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      fontFamily:{
+        outfit: ["var(--font-outfit)"],
+      },
     },
   },
   plugins: [
     heroui({
       addCommonColors: true,
     }),
+    require('daisyui'),
     ],
 };
 export default config;
