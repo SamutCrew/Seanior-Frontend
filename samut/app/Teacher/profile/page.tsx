@@ -1,7 +1,7 @@
 "use client"
 
 import { FaSwimmer, FaTrophy, FaClock, FaStar, FaMapMarkerAlt, FaWater } from 'react-icons/fa';
-import CourseCard from '@/app/components/Course/CourseCard'; // Adjust import path as needed
+import CourseCard from '@/app/components/Course/CourseCard';
 
 interface Location {
   lat: number;
@@ -81,7 +81,7 @@ export default function CoachProfile() {
         location: {
           lat: 25.7617,
           lng: -80.1918,
-          address: 'Skyline Aquatic Center'
+          address: 'Skyline Aquatic Center, Pool 2'
         }
       },
       {
@@ -98,7 +98,7 @@ export default function CoachProfile() {
         location: {
           lat: 25.7617,
           lng: -80.1918,
-          address: 'Skyline Aquatic Center'
+          address: 'Skyline Aquatic Center, Pool 1'
         }
       },
       {
@@ -115,7 +115,7 @@ export default function CoachProfile() {
         location: {
           lat: 25.7617,
           lng: -80.1918,
-          address: 'Skyline Aquatic Center'
+          address: 'Skyline Aquatic Center, Competition Pool'
         }
       }
     ]
@@ -245,24 +245,36 @@ export default function CoachProfile() {
 
         {/* Courses Section */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="bg-gradient-to-r from-sky-500 to-sky-600 p-6 text-black">
+          <div className="bg-gradient-to-r from-sky-500 to-sky-600 p-6 text-white">
             <h2 className="text-2xl font-bold flex items-center gap-3">
-              <FaWater className="text-sky-600" />
-              <span>Featured Courses</span>
+              <FaWater className="text-white" />
+              <span>Featured Swimming Courses</span>
             </h2>
+            <p className="mt-2 text-sky-100">Top courses taught by {coach.name}</p>
           </div>
 
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {coach.courses.map((course) => (
-                <CourseCard key={course.id} course={course} />
+                <CourseCard 
+                  key={course.id} 
+                  course={{
+                    ...course,
+                    // Ensure all required fields are passed exactly as your CourseCard expects
+                    instructor: coach.name, // Use coach's name as instructor
+                    location: {
+                      ...course.location,
+                      address: course.location.address || coach.location // Fallback to coach's location
+                    }
+                  }} 
+                />
               ))}
             </div>
 
             {coach.courses.length > 3 && (
               <div className="mt-8 text-center">
                 <button className="inline-flex items-center px-4 py-2 border border-sky-300 text-sky-700 rounded-lg hover:bg-sky-50 transition-colors font-medium">
-                  View All Courses
+                  View All {coach.courses.length} Courses
                 </button>
               </div>
             )}
