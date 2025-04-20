@@ -55,14 +55,14 @@ const Navbar: React.FC<NavbarProps> = ({ pathname }) => {
       className={`fixed top-0 left-0 w-full transition-all duration-300 z-40 flex items-center justify-between px-12 ${scrolledClass} ${paddingClass}`}
     >
       {/* Left - Menu */}
-      <div className="flex items-center gap-8">
+      <div className="flex items-center gap-8 w-1/3">
         <button onClick={() => dispatch(setIsSidebarCollapsed(!isSidebarCollapsed))}>
           <Menu className="h-8 w-8" />
         </button>
       </div>
 
       {/* Center - Links */}
-      <div className="flex justify-center gap-12 font-medium">
+      <div className="flex justify-center gap-12 font-medium w-1/3">
         <div className="cursor-pointer">Find Course</div>
         <div className="cursor-pointer">My Course</div>
         <div className="cursor-pointer">About</div>
@@ -70,7 +70,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname }) => {
       </div>
 
       {/* Right - Toggles */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-end gap-4 w-1/3">
         <button
           onClick={() => dispatch(setIsDarkmode(!isDarkMode))}
           className="rounded p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -78,7 +78,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname }) => {
           {isDarkMode ? <Sun className="h-6 w-6" /> : <Moon className="h-6 w-6" />}
         </button>
 
-        <div className="text-sm">{user ? user.email : "User"}</div>
+        <div className="text-sm truncate max-w-[120px]">{user ? user.email : "User"}</div>
 
         <a href="/auth/Login">
           <button className="rounded p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
