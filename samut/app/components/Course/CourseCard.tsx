@@ -7,19 +7,20 @@ interface Location {
   lng: number;
   address?: string;
 }
-
 interface Course {
   id: number;
   title: string;
-  focus: string;           // <-- Added
+  focus: string;
   level: string;
   duration: string;
-  schedule: string;        // <-- Added
+  schedule: string;
   instructor: string;
   rating: number;
   students: number;
-  price: number;           // <-- Added
-  location: Location;
+  price: number;
+  location: {
+    address: string;
+  };
 }
 
 const CourseCard = ({ course }: { course: Course }) => {
