@@ -5,6 +5,8 @@ import Link from "next/link"
 import {
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Home,
   LogOut,
   MessageCircleQuestion,
@@ -20,6 +22,7 @@ import { usePathname } from "next/navigation"
 import { useAppDispatch, useAppSelector } from "@/app/redux"
 import { setIsSidebarCollapsed } from "@/state"
 import type { LucideIcon } from "lucide-react"
+import { motion } from "framer-motion"
 
 interface SidebarProps {
   isLandingPage?: boolean
@@ -28,6 +31,7 @@ interface SidebarProps {
 
 const Sidebar = ({ isLandingPage = false, scrollPosition = 0 }: SidebarProps) => {
   const [showClasses, setShowClasses] = useState(true)
+  const [isHandleHovered, setIsHandleHovered] = useState(false)
 
   const dispatch = useAppDispatch()
   const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed)
@@ -66,30 +70,70 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0 }: SidebarProps) =>
         bottom: 0,
       }}
     >
+      {!isSidebarCollapsed && (
+        <motion.button
+          className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 z-50 
+            bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg border border-gray-200 dark:border-gray-700
+            hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300"
+          onClick={() => {
+            dispatch(setIsSidebarCollapsed(true))
+            setShowClasses(false) // Close "My Classes" when sidebar collapses
+          }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          title="Close Sidebar"
+        >
+          <ChevronLeft className="h-5 w-5 text-gray-700 dark:text-gray-300" />
+        </motion.button>
+      )}
+      {isSidebarCollapsed && (
+        <motion.div
+          className="fixed left-0 top-1/2 transform -translate-y-1/2 z-50 cursor-pointer"
+          onClick={() => dispatch(setIsSidebarCollapsed(false))}
+          onMouseEnter={() => setIsHandleHovered(true)}
+          onMouseLeave={() => setIsHandleHovered(false)}
+          initial={{ opacity: 0.6 }}
+          animate={{
+            opacity: isHandleHovered ? 1 : 0.6,
+            x: isHandleHovered ? 3 : 0,
+          }}
+          transition={{ duration: 0.3 }}
+        >
+          <div
+            className={`${isDarkMode ? "bg-gray-800" : "bg-white"} 
+              backdrop-blur-md shadow-md rounded-r-full transition-all duration-300
+              flex items-center justify-center`}
+            style={{
+              width: isHandleHovered ? "28px" : "24px",
+              height: isHandleHovered ? "60px" : "50px",
+              border: isDarkMode ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.1)",
+              borderLeft: "none",
+            }}
+          >
+            <ChevronRight
+              className={`${isDarkMode ? "text-cyan-400" : "text-cyan-600"} transition-all duration-300`}
+              size={isHandleHovered ? 18 : 16}
+            />
+          </div>
+        </motion.div>
+      )}
       <div className="flex h-full w-full flex-col justify-start">
         {/* Top Logo */}
         <div
-          className={`z-10 flex min-h-[56px] items-center justify-between pt-3 
-            transition-colors duration-500
-            ${isLandingPage ? "bg-transparent" : "bg-white dark:bg-slate-900"}
-            ${isSidebarCollapsed ? "px-2" : "px-6"}`}
+          className={`z-10 flex min-h-[56px] items-center justify-center pt-3 
+transition-colors duration-500
+${isLandingPage ? "bg-transparent" : "bg-white dark:bg-slate-900"}
+${isSidebarCollapsed ? "px-2" : "px-6"}`}
         >
           {isSidebarCollapsed ? (
             <div className="mx-auto">
               <GraduationCap className="h-6 w-6 text-cyan-600" />
             </div>
           ) : (
-            <>
-              <div className="text-xl font-bold text-gray-800 dark:text-white">SeaNior</div>
-              <button
-                className="py-3 transition-transform hover:scale-110 duration-300"
-                onClick={() => {
-                  dispatch(setIsSidebarCollapsed(!isSidebarCollapsed))
-                }}
-              >
-                <ChevronUp className="h-6 w-6 text-gray-800 hover:text-gray-500 dark:text-white" />
-              </button>
-            </>
+            <div className="w-full text-xl font-bold text-gray-800 dark:text-white text-center">SeaNior</div>
           )}
         </div>
 
