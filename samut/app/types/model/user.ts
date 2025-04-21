@@ -1,5 +1,4 @@
 export interface UserCreate {
-    user_id: string;
     firebase_uid: string;
     email: string;
     name: string;

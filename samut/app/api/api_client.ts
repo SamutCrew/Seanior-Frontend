@@ -14,6 +14,7 @@ let retryCount = 0;
 apiClient.interceptors.request.use(
   async (config) => {
     const token = await getAuthToken();
+    console.log("Token:", token);
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }
@@ -43,7 +44,7 @@ apiClient.interceptors.response.use(
     if (retryCount <= 2) {
       const errorMsg = "Request failed. Retrying...";
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 10000));
       console.log(`Retrying request (${retryCount}/3)`);
       return apiClient.request(error.config); // Retry the request
     } else {

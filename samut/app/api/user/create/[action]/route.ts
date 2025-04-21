@@ -3,32 +3,12 @@ import { prisma } from "@/app/lib/prisma";
 import { NextResponse } from "next/server";
 
 type ActionParams = {
-  params: Promise<{ action: string }>; // Update type to reflect that params is a Promise
+  params: Promise<{ action: string }>;
 };
 
-// Handler functions for each action
 const handlers: {
   [key: string]: (req: Request) => Promise<NextResponse>;
 } = {
-  checkUser: async (req: Request) => {
-    try {
-      const { firebase_uid } = await req.json();
-
-      if (!firebase_uid) {
-        return NextResponse.json({ error: "Firebase UID is required" }, { status: 400 });
-      }
-
-      const user = await prisma.user.findUnique({
-        where: { firebase_uid },
-      });
-
-      return NextResponse.json(user || null, { status: user ? 200 : 404 });
-    } catch (error) {
-      console.error("Error checking user:", error);
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-    }
-  },
-
   createUser: async (req: Request) => {
     try {
       const userData = await req.json();
@@ -59,9 +39,8 @@ const handlers: {
   },
 };
 
-// Main POST handler
 export async function POST(req: Request, { params }: ActionParams) {
-  const { action } = await params; // Await params to resolve the Promise
+  const { action } = await params;
 
   const handler = handlers[action];
   if (!handler) {

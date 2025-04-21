@@ -6,6 +6,7 @@ export const getAuthToken = async () => {
     if (user) {
         return user.getIdToken();
     }
+    console.log("token", user.getIdToken());
     return null;
 };
 
