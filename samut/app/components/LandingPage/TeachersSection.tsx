@@ -1,75 +1,178 @@
 "use client"
-
-import { FaChalkboardTeacher } from 'react-icons/fa';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation } from 'swiper/modules';
-import { SectionTitle } from '../Common/SectionTitle';
-import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import { TeacherCard, Teacher } from '../Teachers/TeacherCard';
+import { useRef } from "react"
+import { motion, useInView } from "framer-motion"
+import { ArrowRight } from "lucide-react"
+import Link from "next/link"
+import { TeacherCard, type Teacher } from "../Teachers/TeacherCard"
 
 interface TeachersSectionProps {
-  teachers: Teacher[];
+  teachers?: Teacher[]
 }
 
-export const TeachersSection = ({ teachers }: TeachersSectionProps) => {
+export const TeachersSection = ({ teachers = [] }: TeachersSectionProps) => {
+  const sectionRef = useRef(null)
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" })
+
+  // Default teachers if none provided
+  const defaultTeachers = [
+    {
+      id: 1,
+      name: "Michael Phelps",
+      specialty: "Competitive Swimming",
+      styles: ["Freestyle", "Butterfly"],
+      levels: ["Intermediate", "Advanced"],
+      certification: ["ASCA", "RedCross"],
+      rating: 4.9,
+      experience: 15,
+      image: "/teacher1.jpg",
+      bio: "Olympic gold medalist specializing in competitive swimming techniques",
+      lessonType: "Private",
+      price: 80,
+      location: { lat: 34.0522, lng: -118.2437, address: "Los Angeles, CA" },
+    },
+    {
+      id: 2,
+      name: "Katie Ledecky",
+      specialty: "Freestyle Technique",
+      styles: ["Freestyle"],
+      levels: ["Beginner", "Intermediate", "Advanced"],
+      certification: ["USMS", "RedCross"],
+      rating: 4.8,
+      experience: 12,
+      image: "/teacher2.jpg",
+      bio: "World record holder focusing on freestyle technique and endurance",
+      lessonType: "Private",
+      price: 75,
+      location: { lat: 34.0522, lng: -118.2437, address: "Los Angeles, CA" },
+    },
+    {
+      id: 3,
+      name: "Ryan Murphy",
+      specialty: "Backstroke",
+      styles: ["Backstroke", "Freestyle"],
+      levels: ["Intermediate", "Advanced"],
+      certification: ["ASCA", "RedCross"],
+      rating: 4.7,
+      experience: 10,
+      image: "/teacher3.jpg",
+      bio: "Olympic gold medalist specializing in backstroke techniques",
+      lessonType: "Group",
+      price: 70,
+      location: { lat: 34.0522, lng: -118.2437, address: "Los Angeles, CA" },
+    },
+    {
+      id: 4,
+      name: "Simone Manuel",
+      specialty: "Sprint Freestyle",
+      styles: ["Freestyle", "Butterfly"],
+      levels: ["Beginner", "Intermediate"],
+      certification: ["ASCA", "RedCross"],
+      rating: 4.9,
+      experience: 8,
+      image: "/teacher4.jpg",
+      bio: "Olympic gold medalist focusing on sprint techniques and fundamentals",
+      lessonType: "Private",
+      price: 85,
+      location: { lat: 34.0522, lng: -118.2437, address: "Los Angeles, CA" },
+    },
+  ]
+
+  const displayTeachers = teachers.length > 0 ? teachers : defaultTeachers
+
   return (
-    <section className="py-16 px-4 max-w-7xl mx-auto">
-      <div className="text-center mb-12">
-        <SectionTitle>Meet Our Expert Instructors</SectionTitle>
-        <p className="text-gray-600 max-w-2xl mx-auto mt-4">
-          Learn from industry professionals with years of teaching experience and real-world expertise.
-        </p>
+    <section ref={sectionRef} className="py-24 px-4 max-w-7xl mx-auto relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 -z-10">
+        <motion.div
+          className="absolute top-20 left-10 w-64 h-64 rounded-full bg-blue-100/30 blur-3xl"
+          animate={{
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-20 right-10 w-80 h-80 rounded-full bg-cyan-100/30 blur-3xl"
+          animate={{
+            x: [0, -50, 0],
+            y: [0, -30, 0],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "easeInOut",
+          }}
+        />
       </div>
 
-      <Swiper
-        modules={[Navigation]}
-        spaceBetween={30}
-        slidesPerView={1}
-        breakpoints={{
-          640: { slidesPerView: 1.5, centeredSlides: true },
-          768: { slidesPerView: 2, centeredSlides: false },
-          1024: { slidesPerView: 3 },
-          1280: { slidesPerView: 4 },
-        }}
-        navigation={{
-          nextEl: '.swiper-button-next',
-          prevEl: '.swiper-button-prev',
-        }}
-        className="relative"
-      >
-        {teachers.map((teacher) => (
-          <SwiperSlide key={teacher.id}>
-            <div className="px-2 py-4">
-              <TeacherCard teacher={teacher} />
-            </div>
-          </SwiperSlide>
-        ))}
-        
-        {/* Custom Navigation */}
-        <div className="swiper-button-prev hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-white shadow-md absolute left-0 top-1/2 -translate-y-1/2 z-10 cursor-pointer hover:bg-gray-100 transition-colors">
-          <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </div>
-        <div className="swiper-button-next hidden md:flex items-center justify-center w-12 h-12 rounded-full bg-white shadow-md absolute right-0 top-1/2 -translate-y-1/2 z-10 cursor-pointer hover:bg-gray-100 transition-colors">
-          <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </div>
-      </Swiper>
-
-      <div className="text-center mt-12">
-        <Link
-          href="/teachers"
-          className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-300 shadow-sm"
+      <div className="text-center mb-16">
+        <motion.span
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.8 }}
+          className="inline-block text-blue-600 font-medium mb-4 tracking-wider"
         >
-          Browse All Instructors
-          <ArrowRight className="ml-2" size={18} />
-        </Link>
+          EXPERT INSTRUCTORS
+        </motion.span>
+
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="text-4xl md:text-5xl font-bold text-gray-900 mb-6"
+        >
+          Meet Our <span className="text-blue-600">Swimming Experts</span>
+        </motion.h2>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="flex items-center justify-center mb-8"
+        >
+          <div className="w-16 h-1 bg-gray-300 mx-4"></div>
+          <p className="text-gray-600 max-w-2xl">
+            Learn from industry professionals with years of teaching experience and real-world expertise.
+          </p>
+          <div className="w-16 h-1 bg-gray-300 mx-4"></div>
+        </motion.div>
+
+        {/* Teacher Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
+          {displayTeachers.map((teacher, index) => (
+            <motion.div
+              key={teacher.id}
+              initial={{ opacity: 0, y: 50 }}
+              animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+              transition={{ duration: 0.6, delay: index * 0.1 + 0.4 }}
+            >
+              <TeacherCard teacher={teacher} />
+            </motion.div>
+          ))}
+        </div>
+
+        {/* View All Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
+          className="mt-16"
+        >
+          <Link
+            href="/teachers"
+            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-300 shadow-md hover:shadow-lg"
+          >
+            Browse All Instructors
+            <ArrowRight className="ml-2" size={18} />
+          </Link>
+        </motion.div>
       </div>
     </section>
-  );
-};
+  )
+}
+
+export default TeachersSection
