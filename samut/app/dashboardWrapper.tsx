@@ -1,3 +1,4 @@
+
 "use client"
 
 import type React from "react"
@@ -110,3 +111,4 @@ const DashboardWrapper = ({ children }: { children: React.ReactNode }) => {
 }
 
 export default DashboardWrapper
+

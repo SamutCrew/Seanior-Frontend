@@ -1,7 +1,5 @@
-// app/api/user/create/[action]/route.ts
-
-import { prisma } from "@/lib/prisma";
-
+// app/api/user/retrieve/[action]/route.ts
+import { prisma } from "@/app/lib/prisma";
 import { NextResponse } from "next/server";
 
 type ActionParams = {
@@ -28,35 +26,6 @@ const handlers: {
     } catch (error) {
       console.error("Error checking user:", error);
       return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-    }
-  },
-
-  createUser: async (req: Request) => {
-    try {
-      const userData = await req.json();
-
-      if (!userData.firebase_uid || !userData.email) {
-        return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-      }
-
-      const newUser = await prisma.user.create({
-        data: {
-          firebase_uid: userData.firebase_uid,
-          email: userData.email,
-          name: userData.name || "",
-          profile_img: userData.profile_img || "",
-          user_type: userData.user_type || "user",
-        },
-      });
-
-      return NextResponse.json(newUser, { status: 200 });
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Prisma error:", error.message);
-        return NextResponse.json({ error: "Database error", details: error.message }, { status: 500 });
-      }
-      console.error("Unknown error:", error);
-      return NextResponse.json({ error: "An unknown error occurred" }, { status: 500 });
     }
   },
 };

@@ -1,12 +1,12 @@
 import type { Config } from "tailwindcss";
-
-
-export default {
+const {heroui} = require("@heroui/react");
+const config: Config = {
   darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
@@ -17,8 +17,14 @@ export default {
       },
       fontFamily:{
         outfit: ["var(--font-outfit)"],
-      }
+      },
     },
   },
-  plugins: [require('daisyui')],
-} satisfies Config;
+  plugins: [
+    heroui({
+      addCommonColors: true,
+    }),
+    require('daisyui'),
+    ],
+};
+export default config;

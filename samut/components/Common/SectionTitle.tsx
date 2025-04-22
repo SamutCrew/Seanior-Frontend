@@ -1,3 +1,4 @@
+
 "use client"
 
 import type React from "react"
@@ -43,6 +44,7 @@ export const SectionTitle = ({ children, className = "", description }: SectionT
 
       {/* Description */}
       {description && (
+
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -56,3 +58,4 @@ export const SectionTitle = ({ children, className = "", description }: SectionT
     </motion.div>
   )
 }
+

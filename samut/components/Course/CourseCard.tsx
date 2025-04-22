@@ -1,5 +1,4 @@
 "use client"
-
 import { FaEdit, FaTrash, FaCalendarAlt, FaClock, FaMapMarkerAlt, FaChalkboardTeacher, FaStar } from "react-icons/fa"
 import type { Course } from "@/app/types/course"
 import { getLevelColor } from "@/utils/courseHelpers"
@@ -70,9 +69,12 @@ export default function CourseCard({ course, onEdit, onDelete }: CourseCardProps
             className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
           >
             <FaTrash /> Delete
+
           </button>
         </div>
       </div>
     </div>
+
   )
 }
+

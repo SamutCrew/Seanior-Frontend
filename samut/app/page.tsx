@@ -1,6 +1,7 @@
 "use client"
 import { useRef } from "react"
 
+
 import { SectionTitle } from "@/components/Common/SectionTitle"
 import HeroSection from "@/components/LandingPage/HeroSection"
 import EventSection from "@/components/LandingPage/EventsSection"
@@ -10,6 +11,7 @@ import { FunctionCards } from "@/components/LandingPage/FunctionCards"
 
 export default function Home() {
   const nextSectionRef = useRef<HTMLDivElement | null>(null)
+
 
   const scrollToNextSection = () => {
     nextSectionRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -117,3 +119,5 @@ export default function Home() {
     </div>
   )
 }
+
+export default withLayout(Home, LayoutType.App);
