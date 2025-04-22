@@ -2,8 +2,8 @@
 
 import type React from "react"
 import { useEffect, useState } from "react"
-import Navbar from "./components/Navbar"
-import Sidebar from "./components/Sidebar"
+import Navbar from "../components/layout/navbar"
+import Sidebar from "../components/layout/sidebar"
 import StoreProvider, { useAppSelector } from "./redux"
 import { usePathname } from "next/navigation"
 

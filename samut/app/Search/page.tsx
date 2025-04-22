@@ -2,15 +2,15 @@
 
 import { useState } from "react"
 import dynamic from "next/dynamic"
-import { SearchHeader } from "../components/Searchpage/SearchHeader"
-import { LocationFilter } from "../components/Searchpage/LocationFilter"
-import { ResultsSection } from "../components/Searchpage/ResultsSection"
-import { TeacherFiltersComponent } from "../components/Searchpage/TeacherFilters"
-import { CourseFiltersComponent } from "../components/Searchpage/CourseFilters"
-import type { Teacher, Course, TeacherFilters, CourseFilters, Location } from "../components/Searchpage/types"
+import { SearchHeader } from "@/components/Searchpage/SearchHeader"
+import { LocationFilter } from "@/components/Searchpage/LocationFilter"
+import { ResultsSection } from "@/components/Searchpage/ResultsSection"
+import { TeacherFiltersComponent } from "@/components/Searchpage/TeacherFilters"
+import { CourseFiltersComponent } from "@/components/Searchpage/CourseFilters"
+import type { Teacher, Course, TeacherFilters, CourseFilters, Location } from "@/components/Searchpage/types"
 
 // Dynamically import the Map component
-const Map = dynamic(() => import("../components/Googlemap/map"), {
+const Map = dynamic(() => import("@/components/Googlemap/map"), {
   ssr: false,
   loading: () => <p>Loading map...</p>,
 })

@@ -1,12 +1,12 @@
 "use client"
 import { useRef } from "react"
 
-import { SectionTitle } from "@/app/components/Common/SectionTitle"
-import HeroSection from "@/app/components/LandingPage/HeroSection"
-import EventSection from "@/app/components/LandingPage/EventsSection"
-import { TeachersSection} from "@/app/components/LandingPage/TeachersSection"
-import CTASection from "@/app/components/LandingPage/CTASection"
-import { FunctionCards } from "@/app/components/Functions/FunctionCards"
+import { SectionTitle } from "@/components/Common/SectionTitle"
+import HeroSection from "@/components/LandingPage/HeroSection"
+import EventSection from "@/components/LandingPage/EventsSection"
+import { TeachersSection} from "@/components/LandingPage/TeachersSection"
+import CTASection from "@/components/LandingPage/CTASection"
+import { FunctionCards } from "@/components/LandingPage/FunctionCards"
 
 export default function Home() {
   const nextSectionRef = useRef<HTMLDivElement | null>(null)
