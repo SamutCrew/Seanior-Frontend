@@ -146,9 +146,6 @@ export default function Home() {
         style={{ opacity: eventsOpacity, y: eventsY }}
         className="px-4 max-w-6xl mx-auto mt-10 relative z-10 transition-all duration-1000 ease-out"
       >
-        <SectionTitle description="Join our community events to learn, network, and grow with industry experts.">
-          Events Available
-        </SectionTitle>
         <EventSection />
       </motion.section>
 

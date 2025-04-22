@@ -91,6 +91,61 @@ body,
   }
 }
 
+/* Water ripple effect for events background */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.water-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.05);
+  transform-origin: center;
+  width: 100px;
+  height: 100px;
+  animation: ripple 8s infinite cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.water-ripple.delay-0 {
+  animation-delay: 0s;
+}
+.water-ripple.delay-1 {
+  animation-delay: 2s;
+}
+.water-ripple.delay-2 {
+  animation-delay: 4s;
+}
+.water-ripple.delay-3 {
+  animation-delay: 6s;
+}
+.water-ripple.delay-4 {
+  animation-delay: 8s;
+}
+
+/* Mesh grid pattern */
+.mesh-grid {
+  background-image: linear-gradient(to right, rgba(56, 189, 248, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.1) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.mesh-grid-dark {
+  background-image: linear-gradient(to right, rgba(56, 189, 248, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.07) 1px, transparent 1px);
+}
+
+.mesh-grid-light {
+  background-image: linear-gradient(to right, rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.8s ease-out forwards;
 }
