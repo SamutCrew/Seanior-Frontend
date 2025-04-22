@@ -1,7 +1,7 @@
 // app/hocs/WithLayout.tsx
 import React from "react";
 import DashboardWrapper from "@/app/dashboardWrapper";
-import { LayoutType } from "@/app/types/layout";
+import { LayoutType } from "@/types/layout";
 
 interface WithLayoutOptions {
   showHeader?: boolean;

@@ -1,4 +1,3 @@
-
 "use client"
 
 import type React from "react"
@@ -7,6 +6,7 @@ import Navbar from "../components/layout/navbar"
 import Sidebar from "../components/layout/sidebar"
 import StoreProvider, { useAppSelector } from "./redux"
 import { usePathname } from "next/navigation"
+import { motion, AnimatePresence } from "framer-motion"
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed)
@@ -15,6 +15,11 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Check if we're on the landing page
   const isLandingPage = pathname === "/"
+
+  // Update the userRole determination to use a state variable that can be toggled
+  const [userRoleState, setUserRoleState] = useState<"student" | "teacher">(
+    pathname.startsWith("/Teacher") || pathname.startsWith("/teacher") ? "teacher" : "student",
+  )
 
   // Add a scroll state to the DashboardLayout component
   const [scrollPosition, setScrollPosition] = useState(0)
@@ -44,16 +49,25 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   // Determine if we're at the top of the page
   const isAtTop = scrollPosition < 10
 
-  // Calculate the left padding based on scroll position for a smoother transition
-  const leftPadding = isLandingPage
-    ? isAtTop
-      ? "pl-0"
-      : isSidebarCollapsed
-        ? "pl-16"
-        : "pl-64"
-    : isSidebarCollapsed
-      ? "pl-16"
-      : "pl-64"
+  // Animation variants for the main content
+  const mainContentVariants = {
+    expanded: {
+      paddingLeft: isLandingPage && isAtTop ? "0px" : "240px",
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+      },
+    },
+    collapsed: {
+      paddingLeft: isLandingPage && isAtTop ? "0px" : "64px",
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+      },
+    },
+  }
 
   return (
     <div className="flex min-h-screen w-full bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-white">
@@ -66,38 +80,41 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           opacity: isLandingPage ? Math.min(scrollPosition / 50, 1) : 1,
         }}
       >
-        <Sidebar isLandingPage={isLandingPage} scrollPosition={scrollPosition} />
+        {/* Pass the state setter to the Sidebar component */}
+        <Sidebar isLandingPage={isLandingPage} scrollPosition={scrollPosition} userRole={userRoleState} />
       </div>
 
       {/* Main content with smooth padding transition */}
-      <main
-        className={`flex w-full flex-col transition-all duration-500 ease-in-out`}
+      <motion.main
+        initial={false}
+        animate={isSidebarCollapsed ? "collapsed" : "expanded"}
+        variants={mainContentVariants}
+        className="flex w-full flex-col transition-all duration-500 ease-in-out"
         style={{
-          paddingLeft: isLandingPage
-            ? isAtTop
-              ? "0px"
-              : isSidebarCollapsed
-                ? "64px"
-                : "256px"
-            : isSidebarCollapsed
-              ? "64px"
-              : "256px",
+          marginLeft: 0, // Ensure no margin is creating a gap
         }}
       >
         {/* Modify the Navbar component call to pass the scroll position */}
         <Navbar pathname={pathname} isLandingPage={isLandingPage} scrollPosition={scrollPosition} />
 
         {/* Content with conditional padding */}
-        <div
-          className={isLandingPage ? "" : "pt-16"}
-          style={{
-            paddingTop: isLandingPage ? (isAtTop ? "0" : "0") : "4rem",
-            transition: "padding-top 0.3s ease-in-out",
-          }}
-        >
-          {children}
-        </div>
-      </main>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className={isLandingPage ? "" : "pt-16"}
+            style={{
+              paddingTop: isLandingPage ? (isAtTop ? "0" : "0") : "4rem",
+              transition: "padding-top 0.3s ease-in-out",
+            }}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
+      </motion.main>
     </div>
   )
 }
@@ -111,4 +128,3 @@ const DashboardWrapper = ({ children }: { children: React.ReactNode }) => {
 }
 
 export default DashboardWrapper
-

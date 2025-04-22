@@ -70,10 +70,11 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
         backdropFilter: isAtTop ? "none" : "blur(8px)",
         borderBottom: !isAtTop
           ? isDarkMode
-            ? "1px solid rgba(55, 65, 81, 1)"
-            : "1px solid rgba(229, 231, 235, 1)"
+            ? "1px solid rgba(55, 65, 81, 0.5)"
+            : "1px solid rgba(229, 231, 235, 0.5)"
           : "none",
         height: isLandingPage ? (isAtTop ? "80px" : "64px") : "64px", // Only change height on landing page
+        boxShadow: "none", // Ensure no shadow
       }}
     >
       <div
