@@ -6,6 +6,7 @@ import { Button } from "../Common/Button"
 import { motion, useScroll, useTransform } from "framer-motion"
 import { useEffect, useState, useRef } from "react"
 import ScrollDownButton from "./ScrollDownButton"
+import { useAppSelector } from "@/app/redux"
 
 interface ActionProps {
   text: string
@@ -38,6 +39,7 @@ export const HeroSection = ({
   const [scrollY, setScrollY] = useState(0)
   const [windowHeight, setWindowHeight] = useState(0)
   const [windowWidth, setWindowWidth] = useState(0)
+  const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
   // For parallax scrolling effect
   const { scrollYProgress } = useScroll({
@@ -111,14 +113,21 @@ export const HeroSection = ({
             src={imageSrc || "/placeholder.svg"}
             alt="Hero background"
             fill
-            className="object-cover opacity-90"
+            className={`object-cover ${isDarkMode ? "opacity-80" : "opacity-90"}`}
             priority
             sizes="100vw"
           />
 
+          {/* Dark overlay for dark mode */}
+          {isDarkMode && (
+            <div className="absolute inset-0 bg-slate-900/40 mix-blend-multiply transition-opacity duration-500"></div>
+          )}
+
           {/* Water ripple animations */}
           <motion.div
-            className="absolute bottom-1/3 right-1/4 w-20 h-20 rounded-full bg-white/20"
+            className={`absolute bottom-1/3 right-1/4 w-20 h-20 rounded-full ${
+              isDarkMode ? "bg-blue-400/20" : "bg-white/20"
+            }`}
             variants={rippleVariants}
             initial="initial"
             animate="animate"
@@ -130,7 +139,9 @@ export const HeroSection = ({
           />
 
           <motion.div
-            className="absolute top-1/3 left-1/4 w-16 h-16 rounded-full bg-white/20"
+            className={`absolute top-1/3 left-1/4 w-16 h-16 rounded-full ${
+              isDarkMode ? "bg-blue-400/20" : "bg-white/20"
+            }`}
             variants={rippleVariants}
             initial="initial"
             animate="animate"
@@ -138,7 +149,9 @@ export const HeroSection = ({
           />
 
           <motion.div
-            className="absolute bottom-1/4 left-1/3 w-24 h-24 rounded-full bg-white/20"
+            className={`absolute bottom-1/4 left-1/3 w-24 h-24 rounded-full ${
+              isDarkMode ? "bg-blue-400/20" : "bg-white/20"
+            }`}
             variants={rippleVariants}
             initial="initial"
             animate="animate"
@@ -191,7 +204,7 @@ export const HeroSection = ({
             transition={{ duration: 1, ease: "easeOut" }}
             className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-4 md:mb-6 drop-shadow-lg"
             style={{
-              textShadow: "0 4px 12px rgba(0,0,0,0.3)",
+              textShadow: isDarkMode ? "0 4px 16px rgba(0,0,0,0.5)" : "0 4px 12px rgba(0,0,0,0.3)",
               letterSpacing: "-0.02em",
             }}
           >
@@ -202,7 +215,7 @@ export const HeroSection = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
             className="text-lg sm:text-xl md:text-2xl text-white/90 mb-6 md:mb-10 max-w-2xl drop-shadow-md mx-auto"
-            style={{ textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}
+            style={{ textShadow: isDarkMode ? "0 2px 10px rgba(0,0,0,0.5)" : "0 2px 8px rgba(0,0,0,0.3)" }}
           >
             {subtitle}
           </motion.p>
@@ -216,7 +229,9 @@ export const HeroSection = ({
               <Button
                 variant="secondary"
                 onClick={primaryAction.onClick}
-                className="text-base md:text-lg px-6 md:px-8 py-3 md:py-4 font-medium"
+                className={`text-base md:text-lg px-6 md:px-8 py-3 md:py-4 font-medium ${
+                  isDarkMode ? "bg-blue-600 hover:bg-blue-700 text-white" : ""
+                }`}
               >
                 {primaryAction.text}
               </Button>
@@ -225,7 +240,9 @@ export const HeroSection = ({
               <Button
                 variant="outline"
                 onClick={secondaryAction.onClick}
-                className="text-base md:text-lg px-6 md:px-8 py-3 md:py-4 font-medium"
+                className={`text-base md:text-lg px-6 md:px-8 py-3 md:py-4 font-medium ${
+                  isDarkMode ? "border-blue-400 text-blue-300 hover:bg-blue-900/30" : ""
+                }`}
               >
                 {secondaryAction.text}
               </Button>
@@ -266,11 +283,23 @@ export const HeroSection = ({
                 whileHover={{
                   y: -8,
                   scale: 1.03,
-                  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                  boxShadow: isDarkMode
+                    ? "0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)"
+                    : "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
                 }}
-                className="flex items-start gap-3 md:gap-4 bg-white/15 backdrop-blur-md p-4 md:p-6 rounded-xl border border-white/30 text-white shadow-lg transition-all duration-300"
+                className={`flex items-start gap-3 md:gap-4 ${
+                  isDarkMode
+                    ? "bg-slate-800/60 backdrop-blur-md border-slate-700/50"
+                    : "bg-white/15 backdrop-blur-md border-white/30"
+                } p-4 md:p-6 rounded-xl border text-white shadow-lg transition-all duration-300`}
               >
-                <div className="p-2 md:p-3 rounded-full bg-white/20 flex items-center justify-center">{item.icon}</div>
+                <div
+                  className={`p-2 md:p-3 rounded-full ${
+                    isDarkMode ? "bg-blue-600/30" : "bg-white/20"
+                  } flex items-center justify-center`}
+                >
+                  {item.icon}
+                </div>
                 <div>
                   <h3 className="font-bold text-lg md:text-xl mb-1 md:mb-2">{item.title}</h3>
                   <p className="text-sm md:text-base text-white/90">{item.description}</p>
@@ -282,15 +311,21 @@ export const HeroSection = ({
       </motion.div>
 
       {/* Enhanced scroll indicator - positioned to be visible */}
-      <ScrollDownButton targetId="features" />
+      <ScrollDownButton targetId="features" isDarkMode={isDarkMode} />
 
       {/* Floating particles effect */}
-      <Particles />
+      <Particles isDarkMode={isDarkMode} />
 
       {/* Enhanced wave divider with multiple layers and gradients */}
       <div className="absolute bottom-0 left-0 right-0 z-10 overflow-hidden h-[120px] sm:h-[150px] md:h-[180px]">
         {/* Gradient overlay for smoother transition */}
-        <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-white/40 via-white/20 to-transparent z-5"></div>
+        <div
+          className={`absolute bottom-0 left-0 right-0 h-64 ${
+            isDarkMode
+              ? "bg-gradient-to-t from-slate-900/40 via-slate-900/20 to-transparent"
+              : "bg-gradient-to-t from-white/40 via-white/20 to-transparent"
+          } z-5`}
+        ></div>
 
         <svg
           className="relative block w-full h-full"
@@ -300,7 +335,7 @@ export const HeroSection = ({
         >
           {/* First wave layer - more transparent */}
           <path
-            fill="rgba(255, 255, 255, 0.3)"
+            fill={isDarkMode ? "rgba(30, 41, 59, 0.3)" : "rgba(255, 255, 255, 0.3)"}
             d="M0,224L80,213.3C160,203,320,181,480,181.3C640,181,800,203,960,197.3C1120,192,1280,160,1360,144L1440,128L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"
           >
             <animate
@@ -317,7 +352,7 @@ export const HeroSection = ({
 
           {/* Second wave layer - semi-transparent */}
           <path
-            fill="rgba(255, 255, 255, 0.6)"
+            fill={isDarkMode ? "rgba(30, 41, 59, 0.6)" : "rgba(255, 255, 255, 0.6)"}
             d="M0,256L48,240C96,224,192,192,288,181.3C384,171,480,181,576,186.7C672,192,768,192,864,176C960,160,1056,128,1152,117.3C1248,107,1344,117,1392,122.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
           >
             <animate
@@ -332,9 +367,9 @@ export const HeroSection = ({
             />
           </path>
 
-          {/* Main wave layer - solid white */}
+          {/* Main wave layer - solid color */}
           <path
-            fill="white"
+            fill={isDarkMode ? "#0f172a" : "white"}
             d="M0,288L48,272C96,256,192,224,288,213.3C384,203,480,213,576,229.3C672,245,768,267,864,261.3C960,256,1056,224,1152,213.3C1248,203,1344,213,1392,218.7L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
           >
             <animate
@@ -352,14 +387,20 @@ export const HeroSection = ({
       </div>
 
       {/* Enhanced gradient overlay for smoother transition */}
-      <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-white via-white/50 to-transparent z-5 backdrop-blur-[2px]"></div>
+      <div
+        className={`absolute bottom-0 left-0 right-0 h-64 ${
+          isDarkMode
+            ? "bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"
+            : "bg-gradient-to-t from-white via-white/50 to-transparent"
+        } z-5 backdrop-blur-[2px]`}
+      ></div>
 
       {/* Water droplets animation for transition */}
       <div className="absolute bottom-0 left-0 right-0 h-32 overflow-hidden z-[6]">
         {[...Array(12)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute rounded-full bg-blue-400/30"
+            className={`absolute rounded-full ${isDarkMode ? "bg-blue-500/20" : "bg-blue-400/30"}`}
             style={{
               width: Math.random() * 12 + 8,
               height: Math.random() * 12 + 8,
@@ -384,13 +425,13 @@ export const HeroSection = ({
 }
 
 // Floating particles component
-const Particles = () => {
+const Particles = ({ isDarkMode }: { isDarkMode: boolean }) => {
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
       {[...Array(15)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute rounded-full bg-white/30"
+          className={`absolute rounded-full ${isDarkMode ? "bg-blue-400/20" : "bg-white/30"}`}
           style={{
             width: Math.random() * 8 + 4,
             height: Math.random() * 8 + 4,
@@ -410,6 +451,51 @@ const Particles = () => {
         />
       ))}
     </div>
+  )
+}
+
+// Update the ScrollDownButton component to accept isDarkMode prop
+const ScrollDownButtonWithDarkMode = ({ targetId, isDarkMode }: { targetId: string; isDarkMode: boolean }) => {
+  const handleClick = () => {
+    document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  return (
+    <motion.button
+      onClick={handleClick}
+      className={`absolute bottom-10 left-1/2 transform -translate-x-1/2 z-30 flex flex-col items-center justify-center ${
+        isDarkMode ? "text-blue-300" : "text-white"
+      }`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 1.5, duration: 0.8 }}
+      whileHover={{ scale: 1.1 }}
+    >
+      <span className="text-sm font-medium mb-2">Scroll Down</span>
+      <motion.div
+        animate={{
+          y: [0, 8, 0],
+        }}
+        transition={{
+          duration: 1.5,
+          repeat: Number.POSITIVE_INFINITY,
+          repeatType: "loop",
+        }}
+        className={`w-8 h-8 rounded-full ${
+          isDarkMode ? "bg-blue-600/30" : "bg-white/30"
+        } flex items-center justify-center backdrop-blur-sm`}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        </svg>
+      </motion.div>
+    </motion.button>
   )
 }
 

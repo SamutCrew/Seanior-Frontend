@@ -7,6 +7,7 @@ import { useEffect, useState, useRef } from "react"
 import { motion, useInView } from "framer-motion"
 import Image from "next/image"
 import { Droplets, Users, Award, ChevronRight } from "lucide-react"
+import { useAppSelector } from "@/app/redux"
 
 interface FunctionCard {
   title: string
@@ -48,22 +49,44 @@ const cards: FunctionCard[] = [
 ]
 
 const stats = [
-  { value: 1200, label: "Lessons Completed", color: "from-cyan-500 to-blue-600" },
-  { value: 50, label: "Certified Coaches", color: "from-blue-500 to-indigo-600" },
-  { value: 800, label: "Happy Swimmers", color: "from-indigo-500 to-purple-600" },
-  { value: 15, label: "Training Locations", color: "from-purple-500 to-pink-600" },
+  {
+    value: 1200,
+    label: "Lessons Completed",
+    color: "from-cyan-500 to-blue-600",
+    darkColor: "from-cyan-400 to-blue-500",
+  },
+  {
+    value: 50,
+    label: "Certified Coaches",
+    color: "from-blue-500 to-indigo-600",
+    darkColor: "from-blue-400 to-indigo-500",
+  },
+  {
+    value: 800,
+    label: "Happy Swimmers",
+    color: "from-indigo-500 to-purple-600",
+    darkColor: "from-indigo-400 to-purple-500",
+  },
+  {
+    value: 15,
+    label: "Training Locations",
+    color: "from-purple-500 to-pink-600",
+    darkColor: "from-purple-400 to-pink-500",
+  },
 ]
 
 interface AnimatedNumberProps {
   value: number
   duration?: number
   color: string
+  darkColor: string
 }
 
-export const AnimatedNumber = ({ value, duration = 2000, color }: AnimatedNumberProps) => {
+export const AnimatedNumber = ({ value, duration = 2000, color, darkColor }: AnimatedNumberProps) => {
   const [count, setCount] = useState(0)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-100px" })
+  const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
   useEffect(() => {
     if (!isInView) return
@@ -91,7 +114,7 @@ export const AnimatedNumber = ({ value, duration = 2000, color }: AnimatedNumber
   return (
     <div
       ref={ref}
-      className={`text-4xl md:text-5xl font-bold bg-gradient-to-r ${color} bg-clip-text text-transparent mb-1`}
+      className={`text-4xl md:text-5xl font-bold bg-gradient-to-r ${isDarkMode ? darkColor : color} bg-clip-text text-transparent mb-1`}
     >
       {count}+
     </div>
@@ -102,6 +125,7 @@ export const FunctionCards = () => {
   const containerRef = useRef(null)
   const isInView = useInView(containerRef, { once: true, margin: "-100px" })
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
+  const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -126,12 +150,16 @@ export const FunctionCards = () => {
   return (
     <div
       id="features"
-      className="relative py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 xl:px-32 overflow-hidden bg-white transition-all duration-1000"
+      className={`relative py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 xl:px-32 overflow-hidden ${
+        isDarkMode ? "bg-slate-900 text-white" : "bg-white text-gray-900"
+      } transition-all duration-1000`}
     >
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden -z-10">
         <motion.div
-          className="absolute top-20 left-10 w-64 h-64 rounded-full bg-blue-200/20 blur-3xl"
+          className={`absolute top-20 left-10 w-64 h-64 rounded-full ${
+            isDarkMode ? "bg-blue-900/20" : "bg-blue-200/20"
+          } blur-3xl`}
           animate={{
             x: [0, 50, 0],
             y: [0, 30, 0],
@@ -143,7 +171,9 @@ export const FunctionCards = () => {
           }}
         />
         <motion.div
-          className="absolute bottom-20 right-10 w-80 h-80 rounded-full bg-cyan-200/20 blur-3xl"
+          className={`absolute bottom-20 right-10 w-80 h-80 rounded-full ${
+            isDarkMode ? "bg-cyan-900/20" : "bg-cyan-200/20"
+          } blur-3xl`}
           animate={{
             x: [0, -50, 0],
             y: [0, -30, 0],
@@ -157,7 +187,9 @@ export const FunctionCards = () => {
 
         {/* Additional decorative elements */}
         <svg
-          className="absolute top-1/4 right-1/4 w-64 h-64 text-blue-100 opacity-20"
+          className={`absolute top-1/4 right-1/4 w-64 h-64 ${
+            isDarkMode ? "text-blue-900" : "text-blue-100"
+          } opacity-20`}
           viewBox="0 0 200 200"
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -177,7 +209,10 @@ export const FunctionCards = () => {
         variants={containerVariants}
         className="max-w-7xl mx-auto mb-16 sm:mb-20 md:mb-24 pt-8 sm:pt-12 md:pt-16 transition-all duration-700"
       >
-        <motion.h2 variants={itemVariants} className="text-3xl md:text-4xl font-bold text-center mb-6">
+        <motion.h2
+          variants={itemVariants}
+          className={`text-3xl md:text-4xl font-bold text-center mb-6 ${isDarkMode ? "text-white" : "text-gray-900"}`}
+        >
           Our <span className="bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">Impact</span>{" "}
           in Numbers
         </motion.h2>
@@ -196,11 +231,17 @@ export const FunctionCards = () => {
                 y: -8,
                 boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
               }}
-              className="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-100 text-center transition-all duration-300 relative overflow-hidden group"
+              className={`${
+                isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"
+              } p-6 md:p-8 rounded-2xl shadow-lg border text-center transition-all duration-300 relative overflow-hidden group`}
             >
-              <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-5 transition-opacity duration-500 -z-10" />
-              <AnimatedNumber value={stat.value} color={stat.color} />
-              <p className="text-gray-600 text-sm md:text-base font-medium">{stat.label}</p>
+              <div
+                className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-${isDarkMode ? "10" : "5"} transition-opacity duration-500 -z-10`}
+              />
+              <AnimatedNumber value={stat.value} color={stat.color} darkColor={stat.darkColor} />
+              <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"} text-sm md:text-base font-medium`}>
+                {stat.label}
+              </p>
 
               {/* Decorative element */}
               <div className="absolute -bottom-6 -right-6 w-24 h-24 rounded-full bg-gradient-to-br opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
@@ -229,7 +270,9 @@ export const FunctionCards = () => {
               transition={{ duration: 1 }}
               viewport={{ once: true }}
             />
-            <span className="text-lg text-gray-600">Discover our comprehensive swimming services</span>
+            <span className={`text-lg ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+              Discover our comprehensive swimming services
+            </span>
             <motion.div
               className="w-12 h-[3px] bg-gradient-to-r from-cyan-500 to-blue-600"
               initial={{ width: 0 }}
@@ -253,7 +296,9 @@ export const FunctionCards = () => {
             >
               <Link href={card.link} className="group block">
                 <motion.div
-                  className="relative h-[350px] rounded-2xl overflow-hidden transition-all duration-500 bg-white border border-gray-100"
+                  className={`relative h-[350px] rounded-2xl overflow-hidden transition-all duration-500 ${
+                    isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"
+                  } border`}
                   whileHover={{
                     y: -10,
                     boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
@@ -271,7 +316,11 @@ export const FunctionCards = () => {
                     />
 
                     {/* Floating badge */}
-                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-blue-600 z-20 flex items-center gap-1.5 shadow-sm">
+                    <div
+                      className={`absolute top-4 left-4 ${
+                        isDarkMode ? "bg-gray-800/90 text-blue-400" : "bg-white/90 text-blue-600"
+                      } backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold z-20 flex items-center gap-1.5 shadow-sm`}
+                    >
                       {card.icon}
                       <span>Featured</span>
                     </div>
@@ -279,13 +328,23 @@ export const FunctionCards = () => {
 
                   {/* Card content */}
                   <div className="p-6 relative">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+                    <h3
+                      className={`text-xl font-bold ${
+                        isDarkMode ? "text-white group-hover:text-blue-400" : "text-gray-900 group-hover:text-blue-600"
+                      } mb-2 transition-colors duration-300`}
+                    >
                       {card.title}
                     </h3>
-                    <p className="text-gray-600 text-sm mb-4">{card.shortDescription}</p>
+                    <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"} text-sm mb-4`}>
+                      {card.shortDescription}
+                    </p>
 
                     {/* Action button */}
-                    <div className="flex items-center text-blue-600 font-medium text-sm">
+                    <div
+                      className={`flex items-center ${
+                        isDarkMode ? "text-blue-400" : "text-blue-600"
+                      } font-medium text-sm`}
+                    >
                       <span>Learn more</span>
                       <motion.div animate={{ x: hoveredCard === index ? 5 : 0 }} transition={{ duration: 0.3 }}>
                         <ChevronRight className="w-4 h-4 ml-1" />
@@ -293,7 +352,11 @@ export const FunctionCards = () => {
                     </div>
 
                     {/* Decorative corner accent */}
-                    <div className="absolute bottom-0 right-0 w-16 h-16 bg-gradient-to-tl from-blue-100 to-transparent rounded-tl-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div
+                      className={`absolute bottom-0 right-0 w-16 h-16 bg-gradient-to-tl ${
+                        isDarkMode ? "from-blue-900" : "from-blue-100"
+                      } to-transparent rounded-tl-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+                    />
                   </div>
 
                   {/* Animated highlight line */}
