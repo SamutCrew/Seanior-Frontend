@@ -9,7 +9,7 @@ export const getAuthToken = async () => {
         return user.getIdToken();
     }
 
-    console.log(user.getIdToken());
+    console.log("token", user.getIdToken());
 
     return null;
 };

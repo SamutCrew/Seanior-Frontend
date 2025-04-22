@@ -19,47 +19,50 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-
   const handleNewRegister = async (firebaseUser, name) => {
     if (firebaseUser) {
       try {
         let dbUser = await checkAlreadyHaveUserInDb(firebaseUser.uid);
+  
         if (dbUser === null) {
           const newUser = {
-            user_id: firebaseUser.uid,
             firebase_uid: firebaseUser.uid,
-            name: name || firebaseUser.displayName || "Anonymous",
-
+            name: name || firebaseUser.displayName || 'Anonymous',
             email: firebaseUser.email,
-            profile_img: firebaseUser.photoURL || "",
-            user_type: "user",
+            profile_img: firebaseUser.photoURL || '',
+            user_type: 'user',
           };
-
+  
           dbUser = await createUser(newUser);
+          console.log('New user created:', dbUser);
         }
-
-
-        setUser(dbUser); // Set the user state with the database user
-
-
+  
+        setUser(dbUser);
+  
         const isTokenValid = await verifyUserToken();
         console.log('isTokenValid:', isTokenValid);
         if (!isTokenValid) {
+          console.log('Token invalid, signing out');
           await auth.signOut();
-          console.log("Token expired or invalid, signing out...");
           setUser(null);
         }
       } catch (error) {
-        console.error("Error fetching or creating user:", error);
+        console.error('Error in handleNewRegister:', {
+          message: error.message,
+          response: error.response ? {
+            status: error.response.status,
+            data: error.response.data,
+          } : null,
+        });
         await auth.signOut();
         setUser(null);
       }
     } else {
+      console.log('No Firebase user, signing out');
       await auth.signOut();
       setUser(null);
     }
   };
-
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -67,12 +70,12 @@ export function AuthProvider({ children }) {
       console.log('onAuthStateChanged: loading = true');
       try {
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Auth timeout")), 10000) // 10s timeout
+          setTimeout(() => reject(new Error("Auth timeout")), 10000)
         );
         if (firebaseUser) {
           await Promise.race([handleNewRegister(firebaseUser), timeoutPromise]);
         } else {
-          setUser(null); // Clear user if no Firebase user
+          setUser(null);
         }
       } catch (error) {
         console.error("Error in onAuthStateChanged:", error);
@@ -110,7 +113,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-
   const googleSignIn = async () => {
     setLoading(true);
     try {
@@ -123,7 +125,6 @@ export function AuthProvider({ children }) {
       setLoading(false);
     }
   };
-
 
   const logOut = async () => {
     setLoading(true);
@@ -172,7 +173,6 @@ export function AuthProvider({ children }) {
         resetPassword,
       }}
     >
-
       {children}
     </AuthContext.Provider>
   );

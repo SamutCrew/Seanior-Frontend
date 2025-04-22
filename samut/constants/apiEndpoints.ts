@@ -1,14 +1,12 @@
 export const APIEndpoints = Object.freeze({
     AUTH: {
-        VERIFY_TOKEN: "/api/auth/verifyToken",
+        VERIFY_TOKEN: "/auth/verifyToken",
     },
     USER: {
         RETRIEVE: {
-
-        CHECK_ISEXIST: "/api/user/retrieve/checkUser",
-
+        CHECK_ISEXIST: "/users/retrieve/checkUser",
         },
-        CREATE: "/api/user/create/createUser",
+        CREATE: "/users/create/createUser",
     },
 });
   
