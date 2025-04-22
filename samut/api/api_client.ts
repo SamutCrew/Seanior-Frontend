@@ -1,6 +1,8 @@
-import { Toast } from "@/app/components/Responseback/Toast";
+
+import { Toast } from "@/components/Responseback/Toast";
 import axios from "axios";
-import { getAuthToken } from "@/app/context/authToken";
+import { getAuthToken } from "@/context/authToken";
+
 
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,

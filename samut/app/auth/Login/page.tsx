@@ -1,14 +1,16 @@
 //  /login/page.tsx
 
 "use client";
+
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation"; // Import useRouter for redirection
-import { useAuth } from "@/app/context/AuthContext";
-import { AlertType } from "@/app/types";
-import AlertResponse from "@/app/components/Responseback/AlertResponse";
-import withLayout from "@/app/hocs/WithLayout";
-import { LayoutType } from "@/app/types/layout";
+import { useAuth } from "@/context/AuthContext";
+import { AlertType } from "@/types";
+import AlertResponse from "@/components/Responseback/AlertResponse";
+import withLayout from "@/hocs/WithLayout";
+import { LayoutType } from "@/types/layout";
+
 
 const Login = () => {
   const { googleSignIn, signIn } = useAuth();

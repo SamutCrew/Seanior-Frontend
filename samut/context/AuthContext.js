@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
@@ -5,10 +6,11 @@ import {
   EmailProvider,
   RegisterWithEmail,
   SendForgotPassword,
-} from "@/app/provider/EmailProvider";
+} from "@/provider/EmailProvider";
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from '@/app/lib/firebase';
-import { GoogleProvider } from '@/app/provider/GoogleProvider';
+import { auth } from '@/lib/firebase';
+import { GoogleProvider } from '@/provider/GoogleProvider';
+
 import { checkAlreadyHaveUserInDb, createUser, verifyUserToken } from '../api';
 
 const AuthContext = createContext();
@@ -16,6 +18,7 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
 
   const handleNewRegister = async (firebaseUser, name) => {
     if (firebaseUser) {
@@ -26,6 +29,7 @@ export function AuthProvider({ children }) {
             user_id: firebaseUser.uid,
             firebase_uid: firebaseUser.uid,
             name: name || firebaseUser.displayName || "Anonymous",
+
             email: firebaseUser.email,
             profile_img: firebaseUser.photoURL || "",
             user_type: "user",
@@ -34,7 +38,9 @@ export function AuthProvider({ children }) {
           dbUser = await createUser(newUser);
         }
 
+
         setUser(dbUser); // Set the user state with the database user
+
 
         const isTokenValid = await verifyUserToken();
         console.log('isTokenValid:', isTokenValid);
@@ -53,6 +59,7 @@ export function AuthProvider({ children }) {
       setUser(null);
     }
   };
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -103,6 +110,7 @@ export function AuthProvider({ children }) {
     }
   };
 
+
   const googleSignIn = async () => {
     setLoading(true);
     try {
@@ -115,6 +123,7 @@ export function AuthProvider({ children }) {
       setLoading(false);
     }
   };
+
 
   const logOut = async () => {
     setLoading(true);
@@ -163,6 +172,7 @@ export function AuthProvider({ children }) {
         resetPassword,
       }}
     >
+
       {children}
     </AuthContext.Provider>
   );

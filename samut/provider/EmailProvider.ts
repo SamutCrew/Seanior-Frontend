@@ -1,13 +1,30 @@
+
+/**
+ * @file EmailProvider.ts
+ * @description This file provides the EmailProvider for the application. It handles the email sign-in process.
+ * @author Awirut Phuseansaart <awirut2629@gmail.com>
+ * @date 2024-06-29
+ * @version 1.0
+ */
+
+
 // EmailProvider.tsx
+
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+
+} from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { Toast } from "@/components/Responseback/Toast";
+
   updateProfile,
   confirmPasswordReset,
 } from "firebase/auth";
-import { auth } from "@/app/lib/firebase";
-import { Toast } from "@/app/components/Responseback/Toast";
+import { auth } from "@/lib/firebase";
+import { Toast } from "@/components/Responseback/Toast";
+
 // import { getErrorMessage } from "@/app/context/firebaseErrorMessages";
 
 const EmailProvider = async (email: string, password: string) => {
@@ -25,16 +42,20 @@ const EmailProvider = async (email: string, password: string) => {
   }
 };
 
+
 const RegisterWithEmail = async (email: string, password: string, name: string) => {
   try {
     const result = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(result.user, { displayName: name });
+
     return result;
     // const user = result.user;
     // return user;
   } catch (error: any) {
+
     const errorMessage = error.message;
     Toast.error(errorMessage);
+
     throw error;
   }
 };

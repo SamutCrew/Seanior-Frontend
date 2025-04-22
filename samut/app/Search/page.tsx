@@ -1,217 +1,343 @@
 "use client"
 
-import { useState } from 'react';
-import { FaSearch, FaFilter } from 'react-icons/fa';
-import TeacherCard from '../components/Teachers/TeacherCard';
-import CourseCard from '../components/Course/CourseCard';
+import { useState } from "react"
+import dynamic from "next/dynamic"
+import { SearchHeader } from "@/components/Searchpage/SearchHeader"
+import { LocationFilter } from "@/components/Searchpage/LocationFilter"
+import { ResultsSection } from "@/components/Searchpage/ResultsSection"
+import { TeacherFiltersComponent } from "@/components/Searchpage/TeacherFilters"
+import { CourseFiltersComponent } from "@/components/Searchpage/CourseFilters"
+import type { Teacher, Course, TeacherFilters, CourseFilters, Location } from "@/components/Searchpage/types"
 
+// Dynamically import the Map component
+const Map = dynamic(() => import("@/components/Googlemap/map"), {
+  ssr: false,
+  loading: () => <p>Loading map...</p>,
+})
 
-interface Teacher {
-  id: number;
-  name: string;
-  subject: string;
-  rating: number;
-  experience: number;
-  image: string;
-  bio: string;
+// Helper function to calculate distance between two coordinates (in km)
+function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371 // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1)
+  const dLon = deg2rad(lon2 - lon1)
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c // Distance in km
 }
 
-interface Course {
-  id: number;
-  title: string;
-  subject: string;
-  level: string;
-  duration: string;
-  instructor: string;
-  rating: number;
-  students: number;
+function deg2rad(deg: number) {
+  return deg * (Math.PI / 180)
 }
+
+// Sample data
+const teachers: Teacher[] = [
+  {
+    id: 1,
+    name: "Michael Phelps",
+    specialty: "Competitive Swimming",
+    styles: ["Freestyle", "Butterfly"],
+    levels: ["Intermediate", "Advanced"],
+    certification: ["ASCA", "RedCross"],
+    rating: 4.9,
+    experience: 15,
+    image: "/teacher1.jpg",
+    bio: "Olympic gold medalist specializing in competitive swimming techniques",
+    lessonType: "Private",
+    price: 80,
+    location: { lat: 40.7128, lng: -74.006, address: "New York, NY" },
+  },
+  {
+    id: 2,
+    name: "Katie Ledecky",
+    specialty: "Freestyle Technique",
+    styles: ["Freestyle"],
+    levels: ["Beginner", "Intermediate", "Advanced"],
+    certification: ["USMS", "RedCross"],
+    rating: 4.8,
+    experience: 10,
+    image: "/teacher2.jpg",
+    bio: "World record holder focusing on freestyle technique and endurance",
+    lessonType: "Group",
+    price: 65,
+    location: { lat: 34.0522, lng: -118.2437, address: "Los Angeles, CA" },
+  },
+]
+
+const courses: Course[] = [
+  {
+    id: 1,
+    title: "Freestyle Mastery",
+    focus: "Technique",
+    level: "Intermediate",
+    duration: "8 weeks",
+    schedule: "Mon/Wed 6-7pm",
+    instructor: "Michael Phelps",
+    rating: 4.7,
+    students: 12,
+    price: 400,
+    location: { lat: 40.7128, lng: -74.006, address: "New York, NY" },
+  },
+  {
+    id: 2,
+    title: "Beginner Swimming",
+    focus: "Fundamentals",
+    level: "Beginner",
+    duration: "6 weeks",
+    schedule: "Tue/Thu 5-6pm",
+    instructor: "Katie Ledecky",
+    rating: 4.5,
+    students: 8,
+    price: 300,
+    location: { lat: 34.0522, lng: -118.2437, address: "Los Angeles, CA" },
+  },
+]
 
 const SearchPage = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState({
-    subject: '',
+  const [searchTerm, setSearchTerm] = useState("")
+  const [searchType, setSearchType] = useState<"teacher" | "course">("teacher")
+
+  const [teacherFilters, setTeacherFilters] = useState<TeacherFilters>({
+    style: "",
+    level: "",
+    lessonType: "",
+    certification: "",
     minRating: 0,
-  });
-  const [searchType, setSearchType] = useState<'teacher' | 'course'>('teacher');
+    priceRange: "",
+    maxDistance: 0,
+  })
 
-  // Teacher data
-  const teachers: Teacher[] = [
-    { id: 1, name: 'John Smith', subject: 'Mathematics', rating: 4.8, experience: 5, image: '/teacher1.jpg', bio: 'Specialized in Algebra and Calculus with 5 years of teaching experience' },
-    { id: 2, name: 'Sarah Johnson', subject: 'Physics', rating: 4.5, experience: 3, image: '/teacher2.jpg', bio: 'Quantum physics expert with research background' },
-    { id: 3, name: 'Michael Brown', subject: 'Chemistry', rating: 4.9, experience: 7, image: '/teacher3.jpg', bio: 'Organic chemistry specialist with industry experience' },
-    { id: 4, name: 'Emily Davis', subject: 'Biology', rating: 4.7, experience: 4, image: '/teacher4.jpg', bio: 'Molecular biology researcher turned educator' },
-    { id: 5, name: 'Robert Wilson', subject: 'Mathematics', rating: 4.6, experience: 6, image: '/teacher5.jpg', bio: 'Geometry and Trigonometry expert' },
-  ];
+  const [courseFilters, setCourseFilters] = useState<CourseFilters>({
+    focus: "",
+    level: "",
+    duration: "",
+    schedule: "",
+    minRating: 0,
+    priceRange: "",
+    maxDistance: 0,
+  })
 
-  // Course data
-  const courses: Course[] = [
-    { id: 1, title: 'Introduction to Calculus', subject: 'Mathematics', level: 'Beginner', duration: '8 weeks', instructor: 'John Smith', rating: 4.7, students: 245 },
-    { id: 2, title: 'Quantum Mechanics Basics', subject: 'Physics', level: 'Intermediate', duration: '10 weeks', instructor: 'Sarah Johnson', rating: 4.5, students: 189 },
-    { id: 3, title: 'Organic Chemistry Fundamentals', subject: 'Chemistry', level: 'Intermediate', duration: '12 weeks', instructor: 'Michael Brown', rating: 4.8, students: 312 },
-    { id: 4, title: 'Cell Biology', subject: 'Biology', level: 'Beginner', duration: '6 weeks', instructor: 'Emily Davis', rating: 4.6, students: 178 },
-    { id: 5, title: 'Advanced Algebra', subject: 'Mathematics', level: 'Advanced', duration: '10 weeks', instructor: 'Robert Wilson', rating: 4.9, students: 156 },
-  ];
+  const [userLocation, setUserLocation] = useState<Location | null>(null)
+  const [locationError, setLocationError] = useState<string | null>(null)
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false)
+  const [showMap, setShowMap] = useState(false)
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null)
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({ lat: 0, lng: 0 })
 
-  const filteredTeachers = teachers.filter((t) => {
-    const term = searchTerm.toLowerCase();
+  // Get user's current location
+  const getCurrentLocation = () => {
+    setIsLoadingLocation(true)
+    setLocationError(null)
+
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser")
+      setIsLoadingLocation(false)
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const location = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          address: "Your current location",
+        }
+        setUserLocation(location)
+        setSelectedLocation(location)
+        setMapCenter({ lat: location.lat, lng: location.lng })
+        setIsLoadingLocation(false)
+      },
+      (error) => {
+        setLocationError("Unable to retrieve your location")
+        setIsLoadingLocation(false)
+      },
+    )
+  }
+
+  // Handle map click to select a new location
+  const handleMapClick = (e: any) => {
+    const newLocation = {
+      lat: e.latLng.lat(),
+      lng: e.latLng.lng(),
+      address: "Selected location",
+    }
+    setSelectedLocation(newLocation)
+    setUserLocation(newLocation)
+  }
+
+  // Toggle map visibility
+  const toggleMap = () => {
+    setShowMap(!showMap)
+    if (!showMap && userLocation) {
+      setMapCenter({ lat: userLocation.lat, lng: userLocation.lng })
+    }
+  }
+
+  // Filter teachers based on search term and filters
+  const filteredTeachers = teachers.filter((teacher) => {
+    const term = searchTerm.toLowerCase()
+    const matchesSearch = teacher.name.toLowerCase().includes(term) || teacher.specialty.toLowerCase().includes(term)
+
+    const matchesStyle = teacherFilters.style === "" || teacher.styles.includes(teacherFilters.style)
+    const matchesLevel = teacherFilters.level === "" || teacher.levels.includes(teacherFilters.level)
+    const matchesLessonType = teacherFilters.lessonType === "" || teacher.lessonType === teacherFilters.lessonType
+    const matchesCertification =
+      teacherFilters.certification === "" || teacher.certification.includes(teacherFilters.certification)
+    const matchesRating = teacher.rating >= teacherFilters.minRating
+
+    // Price range filter
+    let matchesPrice = true
+    if (teacherFilters.priceRange) {
+      const [min, max] = teacherFilters.priceRange.split("-").map(Number)
+      matchesPrice = teacher.price >= min && (isNaN(max) || teacher.price <= max)
+    }
+
+    // Distance filter
+    let matchesDistance = true
+    if (teacherFilters.maxDistance > 0 && userLocation) {
+      const distance = getDistance(userLocation.lat, userLocation.lng, teacher.location.lat, teacher.location.lng)
+      matchesDistance = distance <= teacherFilters.maxDistance
+    }
+
     return (
-      (t.name.toLowerCase().includes(term) || t.subject.toLowerCase().includes(term)) &&
-      (filters.subject === '' || t.subject === filters.subject) &&
-      t.rating >= filters.minRating
-    );
-  });
+      matchesSearch &&
+      matchesStyle &&
+      matchesLevel &&
+      matchesLessonType &&
+      matchesCertification &&
+      matchesRating &&
+      matchesPrice &&
+      matchesDistance
+    )
+  })
 
-  const filteredCourses = courses.filter((c) => {
-    const term = searchTerm.toLowerCase();
+  // Filter courses based on search term and filters
+  const filteredCourses = courses.filter((course) => {
+    const term = searchTerm.toLowerCase()
+    const matchesSearch = course.title.toLowerCase().includes(term) || course.focus.toLowerCase().includes(term)
+
+    const matchesFocus = courseFilters.focus === "" || course.focus === courseFilters.focus
+    const matchesLevel = courseFilters.level === "" || course.level === courseFilters.level
+    const matchesDuration = courseFilters.duration === "" || course.duration === courseFilters.duration
+    const matchesSchedule = courseFilters.schedule === "" || course.schedule.includes(courseFilters.schedule)
+    const matchesRating = course.rating >= courseFilters.minRating
+
+    // Price range filter
+    let matchesPrice = true
+    if (courseFilters.priceRange) {
+      const [min, max] = courseFilters.priceRange.split("-").map(Number)
+      matchesPrice = course.price >= min && (isNaN(max) || course.price <= max)
+    }
+
+    // Distance filter
+    let matchesDistance = true
+    if (courseFilters.maxDistance > 0 && userLocation) {
+      const distance = getDistance(userLocation.lat, userLocation.lng, course.location.lat, course.location.lng)
+      matchesDistance = distance <= courseFilters.maxDistance
+    }
+
     return (
-      (c.title.toLowerCase().includes(term) || c.subject.toLowerCase().includes(term)) &&
-      (filters.subject === '' || c.subject === filters.subject) &&
-      c.rating >= filters.minRating
-    );
-  });
+      matchesSearch &&
+      matchesFocus &&
+      matchesLevel &&
+      matchesDuration &&
+      matchesSchedule &&
+      matchesRating &&
+      matchesPrice &&
+      matchesDistance
+    )
+  })
 
-  const resultsCount = searchType === 'teacher' ? filteredTeachers.length : filteredCourses.length;
-  const resultsText = searchType === 'teacher' ? 'Teachers' : 'Courses';
+  const resultsCount = searchType === "teacher" ? filteredTeachers.length : filteredCourses.length
+  const resultsText = searchType === "teacher" ? "Teachers" : "Courses"
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <br/>
-      <br/>
-      <br/>
+      <br />
+      <br />
+      <br />
       <div className="max-w-7xl mx-auto mt-10">
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Find Educational Resources</h1>
-          <p className="text-lg text-gray-600">Search for teachers or courses that match your needs</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Find Swimming Instructors & Courses</h1>
+          <p className="text-lg text-gray-600">Discover the perfect swimming teacher or program for your needs</p>
         </div>
 
-        {/* Combined Search Bar */}
-        <div className="mb-8 max-w-4xl mx-auto">
-          <div className="flex justify-center mb-4">
-            <div className="inline-flex rounded-md shadow-sm">
-              <button
-                onClick={() => setSearchType('teacher')}
-                className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
-                  searchType === 'teacher' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                Search Teachers
-              </button>
-              <button
-                onClick={() => setSearchType('course')}
-                className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
-                  searchType === 'course' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                Search Courses
-              </button>
-            </div>
-          </div>
+        <SearchHeader
+          searchType={searchType}
+          setSearchType={setSearchType}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          resultsCount={resultsCount}
+          resultsText={resultsText}
+        />
 
-          <div className="relative">
-            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder={searchType === 'teacher' ? "Search teachers by name or subject..." : "Search courses by title or subject..."}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-black"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          <div className="mt-4">
-            <input
-              type="text"
-              className="w-full p-3 border-2 border-black rounded-lg text-black font-semibold text-center bg-white shadow-md"
-              placeholder="Search results will appear below..."
-              readOnly
-              value={searchTerm ? `${resultsText} matching: ${searchTerm}` : ''}
-            />
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="mb-8 p-4 rounded-lg shadow-sm">
+        {/* Filters Section */}
+        <div className="mb-8 p-4 rounded-lg shadow-sm bg-white">
           <div className="flex items-center mb-4">
-            <FaFilter className="text-gray-500 mr-2" />
             <h3 className="font-medium text-gray-700">Filters</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-              <select
-                className="w-full border border-gray-300 rounded-md p-2 bg-white text-black"
-                value={filters.subject}
-                onChange={(e) => setFilters({...filters, subject: e.target.value})}
-              >
-                <option value="">All Subjects</option>
-                <option value="Mathematics">Mathematics</option>
-                <option value="Physics">Physics</option>
-                <option value="Chemistry">Chemistry</option>
-                <option value="Biology">Biology</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Min Rating</label>
-              <select
-                className="w-full border border-gray-300 rounded-md p-2 bg-white text-black"
-                value={filters.minRating}
-                onChange={(e) => setFilters({...filters, minRating: Number(e.target.value)})}
-              >
-                <option value="0">Any Rating</option>
-                <option value="3">3+ Stars</option>
-                <option value="4">4+ Stars</option>
-                <option value="4.5">4.5+ Stars</option>
-              </select>
-            </div>
-            {searchType === 'course' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Level</label>
-                <select
-                  className="w-full border border-gray-300 rounded-md p-2 bg-white text-black"
-                  onChange={(e) => {}}
-                >
-                  <option value="">All Levels</option>
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Advanced">Advanced</option>
-                </select>
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Results */}
-        <div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">
-            {resultsCount} {resultsText} Found
-          </h2>
-
-          {resultsCount === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No {resultsText.toLowerCase()} match your search criteria</p>
-            </div>
-          ) : searchType === 'teacher' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTeachers.map((teacher) => (
-                <TeacherCard key={teacher.id} teacher={teacher} />
-              ))}
-            </div>
+          {searchType === "teacher" ? (
+            <TeacherFiltersComponent filters={teacherFilters} setFilters={setTeacherFilters} />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCourses.map((course) => (
-                <CourseCard key={course.id} course={course} />
-              ))}
+            <CourseFiltersComponent filters={courseFilters} setFilters={setCourseFilters} />
+          )}
+
+          <LocationFilter
+            isLoadingLocation={isLoadingLocation}
+            locationError={locationError}
+            userLocation={userLocation}
+            selectedLocation={selectedLocation}
+            showMap={showMap}
+            maxDistance={searchType === "teacher" ? teacherFilters.maxDistance : courseFilters.maxDistance}
+            searchType={searchType}
+            getCurrentLocation={getCurrentLocation}
+            toggleMap={toggleMap}
+            handleMapClick={handleMapClick}
+            mapCenter={mapCenter}
+            setMaxDistance={(distance) => {
+              searchType === "teacher"
+                ? setTeacherFilters({ ...teacherFilters, maxDistance: distance })
+                : setCourseFilters({ ...courseFilters, maxDistance: distance })
+            }}
+          />
+
+          {/* Map Section */}
+          {showMap && (
+            <div className="mt-4 p-4 border rounded-lg">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">
+                {selectedLocation ? "Click on the map to change location" : "Click on the map to select a location"}
+              </h4>
+              <div className="h-64 w-full rounded-lg overflow-hidden">
+                <Map
+                  center={mapCenter}
+                  zoom={selectedLocation ? 12 : 2}
+                  onClick={handleMapClick}
+                  markers={selectedLocation ? [selectedLocation] : []}
+                />
+              </div>
+              {selectedLocation && (
+                <div className="mt-2 text-sm text-gray-700">
+                  <p>Selected Location: </p>
+                  <p>Latitude: {selectedLocation.lat.toFixed(4)}</p>
+                  <p>Longitude: {selectedLocation.lng.toFixed(4)}</p>
+                </div>
+              )}
             </div>
           )}
         </div>
+
+        <ResultsSection
+          resultsCount={resultsCount}
+          resultsText={resultsText}
+          searchType={searchType}
+          filteredTeachers={filteredTeachers}
+          filteredCourses={filteredCourses}
+        />
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SearchPage;
+export default SearchPage

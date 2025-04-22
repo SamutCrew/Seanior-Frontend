@@ -1,12 +1,14 @@
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/app/context/AuthContext';
-import { AlertType } from "@/app/types";
-import AlertResponse from "@/app/components/Responseback/AlertResponse";
-import withLayout from "@/app/hocs/WithLayout";
-import { LayoutType } from "@/app/types/layout";
-import { SendForgotPassword } from "@/app/provider/EmailProvider";
+
+import { useAuth } from '@/context/AuthContext';
+import { AlertType } from "@/types";
+import AlertResponse from "@/components/Responseback/AlertResponse";
+import withLayout from "@/hocs/WithLayout";
+import { LayoutType } from "@/types/layout";
+import { SendForgotPassword } from "@/provider/EmailProvider";
+
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
