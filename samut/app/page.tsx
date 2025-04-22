@@ -120,4 +120,4 @@ export default function Home() {
   )
 }
 
-export default withLayout(Home, LayoutType.App);
+

@@ -14,11 +14,6 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
-
-} from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { Toast } from "@/components/Responseback/Toast";
-
   updateProfile,
   confirmPasswordReset,
 } from "firebase/auth";

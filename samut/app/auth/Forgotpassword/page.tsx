@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 
 import { useAuth } from '@/context/AuthContext';
-import { AlertType } from "@/types";
+import { AlertType } from "@/types/AlertTypes";
 import AlertResponse from "@/components/Responseback/AlertResponse";
 import withLayout from "@/hocs/WithLayout";
 import { LayoutType } from "@/types/layout";

@@ -1,11 +1,9 @@
-
 import type React from "react"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
-import DashboardWrapper from "./dashboardWrapper"
 import { AuthProvider } from "@/context/AuthContext"
-
+import DashboardWrapper from "./dashboardWrapper"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,12 +15,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 })
 
-
 export const metadata: Metadata = {
   title: "SeaNior - Swimming Instructor Platform",
   description: "Connect with certified swimming instructors for all ages and skill levels",
 }
-
 
 export default function RootLayout({
   children,
@@ -31,16 +27,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-
         <AuthProvider>
-          <HeroUIProvider>
-            {children}
-          </HeroUIProvider>
+          <DashboardWrapper>{children}</DashboardWrapper>
         </AuthProvider>
       </body>
     </html>
   )
 }
-
