@@ -93,8 +93,8 @@ export const HeroSection = ({
       ref={heroRef}
       className="relative w-full overflow-hidden"
       style={{
-        height: "100vh", // Full viewport height
-        minHeight: "600px", // Minimum height for smaller screens
+        height: "150vh", // 150% of viewport height
+        minHeight: "1000px",
         marginTop: isAtTop ? "-80px" : "0", // Move hero up when at top to compensate for navbar height
         transition: "margin-top 0.3s ease-in-out",
       }}
@@ -183,8 +183,8 @@ export const HeroSection = ({
           </motion.a>
         </div>
 
-        {/* Main content - centered in the middle of the screen */}
-        <div className="flex flex-col justify-center h-full text-center max-w-4xl px-4 pt-16 md:pt-0 mx-auto">
+        {/* Main content - perfectly centered in the middle of the screen */}
+        <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/2 flex flex-col justify-center text-center max-w-4xl px-4 mx-auto">
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -210,7 +210,7 @@ export const HeroSection = ({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.6, ease: "easeOut" }}
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-12 md:mb-0"
+            className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
               <Button
@@ -233,8 +233,8 @@ export const HeroSection = ({
           </motion.div>
         </div>
 
-        {/* Feature cards at bottom with staggered animations */}
-        <div className="absolute bottom-16 sm:bottom-24 md:bottom-28 lg:bottom-32 left-0 right-0 px-4 z-20">
+        {/* Feature cards at absolute bottom with staggered animations */}
+        <div className="absolute bottom-0 left-0 right-0 px-4 z-20 mb-[220px] sm:mb-[250px] md:mb-[280px]">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
