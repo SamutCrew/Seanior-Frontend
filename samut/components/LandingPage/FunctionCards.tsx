@@ -1,14 +1,19 @@
 "use client"
+
+import type React from "react"
+
 import Link from "next/link"
 import { useEffect, useState, useRef } from "react"
 import { motion, useInView } from "framer-motion"
 import Image from "next/image"
+import { Droplets, Users, Award, ChevronRight } from "lucide-react"
 
 interface FunctionCard {
   title: string
   shortDescription: string
   image: string
   link: string
+  icon: React.ReactNode
 }
 
 const cards: FunctionCard[] = [
@@ -17,40 +22,45 @@ const cards: FunctionCard[] = [
     shortDescription: "Connect with certified instructors",
     image: "/Feature1.jpg",
     link: "/find-coach",
+    icon: <Award className="w-5 h-5" />,
   },
   {
     title: "Private Lessons",
     shortDescription: "1-on-1 personalized training",
     image: "/Feature2.jpg",
     link: "/private-lessons",
+    icon: <Droplets className="w-5 h-5" />,
   },
   {
     title: "Group Classes",
     shortDescription: "Learn in a fun group setting",
     image: "/Feature3.jpg",
     link: "/group-classes",
+    icon: <Users className="w-5 h-5" />,
   },
   {
     title: "Competitive Training",
     shortDescription: "Advanced programs for athletes",
     image: "/Feature4.jpg",
     link: "/competitive-training",
+    icon: <Award className="w-5 h-5 rotate-12" />,
   },
 ]
 
 const stats = [
-  { value: 1200, label: "Lessons Completed" },
-  { value: 50, label: "Certified Coaches" },
-  { value: 800, label: "Happy Swimmers" },
-  { value: 15, label: "Training Locations" },
+  { value: 1200, label: "Lessons Completed", color: "from-cyan-500 to-blue-600" },
+  { value: 50, label: "Certified Coaches", color: "from-blue-500 to-indigo-600" },
+  { value: 800, label: "Happy Swimmers", color: "from-indigo-500 to-purple-600" },
+  { value: 15, label: "Training Locations", color: "from-purple-500 to-pink-600" },
 ]
 
 interface AnimatedNumberProps {
   value: number
   duration?: number
+  color: string
 }
 
-export const AnimatedNumber = ({ value, duration = 2000 }: AnimatedNumberProps) => {
+export const AnimatedNumber = ({ value, duration = 2000, color }: AnimatedNumberProps) => {
   const [count, setCount] = useState(0)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-100px" })
@@ -79,7 +89,10 @@ export const AnimatedNumber = ({ value, duration = 2000 }: AnimatedNumberProps) 
   }, [value, duration, isInView])
 
   return (
-    <div ref={ref} className="text-3xl md:text-4xl font-bold text-blue-600 mb-1">
+    <div
+      ref={ref}
+      className={`text-4xl md:text-5xl font-bold bg-gradient-to-r ${color} bg-clip-text text-transparent mb-1`}
+    >
       {count}+
     </div>
   )
@@ -88,6 +101,7 @@ export const AnimatedNumber = ({ value, duration = 2000 }: AnimatedNumberProps) 
 export const FunctionCards = () => {
   const containerRef = useRef(null)
   const isInView = useInView(containerRef, { once: true, margin: "-100px" })
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null)
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -110,11 +124,11 @@ export const FunctionCards = () => {
   }
 
   return (
-    <div id="features" className="relative py-24 px-4 sm:px-6 lg:px-8 xl:px-32 overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white via-blue-50/30 to-white -z-10"></div>
-
-      {/* Animated background shapes */}
+    <div
+      id="features"
+      className="relative py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 xl:px-32 overflow-hidden bg-white transition-all duration-1000"
+    >
+      {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden -z-10">
         <motion.div
           className="absolute top-20 left-10 w-64 h-64 rounded-full bg-blue-200/20 blur-3xl"
@@ -140,21 +154,40 @@ export const FunctionCards = () => {
             ease: "easeInOut",
           }}
         />
+
+        {/* Additional decorative elements */}
+        <svg
+          className="absolute top-1/4 right-1/4 w-64 h-64 text-blue-100 opacity-20"
+          viewBox="0 0 200 200"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill="currentColor"
+            d="M44.7,-76.4C58.8,-69.2,71.8,-59.1,79.6,-45.8C87.4,-32.6,90,-16.3,88.5,-1.5C87,13.4,81.4,26.8,73.6,38.2C65.8,49.5,55.9,58.9,44.2,64.2C32.4,69.5,18.8,70.8,4.7,74.1C-9.3,77.4,-23.8,82.7,-35.3,79.1C-46.9,75.5,-55.5,63,-63.3,50.4C-71.1,37.8,-78.1,25.1,-81.7,11.2C-85.3,-2.8,-85.5,-17.9,-80.5,-30.8C-75.4,-43.7,-65.2,-54.3,-52.8,-62.4C-40.3,-70.6,-25.7,-76.2,-10.8,-77.9C4.1,-79.6,30.5,-83.5,44.7,-76.4Z"
+            transform="translate(100 100)"
+          />
+        </svg>
       </div>
 
-      {/* Stats Section with enhanced animations */}
+      {/* Stats Section with enhanced animations and design */}
       <motion.div
         ref={containerRef}
         initial="hidden"
         animate={isInView ? "visible" : "hidden"}
         variants={containerVariants}
-        className="max-w-7xl mx-auto mb-20"
+        className="max-w-7xl mx-auto mb-16 sm:mb-20 md:mb-24 pt-8 sm:pt-12 md:pt-16 transition-all duration-700"
       >
-        <motion.h2 variants={itemVariants} className="text-3xl md:text-4xl font-bold text-center mb-16">
-          Our <span className="text-blue-600">Impact</span> in Numbers
+        <motion.h2 variants={itemVariants} className="text-3xl md:text-4xl font-bold text-center mb-6">
+          Our <span className="bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">Impact</span>{" "}
+          in Numbers
         </motion.h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
+        <motion.div
+          variants={itemVariants}
+          className="w-24 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 mx-auto mb-16 rounded-full"
+        />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-10">
           {stats.map((stat, index) => (
             <motion.div
               key={index}
@@ -163,10 +196,14 @@ export const FunctionCards = () => {
                 y: -8,
                 boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
               }}
-              className="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-100 text-center transition-all duration-300"
+              className="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-100 text-center transition-all duration-300 relative overflow-hidden group"
             >
-              <AnimatedNumber value={stat.value} />
-              <p className="text-gray-600 text-sm md:text-base">{stat.label}</p>
+              <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-5 transition-opacity duration-500 -z-10" />
+              <AnimatedNumber value={stat.value} color={stat.color} />
+              <p className="text-gray-600 text-sm md:text-base font-medium">{stat.label}</p>
+
+              {/* Decorative element */}
+              <div className="absolute -bottom-6 -right-6 w-24 h-24 rounded-full bg-gradient-to-br opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
             </motion.div>
           ))}
         </div>
@@ -180,11 +217,13 @@ export const FunctionCards = () => {
           viewport={{ once: true, margin: "-100px" }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">What We Offer</h2>
+          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-6">
+            What We Offer
+          </h2>
 
           <div className="flex items-center justify-center space-x-3 mb-4">
             <motion.div
-              className="w-12 h-[3px] bg-blue-500"
+              className="w-12 h-[3px] bg-gradient-to-r from-blue-600 to-cyan-500"
               initial={{ width: 0 }}
               whileInView={{ width: 48 }}
               transition={{ duration: 1 }}
@@ -192,7 +231,7 @@ export const FunctionCards = () => {
             />
             <span className="text-lg text-gray-600">Discover our comprehensive swimming services</span>
             <motion.div
-              className="w-12 h-[3px] bg-blue-500"
+              className="w-12 h-[3px] bg-gradient-to-r from-cyan-500 to-blue-600"
               initial={{ width: 0 }}
               whileInView={{ width: 48 }}
               transition={{ duration: 1 }}
@@ -201,7 +240,7 @@ export const FunctionCards = () => {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
           {cards.map((card, index) => (
             <motion.div
               key={index}
@@ -209,28 +248,20 @@ export const FunctionCards = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: index * 0.1 }}
               viewport={{ once: true, margin: "-50px" }}
+              onHoverStart={() => setHoveredCard(index)}
+              onHoverEnd={() => setHoveredCard(null)}
             >
-              <Link href={card.link} className="group block h-card">
+              <Link href={card.link} className="group block">
                 <motion.div
-                  className="relative h-[400px] rounded-2xl shadow-xl overflow-hidden transition-all duration-500"
+                  className="relative h-[350px] rounded-2xl overflow-hidden transition-all duration-500 bg-white border border-gray-100"
                   whileHover={{
                     y: -10,
                     boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
                   }}
                 >
-                  <div className="absolute top-2 right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 text-black"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M7 7h10v10" />
-                    </svg>
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10 z-10" />
-                  <div className="absolute inset-0 overflow-hidden">
+                  {/* Card top section with image */}
+                  <div className="h-[200px] relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10" />
                     <Image
                       src={card.image || "/placeholder.svg?height=400&width=600&query=swimming feature"}
                       alt={card.title}
@@ -238,27 +269,40 @@ export const FunctionCards = () => {
                       className="object-cover transition-transform duration-700 group-hover:scale-110"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                     />
+
+                    {/* Floating badge */}
+                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-blue-600 z-20 flex items-center gap-1.5 shadow-sm">
+                      {card.icon}
+                      <span>Featured</span>
+                    </div>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-20">
-                    <motion.h3
-                      className="text-2xl font-bold mb-2"
-                      initial={{ y: 20, opacity: 0 }}
-                      whileInView={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.2 + index * 0.1 }}
-                      viewport={{ once: true }}
-                    >
+
+                  {/* Card content */}
+                  <div className="p-6 relative">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
                       {card.title}
-                    </motion.h3>
-                    <motion.p
-                      className="text-white/90 text-base"
-                      initial={{ y: 20, opacity: 0 }}
-                      whileInView={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-                      viewport={{ once: true }}
-                    >
-                      {card.shortDescription}
-                    </motion.p>
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-4">{card.shortDescription}</p>
+
+                    {/* Action button */}
+                    <div className="flex items-center text-blue-600 font-medium text-sm">
+                      <span>Learn more</span>
+                      <motion.div animate={{ x: hoveredCard === index ? 5 : 0 }} transition={{ duration: 0.3 }}>
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </motion.div>
+                    </div>
+
+                    {/* Decorative corner accent */}
+                    <div className="absolute bottom-0 right-0 w-16 h-16 bg-gradient-to-tl from-blue-100 to-transparent rounded-tl-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
+
+                  {/* Animated highlight line */}
+                  <motion.div
+                    className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-500"
+                    initial={{ scaleX: 0, originX: 0 }}
+                    animate={{ scaleX: hoveredCard === index ? 1 : 0 }}
+                    transition={{ duration: 0.4 }}
+                  />
                 </motion.div>
               </Link>
             </motion.div>

@@ -1,20 +1,54 @@
 "use client"
 import { useRef } from "react"
-
+import { motion, useScroll, useTransform } from "framer-motion"
 
 import { SectionTitle } from "@/components/Common/SectionTitle"
 import HeroSection from "@/components/LandingPage/HeroSection"
 import EventSection from "@/components/LandingPage/EventsSection"
-import { TeachersSection} from "@/components/LandingPage/TeachersSection"
+import { TeachersSection } from "@/components/LandingPage/TeachersSection"
 import CTASection from "@/components/LandingPage/CTASection"
 import { FunctionCards } from "@/components/LandingPage/FunctionCards"
 
 export default function Home() {
-  const nextSectionRef = useRef<HTMLDivElement | null>(null)
+  const featuresRef = useRef<HTMLDivElement>(null)
+  const eventsRef = useRef<HTMLDivElement>(null)
+  const teachersRef = useRef<HTMLDivElement>(null)
+  const ctaRef = useRef<HTMLDivElement>(null)
 
+  // Scroll animations for features section
+  const { scrollYProgress: featuresScrollProgress } = useScroll({
+    target: featuresRef,
+    offset: ["start end", "end start"],
+  })
+  const featuresOpacity = useTransform(featuresScrollProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0])
+  const featuresY = useTransform(featuresScrollProgress, [0, 0.15, 0.85, 1], [100, 0, 0, -100])
+
+  // Scroll animations for events section
+  const { scrollYProgress: eventsScrollProgress } = useScroll({
+    target: eventsRef,
+    offset: ["start end", "end start"],
+  })
+  const eventsOpacity = useTransform(eventsScrollProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0])
+  const eventsY = useTransform(eventsScrollProgress, [0, 0.15, 0.85, 1], [100, 0, 0, -100])
+
+  // Scroll animations for teachers section
+  const { scrollYProgress: teachersScrollProgress } = useScroll({
+    target: teachersRef,
+    offset: ["start end", "end start"],
+  })
+  const teachersOpacity = useTransform(teachersScrollProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0])
+  const teachersY = useTransform(teachersScrollProgress, [0, 0.15, 0.85, 1], [100, 0, 0, -100])
+
+  // Scroll animations for CTA section
+  const { scrollYProgress: ctaScrollProgress } = useScroll({
+    target: ctaRef,
+    offset: ["start end", "end start"],
+  })
+  const ctaOpacity = useTransform(ctaScrollProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0])
+  const ctaY = useTransform(ctaScrollProgress, [0, 0.15, 0.85, 1], [100, 0, 0, -100])
 
   const scrollToNextSection = () => {
-    nextSectionRef.current?.scrollIntoView({ behavior: "smooth" })
+    featuresRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
   const teachers = [
@@ -96,28 +130,50 @@ export default function Home() {
         }}
       />
 
-      {/* Functions Section */}
-      <FunctionCards />
+      {/* Functions Section with scroll animations */}
+      <motion.div
+        ref={featuresRef}
+        id="features"
+        style={{ opacity: featuresOpacity, y: featuresY }}
+        className="relative z-10 transition-all duration-1000 ease-out"
+      >
+        <FunctionCards />
+      </motion.div>
 
-      {/* Events Section */}
-      <section ref={nextSectionRef} className="px-4 max-w-6xl mx-auto mt-10">
+      {/* Events Section with scroll animations */}
+      <motion.section
+        ref={eventsRef}
+        style={{ opacity: eventsOpacity, y: eventsY }}
+        className="px-4 max-w-6xl mx-auto mt-10 relative z-10 transition-all duration-1000 ease-out"
+      >
         <SectionTitle description="Join our community events to learn, network, and grow with industry experts.">
           Events Available
         </SectionTitle>
         <EventSection />
-      </section>
+      </motion.section>
 
-      {/* Teachers Section */}
-      <TeachersSection teachers={teachers} />
+      {/* Teachers Section with scroll animations */}
+      <motion.div
+        ref={teachersRef}
+        style={{ opacity: teachersOpacity, y: teachersY }}
+        className="relative z-10 transition-all duration-1000 ease-out"
+      >
+        <TeachersSection teachers={teachers} />
+      </motion.div>
 
-      <CTASection
-        title="Ready to Dive In?"
-        description="Join hundreds of students improving their swimming skills today"
-        buttonText="Find Your Instructor"
-        onButtonClick={() => console.log("CTA clicked")}
-      />
+      {/* CTA Section with scroll animations */}
+      <motion.div
+        ref={ctaRef}
+        style={{ opacity: ctaOpacity, y: ctaY }}
+        className="relative z-10 transition-all duration-1000 ease-out"
+      >
+        <CTASection
+          title="Ready to Dive In?"
+          description="Join hundreds of students improving their swimming skills today"
+          buttonText="Find Your Instructor"
+          onButtonClick={() => console.log("CTA clicked")}
+        />
+      </motion.div>
     </div>
   )
 }
-
-

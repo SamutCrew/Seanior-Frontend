@@ -2,7 +2,7 @@
 
 import { ChevronDown } from "lucide-react"
 import { useEffect, useState } from "react"
-import { motion, useAnimation } from "framer-motion"
+import { motion, useScroll, useTransform, useAnimation } from "framer-motion"
 
 interface ScrollDownButtonProps {
   targetId?: string
@@ -11,6 +11,8 @@ interface ScrollDownButtonProps {
 export default function ScrollDownButton({ targetId = "features" }: ScrollDownButtonProps) {
   const [isVisible, setIsVisible] = useState(true)
   const controls = useAnimation()
+  const { scrollYProgress } = useScroll()
+  const opacity = useTransform(scrollYProgress, [0, 0.1], [1, 0])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -61,14 +63,15 @@ export default function ScrollDownButton({ targetId = "features" }: ScrollDownBu
       initial={{ opacity: 0, y: 20 }}
       animate={controls}
       transition={{ duration: 0.5 }}
-      className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-30"
+      style={{ opacity }}
+      className="absolute bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-30"
       aria-label="Scroll down"
     >
       <motion.div
         variants={pulseVariants}
         initial="initial"
         animate="animate"
-        className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3"
+        className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-2"
       >
         <motion.div
           animate={{
@@ -80,11 +83,11 @@ export default function ScrollDownButton({ targetId = "features" }: ScrollDownBu
             ease: "easeInOut",
           }}
         >
-          <ChevronDown className="h-6 w-6 text-white" />
+          <ChevronDown className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
         </motion.div>
       </motion.div>
       <motion.span
-        className="text-white text-sm font-medium"
+        className="text-white text-xs sm:text-sm font-medium"
         animate={{
           opacity: [0.7, 1, 0.7],
         }}

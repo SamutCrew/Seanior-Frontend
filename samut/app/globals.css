@@ -18,6 +18,12 @@ body,
   @apply text-sm;
   @apply bg-gray-50;
   @apply text-gray-900;
+  scroll-behavior: smooth;
+}
+
+/* Section transitions */
+.section-transition {
+  @apply transition-all duration-1000 ease-in-out;
 }
 
 @keyframes slideUp {
