@@ -1,5 +1,5 @@
 
-export * from '@/app/types/model/user';
-export * from '@/app/types/AlertTypes';
-export * from '@/app/types/layout';
+export * from '@/types/model/user';
+export * from '@/types/AlertTypes';
+export * from '@/types/layout';
 
