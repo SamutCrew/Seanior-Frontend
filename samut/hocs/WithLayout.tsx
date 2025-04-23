@@ -1,6 +1,8 @@
+
 // Create a HOC to handle different layout types
 import type React from "react"
 import type { LayoutType } from "@/types/layout"
+
 
 const withLayout = (Component: React.ComponentType<any>, layoutType: LayoutType) => {
   // Return a new component that wraps the original component
