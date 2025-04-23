@@ -98,7 +98,7 @@ body,
     opacity: 0.5;
   }
   100% {
-    transform: scale(1);
+    transform: scale(2);
     opacity: 0;
   }
 }
@@ -416,4 +416,48 @@ body,
 }
 .stagger-item:nth-child(8) {
   animation-delay: 0.8s;
+}
+
+/* Grid patterns for Teachers Section */
+.bg-grid-light {
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+}
+
+.bg-grid-dark {
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
+.animate-ripple {
+  animation: ripple 3s infinite ease-out;
+}
+
+/* Water ripple effect on button hover */
+.ripple-on-hover {
+  @apply absolute rounded-full bg-white/20 opacity-0 transform scale-0;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  height: 200%;
+  transition: all 0.7s ease-out;
+}
+
+button:hover .ripple-on-hover {
+  @apply opacity-30 scale-100;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Gradient text effect */
+.gradient-text {
+  @apply bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent;
+}
+
+/* Enhanced button hover effects */
+.btn-hover-float {
+  transition: transform 0.3s ease;
+}
+
+.btn-hover-float:hover {
+  transform: translateY(-5px);
 }

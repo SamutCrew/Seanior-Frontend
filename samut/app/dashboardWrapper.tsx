@@ -8,13 +8,18 @@ import StoreProvider, { useAppSelector } from "./redux"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 
+// Update the DashboardLayout component to check for auth routes
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed)
+  const isMobileSidebarOpen = useAppSelector((state) => state.global.isMobileSidebarOpen)
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
   const pathname = usePathname()
 
   // Check if we're on the landing page
   const isLandingPage = pathname === "/"
+
+  // Check if we're on an auth page
+  const isAuthPage = pathname.startsWith("/auth/")
 
   // Update the userRole determination to use a state variable that can be toggled
   const [userRoleState, setUserRoleState] = useState<"student" | "teacher">(
@@ -23,6 +28,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Add a scroll state to the DashboardLayout component
   const [scrollPosition, setScrollPosition] = useState(0)
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 0)
 
   useEffect(() => {
     if (isDarkMode) {
@@ -38,21 +44,32 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       setScrollPosition(window.scrollY)
     }
 
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth)
+    }
+
     window.addEventListener("scroll", handleScroll)
+    window.addEventListener("resize", handleResize)
+
     handleScroll() // Check initial position
+    handleResize() // Check initial size
 
     return () => {
       window.removeEventListener("scroll", handleScroll)
+      window.removeEventListener("resize", handleResize)
     }
   }, [])
 
   // Determine if we're at the top of the page
   const isAtTop = scrollPosition < 10
 
+  // Determine if we're on mobile
+  const isMobile = windowWidth < 768
+
   // Animation variants for the main content
   const mainContentVariants = {
     expanded: {
-      paddingLeft: isLandingPage && isAtTop ? "0px" : "240px",
+      paddingLeft: isLandingPage && isAtTop ? "0px" : isMobile ? "0px" : "240px",
       transition: {
         type: "spring",
         stiffness: 300,
@@ -60,13 +77,43 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       },
     },
     collapsed: {
-      paddingLeft: isLandingPage && isAtTop ? "0px" : "64px",
+      paddingLeft: isLandingPage && isAtTop ? "0px" : isMobile ? "0px" : "64px",
       transition: {
         type: "spring",
         stiffness: 300,
         damping: 30,
       },
     },
+    auth: {
+      paddingLeft: "0px",
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+      },
+    },
+  }
+
+  // If we're on an auth page, render only the children without navigation
+  if (isAuthPage) {
+    return (
+      <div className="flex min-h-screen w-full bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-white">
+        <motion.main initial="auth" animate="auth" variants={mainContentVariants} className="flex w-full flex-col">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="w-full"
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
+        </motion.main>
+      </div>
+    )
   }
 
   return (
@@ -87,7 +134,13 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       {/* Main content with smooth padding transition */}
       <motion.main
         initial={false}
-        animate={isSidebarCollapsed ? "collapsed" : "expanded"}
+        animate={
+          isMobile
+            ? "collapsed" // Always use collapsed layout on mobile
+            : isSidebarCollapsed
+              ? "collapsed"
+              : "expanded"
+        }
         variants={mainContentVariants}
         className="flex w-full flex-col transition-all duration-500 ease-in-out"
         style={{
@@ -109,6 +162,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             style={{
               paddingTop: isLandingPage ? (isAtTop ? "0" : "0") : "4rem",
               transition: "padding-top 0.3s ease-in-out",
+              width: "100%", // Ensure full width
             }}
           >
             {children}

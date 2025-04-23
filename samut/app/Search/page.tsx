@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import dynamic from "next/dynamic"
+
 import { SearchHeader } from "@/components/Searchpage/SearchHeader"
 import { LocationFilter } from "@/components/Searchpage/LocationFilter"
 import { ResultsSection } from "@/components/Searchpage/ResultsSection"
@@ -10,10 +10,6 @@ import { CourseFiltersComponent } from "@/components/Searchpage/CourseFilters"
 import type { Teacher, Course, TeacherFilters, CourseFilters, Location } from "@/components/Searchpage/types"
 
 // Dynamically import the Map component
-const Map = dynamic(() => import("@/components/Googlemap/map"), {
-  ssr: false,
-  loading: () => <p>Loading map...</p>,
-})
 
 // Helper function to calculate distance between two coordinates (in km)
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -302,30 +298,6 @@ const SearchPage = () => {
                 : setCourseFilters({ ...courseFilters, maxDistance: distance })
             }}
           />
-
-          {/* Map Section */}
-          {showMap && (
-            <div className="mt-4 p-4 border rounded-lg">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">
-                {selectedLocation ? "Click on the map to change location" : "Click on the map to select a location"}
-              </h4>
-              <div className="h-64 w-full rounded-lg overflow-hidden">
-                <Map
-                  center={mapCenter}
-                  zoom={selectedLocation ? 12 : 2}
-                  onClick={handleMapClick}
-                  markers={selectedLocation ? [selectedLocation] : []}
-                />
-              </div>
-              {selectedLocation && (
-                <div className="mt-2 text-sm text-gray-700">
-                  <p>Selected Location: </p>
-                  <p>Latitude: {selectedLocation.lat.toFixed(4)}</p>
-                  <p>Longitude: {selectedLocation.lng.toFixed(4)}</p>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         <ResultsSection

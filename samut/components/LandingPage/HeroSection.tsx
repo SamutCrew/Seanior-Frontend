@@ -226,25 +226,19 @@ export const HeroSection = ({
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                variant="secondary"
-                onClick={primaryAction.onClick}
-                className={`text-base md:text-lg px-6 md:px-8 py-3 md:py-4 font-medium ${
-                  isDarkMode ? "bg-blue-600 hover:bg-blue-700 text-white" : ""
-                }`}
-              >
+              <Button variant="gradient" size="lg" onClick={primaryAction.onClick} showArrow className="group">
                 {primaryAction.text}
               </Button>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                variant="outline"
-                onClick={secondaryAction.onClick}
-                className={`text-base md:text-lg px-6 md:px-8 py-3 md:py-4 font-medium ${
-                  isDarkMode ? "border-blue-400 text-blue-300 hover:bg-blue-900/30" : ""
-                }`}
-              >
-                {secondaryAction.text}
+              <Button variant="outline" size="lg" onClick={secondaryAction.onClick} className="backdrop-blur-sm">
+                <span
+                  className={
+                    isDarkMode ? "bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent" : ""
+                  }
+                >
+                  {secondaryAction.text}
+                </span>
               </Button>
             </motion.div>
           </motion.div>
