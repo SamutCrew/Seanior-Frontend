@@ -1,5 +1,5 @@
 import { FaChalkboardTeacher, FaPlus, FaMapMarkerAlt } from "react-icons/fa"
-import type { Course } from "@/app/types/schedule"
+import type { Course } from "@/types/schedule"
 import { getLevelColor } from "@/utils/courseHelpers"
 
 interface AvailableCoursesProps {

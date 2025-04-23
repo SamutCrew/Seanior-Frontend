@@ -18,6 +18,12 @@ body,
   @apply text-sm;
   @apply bg-gray-50;
   @apply text-gray-900;
+  scroll-behavior: smooth;
+}
+
+/* Section transitions */
+.section-transition {
+  @apply transition-all duration-1000 ease-in-out;
 }
 
 @keyframes slideUp {
@@ -83,6 +89,61 @@ body,
   100% {
     transform: translateY(0px);
   }
+}
+
+/* Water ripple effect for events background */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.water-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.05);
+  transform-origin: center;
+  width: 100px;
+  height: 100px;
+  animation: ripple 8s infinite cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.water-ripple.delay-0 {
+  animation-delay: 0s;
+}
+.water-ripple.delay-1 {
+  animation-delay: 2s;
+}
+.water-ripple.delay-2 {
+  animation-delay: 4s;
+}
+.water-ripple.delay-3 {
+  animation-delay: 6s;
+}
+.water-ripple.delay-4 {
+  animation-delay: 8s;
+}
+
+/* Mesh grid pattern */
+.mesh-grid {
+  background-image: linear-gradient(to right, rgba(56, 189, 248, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.1) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.mesh-grid-dark {
+  background-image: linear-gradient(to right, rgba(56, 189, 248, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.07) 1px, transparent 1px);
+}
+
+.mesh-grid-light {
+  background-image: linear-gradient(to right, rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(56, 189, 248, 0.05) 1px, transparent 1px);
 }
 
 .animate-fadeIn {
@@ -355,4 +416,48 @@ body,
 }
 .stagger-item:nth-child(8) {
   animation-delay: 0.8s;
+}
+
+/* Grid patterns for Teachers Section */
+.bg-grid-light {
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+}
+
+.bg-grid-dark {
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
+.animate-ripple {
+  animation: ripple 3s infinite ease-out;
+}
+
+/* Water ripple effect on button hover */
+.ripple-on-hover {
+  @apply absolute rounded-full bg-white/20 opacity-0 transform scale-0;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  height: 200%;
+  transition: all 0.7s ease-out;
+}
+
+button:hover .ripple-on-hover {
+  @apply opacity-30 scale-100;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Gradient text effect */
+.gradient-text {
+  @apply bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent;
+}
+
+/* Enhanced button hover effects */
+.btn-hover-float {
+  transition: transform 0.3s ease;
+}
+
+.btn-hover-float:hover {
+  transform: translateY(-5px);
 }

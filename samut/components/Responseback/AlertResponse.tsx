@@ -1,7 +1,8 @@
 // components/AlertResponse.tsx
 import React from "react";
 import PropTypes from "prop-types";
-import { AlertType } from  "@/types"
+
+import { AlertType } from  "@/types/AlertTypes"
 
 interface AlertResponseProps {
   message: string;

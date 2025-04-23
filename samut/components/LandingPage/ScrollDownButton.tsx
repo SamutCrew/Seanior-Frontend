@@ -1,101 +1,54 @@
 "use client"
 
-import { ChevronDown } from "lucide-react"
-import { useEffect, useState } from "react"
-import { motion, useAnimation } from "framer-motion"
+import { motion } from "framer-motion"
 
 interface ScrollDownButtonProps {
-  targetId?: string
+  targetId: string
+  isDarkMode?: boolean
 }
 
-export default function ScrollDownButton({ targetId = "features" }: ScrollDownButtonProps) {
-  const [isVisible, setIsVisible] = useState(true)
-  const controls = useAnimation()
-
-  useEffect(() => {
-    const handleScroll = () => {
-      // Hide the button after scrolling down 100px
-      if (window.scrollY > 100) {
-        setIsVisible(false)
-        controls.start({ opacity: 0, y: 20 })
-      } else {
-        setIsVisible(true)
-        controls.start({ opacity: 1, y: 0 })
-      }
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [controls])
-
-  const scrollToTarget = () => {
-    const target = document.getElementById(targetId)
-    if (target) {
-      target.scrollIntoView({ behavior: "smooth" })
-    } else {
-      // If no target element found, just scroll down 100vh
-      window.scrollTo({
-        top: window.innerHeight,
-        behavior: "smooth",
-      })
-    }
-  }
-
-  // Pulse animation for the circle
-  const pulseVariants = {
-    initial: { scale: 1, opacity: 0.8 },
-    animate: {
-      scale: [1, 1.2, 1],
-      opacity: [0.8, 1, 0.8],
-      transition: {
-        duration: 2,
-        repeat: Number.POSITIVE_INFINITY,
-        ease: "easeInOut",
-      },
-    },
+const ScrollDownButton = ({ targetId, isDarkMode = false }: ScrollDownButtonProps) => {
+  const handleClick = () => {
+    document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })
   }
 
   return (
     <motion.button
-      onClick={scrollToTarget}
+      onClick={handleClick}
+      className={`absolute bottom-10 left-1/2 transform -translate-x-1/2 z-30 flex flex-col items-center justify-center ${
+        isDarkMode ? "text-blue-300" : "text-white"
+      }`}
       initial={{ opacity: 0, y: 20 }}
-      animate={controls}
-      transition={{ duration: 0.5 }}
-      className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-30"
-      aria-label="Scroll down"
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 1.5, duration: 0.8 }}
+      whileHover={{ scale: 1.1 }}
     >
+      <span className="text-sm font-medium mb-2">Scroll Down</span>
       <motion.div
-        variants={pulseVariants}
-        initial="initial"
-        animate="animate"
-        className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3"
-      >
-        <motion.div
-          animate={{
-            y: [0, 5, 0],
-          }}
-          transition={{
-            duration: 1.5,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-          }}
-        >
-          <ChevronDown className="h-6 w-6 text-white" />
-        </motion.div>
-      </motion.div>
-      <motion.span
-        className="text-white text-sm font-medium"
         animate={{
-          opacity: [0.7, 1, 0.7],
+          y: [0, 8, 0],
         }}
         transition={{
-          duration: 2,
+          duration: 1.5,
           repeat: Number.POSITIVE_INFINITY,
-          ease: "easeInOut",
+          repeatType: "loop",
         }}
+        className={`w-8 h-8 rounded-full ${
+          isDarkMode ? "bg-blue-600/30" : "bg-white/30"
+        } flex items-center justify-center backdrop-blur-sm`}
       >
-        Scroll Down
-      </motion.span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        </svg>
+      </motion.div>
     </motion.button>
   )
 }
+
+export default ScrollDownButton

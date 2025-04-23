@@ -1,47 +1,80 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import {
-  ChevronDown,
-  ChevronUp,
   ChevronLeft,
   ChevronRight,
   Home,
   LogOut,
-  MessageCircleQuestion,
-  School,
+  MessageCircle,
+  BookOpen,
   Settings,
   User,
   Calendar,
   Users,
   GraduationCap,
   BarChart3,
+  Search,
+  Clock,
+  Compass,
+  Award,
+  Menu,
+  X,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useAppDispatch, useAppSelector } from "@/app/redux"
-import { setIsSidebarCollapsed } from "@/state"
+import { setIsSidebarCollapsed, toggleMobileSidebar } from "@/state"
 import type { LucideIcon } from "lucide-react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 
 interface SidebarProps {
   isLandingPage?: boolean
   scrollPosition?: number
+  userRole?: "student" | "teacher"
 }
 
-const Sidebar = ({ isLandingPage = false, scrollPosition = 0 }: SidebarProps) => {
+const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "student" }: SidebarProps) => {
+  const [devMode, setDevMode] = useState(false)
+  const [userRoleState, setUserRoleState] = useState(userRole)
   const [showClasses, setShowClasses] = useState(true)
   const [isHandleHovered, setIsHandleHovered] = useState(false)
+  const [isMenuHovered, setIsMenuHovered] = useState(false)
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 0)
+  const pathname = usePathname()
+
+  // Check if we're on an auth page
+  const isAuthPage = pathname.startsWith("/auth/")
+
+  // If we're on an auth page, don't render the sidebar
+  if (isAuthPage) {
+    return null
+  }
 
   const dispatch = useAppDispatch()
   const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed)
+  const isMobileSidebarOpen = useAppSelector((state) => state.global.isMobileSidebarOpen)
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
+
+  // Track window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth)
+      // Auto-collapse sidebar on small screens
+      if (window.innerWidth < 768 && !isSidebarCollapsed) {
+        dispatch(setIsSidebarCollapsed(true))
+      }
+    }
+
+    window.addEventListener("resize", handleResize)
+    handleResize() // Check initial size
+
+    return () => window.removeEventListener("resize", handleResize)
+  }, [dispatch, isSidebarCollapsed])
 
   const handleSignOut = () => {
     alert("Signed out!")
   }
-
-  const sidebarWidth = isSidebarCollapsed ? "w-16" : "w-64"
 
   // Add this constant to determine if we're at the top of the page
   const isAtTop = scrollPosition < 50 && isLandingPage
@@ -54,333 +87,475 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0 }: SidebarProps) =>
     return null
   }
 
+  // Determine if we should show the mobile sidebar
+  const isMobile = windowWidth < 768
+  const showMobileSidebar = isMobile && isMobileSidebarOpen
+  const showDesktopSidebar = !isMobile || (isMobile && isMobileSidebarOpen)
+
+  // Define navigation items for each role
+  const teacherNavItems = [
+    { icon: Home, label: "Dashboard", href: "/Teacher/manage" },
+    { icon: BookOpen, label: "My Courses", href: "/Teacher/profile/courses" },
+    { icon: User, label: "Profile", href: "/Teacher/profile/edit" },
+    { icon: Calendar, label: "Schedule", href: "/Teacher/schedule" },
+    { icon: MessageCircle, label: "Support", href: "/support" },
+    { icon: Settings, label: "Settings", href: "/settings" },
+  ]
+
+  const studentNavItems = [
+    { icon: Home, label: "Dashboard", href: "/student/dashboard" },
+    { icon: Search, label: "Find Instructors", href: "/teacher" },
+    { icon: BookOpen, label: "My Courses", href: "/student/courses" },
+    { icon: Calendar, label: "My Schedule", href: "/student/schedule" },
+    { icon: Clock, label: "Booking History", href: "/student/bookings" },
+    { icon: User, label: "Profile", href: "/student/profile" },
+  ]
+
+  // Select the appropriate navigation items based on user role
+  const navItems = userRoleState === "teacher" ? teacherNavItems : studentNavItems
+
+  // Define class items for each role
+  const teacherClassItems = [
+    { icon: Users, label: "Beginner Swimming", href: "/classes/beginner" },
+    { icon: Users, label: "Advanced Techniques", href: "/classes/advanced" },
+    { icon: Users, label: "Intermediate Stroke", href: "/classes/intermediate" },
+    { icon: Users, label: "Kids Swimming", href: "/classes/kids" },
+    { icon: BarChart3, label: "Class Analytics", href: "/classes/analytics" },
+  ]
+
+  const studentClassItems = [
+    { icon: BookOpen, label: "Current Courses", href: "/student/current-courses" },
+    { icon: Award, label: "Completed Courses", href: "/student/completed-courses" },
+    { icon: Compass, label: "Recommended", href: "/student/recommended" },
+  ]
+
+  // Select the appropriate class items based on user role
+  const classItems = userRoleState === "teacher" ? teacherClassItems : studentClassItems
+
+  // Animation variants for the sidebar
+  const sidebarVariants = {
+    expanded: {
+      width: isMobile ? "85%" : "240px",
+      x: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+      },
+    },
+    collapsed: {
+      width: isMobile ? "0px" : "64px",
+      x: isMobile ? "-100%" : 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+      },
+    },
+  }
+
+  // Animation variants for the toggle button
+  const toggleButtonVariants = {
+    expanded: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+      },
+    },
+    collapsed: {
+      x: -10,
+      opacity: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+      },
+    },
+  }
+
+  // If mobile and sidebar is not open, render a minimal component
+  if (isMobile && !isMobileSidebarOpen) {
+    return null
+  }
+
   return (
-    <div
-      className={`h-full flex flex-col justify-between transition-all duration-500 ease-in-out z-40 
-        ${isLandingPage ? "bg-transparent backdrop-blur-sm" : "bg-white dark:bg-slate-900"} 
-        shadow-xl ${sidebarWidth} pointer-events-auto fixed`}
-      style={{
-        opacity: isLandingPage ? opacity : 1,
-        transform: isLandingPage && scrollPosition < 50 ? "translateX(-100%)" : "none",
-        backgroundColor: isLandingPage ? `rgba(255, 255, 255, ${opacity * 0.9})` : "",
-        maxHeight: "100vh", // Prevent sidebar from extending beyond viewport height
-        overflowY: "auto", // Add scrolling for content that exceeds height
-        left: 0,
-        top: 0,
-        bottom: 0,
-      }}
-    >
-      {!isSidebarCollapsed && (
-        <motion.button
-          className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 z-50 
-            bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg border border-gray-200 dark:border-gray-700
-            hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300"
-          onClick={() => {
-            dispatch(setIsSidebarCollapsed(true))
-            setShowClasses(false) // Close "My Classes" when sidebar collapses
-          }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
+    <>
+      {/* Mobile overlay - only visible when mobile sidebar is open */}
+      {isMobile && isMobileSidebarOpen && (
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          title="Close Sidebar"
-        >
-          <ChevronLeft className="h-5 w-5 text-gray-700 dark:text-gray-300" />
-        </motion.button>
+          className="fixed inset-0 bg-black/50 z-30"
+          onClick={() => dispatch(toggleMobileSidebar())}
+        />
       )}
-      {isSidebarCollapsed && (
-        <motion.div
-          className="fixed left-0 top-1/2 transform -translate-y-1/2 z-50 cursor-pointer"
-          onClick={() => dispatch(setIsSidebarCollapsed(false))}
-          onMouseEnter={() => setIsHandleHovered(true)}
-          onMouseLeave={() => setIsHandleHovered(false)}
-          initial={{ opacity: 0.6 }}
-          animate={{
-            opacity: isHandleHovered ? 1 : 0.6,
-            x: isHandleHovered ? 3 : 0,
-          }}
-          transition={{ duration: 0.3 }}
-        >
-          <div
-            className={`${isDarkMode ? "bg-gray-800" : "bg-white"} 
-              backdrop-blur-md shadow-md rounded-r-full transition-all duration-300
-              flex items-center justify-center`}
-            style={{
-              width: isHandleHovered ? "28px" : "24px",
-              height: isHandleHovered ? "60px" : "50px",
-              border: isDarkMode ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.1)",
-              borderLeft: "none",
-            }}
-          >
-            <ChevronRight
-              className={`${isDarkMode ? "text-cyan-400" : "text-cyan-600"} transition-all duration-300`}
-              size={isHandleHovered ? 18 : 16}
-            />
-          </div>
-        </motion.div>
-      )}
-      <div className="flex h-full w-full flex-col justify-start">
-        {/* Top Logo */}
-        <div
-          className={`z-10 flex min-h-[56px] items-center justify-center pt-3 
-transition-colors duration-500
-${isLandingPage ? "bg-transparent" : "bg-white dark:bg-slate-900"}
-${isSidebarCollapsed ? "px-2" : "px-6"}`}
-        >
-          {isSidebarCollapsed ? (
-            <div className="mx-auto">
-              <GraduationCap className="h-6 w-6 text-cyan-600" />
-            </div>
-          ) : (
-            <div className="w-full text-xl font-bold text-gray-800 dark:text-white text-center">SeaNior</div>
-          )}
-        </div>
 
-        {/* Team Section */}
-        {!isSidebarCollapsed ? (
-          <div
-            className={`flex items-center gap-5 px-8 py-4 transition-colors duration-500
-            ${isLandingPage ? "border-y-[1.5px] border-gray-200/50" : "border-y-[1.5px] border-gray-200 dark:border-gray-700"}`}
-          >
-            <div className="bg-cyan-600 rounded-full p-2">
-              <GraduationCap className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h2 className="text-md font-bold tracking-wide dark:text-gray-200">Teacher Portal</h2>
-              <div className="mt-1 flex items-start gap-2">
-                <p className="text-xs text-gray-500">Swimming Instructor</p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div
-            className={`flex justify-center py-4 transition-colors duration-500
-            ${isLandingPage ? "border-y-[1.5px] border-gray-200/50" : "border-y-[1.5px] border-gray-200 dark:border-gray-700"}`}
-          >
-            <div className="bg-cyan-600 rounded-full p-2">
-              <GraduationCap className="h-5 w-5 text-white" />
-            </div>
-          </div>
-        )}
-
-        {/* Navbar Links */}
-        <nav className="z-10 w-full">
-          <SidebarLink
-            icon={Home}
-            label="Dashboard"
-            href="/Teacher/manage"
-            collapsed={isSidebarCollapsed}
-            isLandingPage={isLandingPage}
-          />
-          <SidebarLink
-            icon={School}
-            label="Find Course"
-            href="/search"
-            collapsed={isSidebarCollapsed}
-            isLandingPage={isLandingPage}
-          />
-          <SidebarLink
-            icon={School}
-            label="My Courses"
-            href="/Teacher/profile/courses"
-            collapsed={isSidebarCollapsed}
-            isLandingPage={isLandingPage}
-          />
-          <SidebarLink
-            icon={User}
-            label="Profile"
-            href="/Teacher/profile/edit"
-            collapsed={isSidebarCollapsed}
-            isLandingPage={isLandingPage}
-          />
-          <SidebarLink
-            icon={Calendar}
-            label="Schedule"
-            href="/Teacher/schedule"
-            collapsed={isSidebarCollapsed}
-            isLandingPage={isLandingPage}
-          />
-          <SidebarLink
-            icon={MessageCircleQuestion}
-            label="Support"
-            href="/support"
-            collapsed={isSidebarCollapsed}
-            isLandingPage={isLandingPage}
-          />
-          <SidebarLink
-            icon={Settings}
-            label="Settings"
-            href="/settings"
-            collapsed={isSidebarCollapsed}
-            isLandingPage={isLandingPage}
-          />
-        </nav>
-
-        {/* Classes Section */}
-        {!isSidebarCollapsed && (
+      <motion.div
+        initial={false}
+        animate={(isMobile && !isMobileSidebarOpen) || (!isMobile && isSidebarCollapsed) ? "collapsed" : "expanded"}
+        variants={sidebarVariants}
+        className={`h-full flex flex-col justify-between z-40 fixed ${isMobile ? "top-0 left-0 bottom-0 pt-16" : ""}`}
+        style={{
+          opacity: isLandingPage ? opacity : 1,
+          transform: isLandingPage && scrollPosition < 50 && !isMobile ? "translateX(-100%)" : "none",
+          backgroundColor: isDarkMode ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(10px)",
+          maxHeight: "100vh",
+          overflowY: "auto",
+          overflowX: "hidden",
+          left: 0,
+          top: isMobile ? 0 : "64px", // Position below navbar on mobile
+          bottom: 0,
+          boxShadow: isDarkMode ? "0 0 15px rgba(0, 0, 0, 0.2)" : "0 0 15px rgba(0, 0, 0, 0.05)",
+        }}
+      >
+        {/* Close button for mobile */}
+        {isMobile && (
           <button
-            onClick={() => setShowClasses((prev) => !prev)}
-            className={`flex w-full items-center justify-between px-8 py-3 transition-colors duration-500
-              ${isLandingPage ? "text-gray-600" : "text-gray-500 dark:text-gray-400"}`}
+            onClick={() => dispatch(toggleMobileSidebar())}
+            className={`absolute top-4 right-4 p-2 rounded-full ${
+              isDarkMode ? "bg-slate-800 text-white" : "bg-gray-100 text-gray-800"
+            }`}
+            aria-label="Close sidebar"
           >
-            <span>My Classes</span>
-            {showClasses ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+            <X size={20} />
           </button>
         )}
 
-        {!isSidebarCollapsed && showClasses && (
-          <>
-            <SidebarLink
-              icon={Users}
-              label="Beginner Swimming"
-              href="/classes/beginner"
-              collapsed={isSidebarCollapsed}
-              isLandingPage={isLandingPage}
-            />
-            <SidebarLink
-              icon={Users}
-              label="Advanced Techniques"
-              href="/classes/advanced"
-              collapsed={isSidebarCollapsed}
-              isLandingPage={isLandingPage}
-            />
-            <SidebarLink
-              icon={Users}
-              label="Intermediate Stroke"
-              href="/classes/intermediate"
-              collapsed={isSidebarCollapsed}
-              isLandingPage={isLandingPage}
-            />
-            <SidebarLink
-              icon={Users}
-              label="Kids Swimming"
-              href="/classes/kids"
-              collapsed={isSidebarCollapsed}
-              isLandingPage={isLandingPage}
-            />
-            <SidebarLink
-              icon={BarChart3}
-              label="Class Analytics"
-              href="/classes/analytics"
-              collapsed={isSidebarCollapsed}
-              isLandingPage={isLandingPage}
-            />
-          </>
-        )}
-
-        {isSidebarCollapsed && (
-          <div className="mt-4 flex justify-center">
-            <button
-              onClick={() => setShowClasses((prev) => !prev)}
-              className={`rounded-full p-2 transition-all duration-300
-                ${isLandingPage ? "hover:bg-gray-100/50" : "hover:bg-gray-100 dark:hover:bg-gray-800"} hover:scale-110 transform`}
+        {/* Toggle Button - only visible on desktop */}
+        {!isMobile && (
+          <motion.div
+            className="absolute right-0 top-20 z-50"
+            initial={false}
+            animate={isSidebarCollapsed ? "collapsed" : "expanded"}
+            variants={toggleButtonVariants}
+          >
+            <motion.button
+              className={`flex items-center justify-center w-6 h-24 bg-gradient-to-r 
+                ${isDarkMode ? "from-slate-800 to-slate-900 text-gray-300" : "from-white to-gray-50 text-gray-600"}
+                rounded-r-md shadow-md`}
+              onClick={() => {
+                dispatch(setIsSidebarCollapsed(true))
+                setShowClasses(false)
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              {showClasses ? (
-                <ChevronUp className="h-5 w-5 text-gray-500" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-gray-500" />
-              )}
-            </button>
-          </div>
+              <ChevronLeft className="h-4 w-4" />
+            </motion.button>
+          </motion.div>
         )}
 
-        {isSidebarCollapsed && showClasses && (
-          <>
-            <SidebarLink
-              icon={Users}
-              label="Beginner"
-              href="/classes/beginner"
-              collapsed={isSidebarCollapsed}
-              isLandingPage={isLandingPage}
-            />
-            <SidebarLink
-              icon={Users}
-              label="Advanced"
-              href="/classes/advanced"
-              collapsed={isSidebarCollapsed}
-              isLandingPage={isLandingPage}
-            />
-            <SidebarLink
-              icon={Users}
-              label="Intermediate"
-              href="/classes/intermediate"
-              collapsed={isSidebarCollapsed}
-              isLandingPage={isLandingPage}
-            />
-            <SidebarLink
-              icon={Users}
-              label="Kids"
-              href="/classes/kids"
-              collapsed={isSidebarCollapsed}
-              isLandingPage={isLandingPage}
-            />
-            <SidebarLink
-              icon={BarChart3}
-              label="Analytics"
-              href="/classes/analytics"
-              collapsed={isSidebarCollapsed}
-              isLandingPage={isLandingPage}
-            />
-          </>
-        )}
-      </div>
-
-      {/* User Profile Section */}
-      <div
-        className={`z-10 flex w-full flex-col py-4 transition-colors duration-500
-          ${isLandingPage ? "border-t border-gray-200/50" : "border-t border-gray-200 dark:border-gray-700"} 
-          ${isLandingPage ? "bg-transparent" : "bg-white dark:bg-slate-900"}
-          ${isLandingPage ? "bg-transparent" : "bg-white dark:bg-slate-900"}
-          ${isSidebarCollapsed ? "items-center px-3" : "px-6"}`}
-      >
-        {!isSidebarCollapsed ? (
-          <>
-            <div className="flex w-full items-center mb-4">
-              <div className="bg-cyan-600 rounded-full p-1 flex items-center justify-center">
-                <User className="h-5 w-5 text-white" />
-              </div>
-              <div className="ml-3">
-                <span
-                  className={`text-sm font-medium ${isLandingPage ? "text-gray-700" : "text-gray-800 dark:text-white"}`}
-                >
-                  Alex Johnson
-                </span>
-                <p className="text-xs text-gray-500">Swimming Instructor</p>
-              </div>
-            </div>
-
-            {/* Logout Button */}
-            <button
-              onClick={handleSignOut}
-              className={`flex w-full items-center gap-3 rounded-md px-3 py-2 transition-all duration-300
+        {/* Collapsed State Toggle - only visible on desktop */}
+        {!isMobile && isSidebarCollapsed && (
+          <motion.div
+            className="fixed left-0 top-20 h-24 z-50 flex items-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            onMouseEnter={() => setIsHandleHovered(true)}
+            onMouseLeave={() => setIsHandleHovered(false)}
+          >
+            <motion.button
+              className={`flex items-center justify-center w-6 rounded-r-md
                 ${
-                  isLandingPage
-                    ? "text-gray-700 hover:bg-gray-100/50"
-                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
-                } hover:scale-105 transform`}
+                  isDarkMode
+                    ? "bg-gradient-to-r from-slate-800 to-slate-900 text-gray-300"
+                    : "bg-gradient-to-r from-white to-gray-50 text-gray-600"
+                }
+                shadow-md`}
+              style={{ height: isHandleHovered ? "96px" : "64px" }}
+              onClick={() => dispatch(setIsSidebarCollapsed(false))}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.2 }}
             >
-              <LogOut className="h-5 w-5" />
-              <span>Logout</span>
-            </button>
-          </>
-        ) : (
-          <>
-            <div className="bg-cyan-600 rounded-full p-1 flex items-center justify-center mb-4">
-              <User className="h-4 w-4 text-white" />
-            </div>
-            <button
-              onClick={handleSignOut}
-              className={`rounded-full p-2 transition-all duration-300
-                ${isLandingPage ? "hover:bg-gray-100/50" : "hover:bg-gray-100 dark:hover:bg-gray-800"} hover:scale-110 transform`}
-              title="Logout"
-            >
-              <LogOut className={`h-5 w-5 ${isLandingPage ? "text-gray-700" : "text-gray-700 dark:text-gray-300"}`} />
-            </button>
-          </>
+              <ChevronRight className={`h-4 w-4 ${isHandleHovered ? "text-cyan-500" : ""}`} />
+            </motion.button>
+          </motion.div>
         )}
-      </div>
-    </div>
+
+        <div className="flex h-full w-full flex-col justify-start">
+          {/* Top Logo */}
+          <div className="flex items-center justify-center h-16 border-b border-gray-100 dark:border-gray-800">
+            <AnimatePresence mode="wait">
+              {(isMobile ? false : isSidebarCollapsed) ? (
+                <motion.div
+                  key="collapsed-logo"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center justify-center"
+                >
+                  <GraduationCap className="h-6 w-6 text-cyan-600" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="expanded-logo"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center"
+                >
+                  <GraduationCap className="h-6 w-6 text-cyan-600 mr-2" />
+                  <span className="text-xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                    SeaNior
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Development Mode Toggle - only visible in development */}
+          {process.env.NODE_ENV === "development" && (
+            <div className="flex items-center justify-center py-2 px-2 border-b border-gray-100 dark:border-gray-800">
+              <div className="flex items-center gap-2">
+                {(!isMobile && !isSidebarCollapsed) || isMobile ? (
+                  <span className="text-xs text-gray-600 dark:text-gray-300">
+                    {userRoleState === "teacher" ? "Teacher" : "Student"}
+                  </span>
+                ) : null}
+                <button
+                  onClick={() => {
+                    setUserRoleState((prev) => (prev === "teacher" ? "student" : "teacher"))
+                    setDevMode((prev) => !prev)
+                  }}
+                  className={`relative inline-flex h-4 w-8 items-center rounded-full ${
+                    userRoleState === "teacher" ? "bg-cyan-500" : "bg-blue-500"
+                  } transition-colors focus:outline-none`}
+                >
+                  <span className="sr-only">Toggle user role</span>
+                  <span
+                    className={`${
+                      userRoleState === "teacher" ? "translate-x-4" : "translate-x-1"
+                    } inline-block h-2.5 w-2.5 transform rounded-full bg-white transition-transform`}
+                  />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Role Section */}
+          <AnimatePresence mode="wait">
+            {(!isMobile && !isSidebarCollapsed) || isMobile ? (
+              <motion.div
+                key="expanded-role"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="flex items-center gap-3 px-4 py-4 border-b border-gray-100 dark:border-gray-800"
+              >
+                <div className={`bg-${userRoleState === "teacher" ? "cyan" : "blue"}-600 rounded-full p-2`}>
+                  {userRoleState === "teacher" ? (
+                    <GraduationCap className="h-5 w-5 text-white" />
+                  ) : (
+                    <BookOpen className="h-5 w-5 text-white" />
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold tracking-wide dark:text-gray-200">
+                    {userRoleState === "teacher" ? "Teacher Portal" : "Student Portal"}
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    {userRoleState === "teacher" ? "Swimming Instructor" : "Swimming Student"}
+                  </p>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="collapsed-role"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.3 }}
+                className="flex justify-center py-4 border-b border-gray-100 dark:border-gray-800"
+              >
+                <div className={`bg-${userRoleState === "teacher" ? "cyan" : "blue"}-600 rounded-full p-2`}>
+                  {userRoleState === "teacher" ? (
+                    <GraduationCap className="h-4 w-4 text-white" />
+                  ) : (
+                    <BookOpen className="h-4 w-4 text-white" />
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Navigation Section */}
+          <div className="mt-2 px-2">
+            <AnimatePresence>
+              {((!isMobile && !isSidebarCollapsed) || isMobile) && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="mb-2 px-2"
+                >
+                  <h3 className="text-xs uppercase text-gray-500 font-medium tracking-wider">Navigation</h3>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Navbar Links */}
+            <nav className="space-y-1">
+              {navItems.map((item, index) => (
+                <SidebarLink
+                  key={item.href}
+                  icon={item.icon}
+                  label={item.label}
+                  href={item.href}
+                  collapsed={!isMobile && isSidebarCollapsed}
+                  isLandingPage={isLandingPage}
+                  delay={index * 0.05}
+                  isMobile={isMobile}
+                  onClick={isMobile ? () => dispatch(toggleMobileSidebar()) : undefined}
+                />
+              ))}
+            </nav>
+          </div>
+
+          {/* Classes Section */}
+          <div className="mt-6 px-2">
+            <AnimatePresence>
+              {((!isMobile && !isSidebarCollapsed) || isMobile) && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center justify-between mb-2 px-2"
+                >
+                  <h3 className="text-xs uppercase text-gray-500 font-medium tracking-wider">
+                    {userRoleState === "teacher" ? "My Classes" : "My Learning"}
+                  </h3>
+                  <button
+                    onClick={() => setShowClasses((prev) => !prev)}
+                    className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    {showClasses ? (
+                      <ChevronLeft className="h-4 w-4 text-gray-500" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-gray-500" />
+                    )}
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {!isMobile && isSidebarCollapsed && (
+              <div className="flex justify-center mb-2">
+                <button
+                  onClick={() => setShowClasses((prev) => !prev)}
+                  onMouseEnter={() => setIsMenuHovered(true)}
+                  onMouseLeave={() => setIsMenuHovered(false)}
+                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <Menu className={`h-4 w-4 ${isMenuHovered ? "text-cyan-500" : "text-gray-500"}`} />
+                </button>
+              </div>
+            )}
+
+            <AnimatePresence>
+              {showClasses && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="space-y-1">
+                    {classItems.map((item, index) => (
+                      <SidebarLink
+                        key={item.href}
+                        icon={item.icon}
+                        label={item.label}
+                        href={item.href}
+                        collapsed={!isMobile && isSidebarCollapsed}
+                        isLandingPage={isLandingPage}
+                        delay={0.1 + index * 0.05}
+                        isSubItem
+                        isMobile={isMobile}
+                        onClick={isMobile ? () => dispatch(toggleMobileSidebar()) : undefined}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* User Profile Section */}
+        <div className="mt-auto border-t border-gray-100 dark:border-gray-800 py-4 px-2">
+          <AnimatePresence mode="wait">
+            {(!isMobile && !isSidebarCollapsed) || isMobile ? (
+              <motion.div
+                key="expanded-profile"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col px-2"
+              >
+                <div className="flex items-center mb-3">
+                  <div className="relative">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
+                      <User className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-900"></div>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium dark:text-white">
+                      {userRoleState === "teacher" ? "Alex Johnson" : "Jamie Smith"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {userRoleState === "teacher" ? "Swimming Instructor" : "Swimming Student"}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign out</span>
+                </button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="collapsed-profile"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="flex flex-col items-center"
+              >
+                <div className="relative mb-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
+                    <User className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-900"></div>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  title="Sign out"
+                >
+                  <LogOut className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </>
   )
 }
 
@@ -390,52 +565,75 @@ interface SidebarLinkProps {
   label: string
   collapsed: boolean
   isLandingPage?: boolean
+  delay?: number
+  isSubItem?: boolean
+  isMobile?: boolean
+  onClick?: () => void
 }
 
-const SidebarLink = ({ href, icon: Icon, label, collapsed, isLandingPage = false }: SidebarLinkProps) => {
+const SidebarLink = ({
+  href,
+  icon: Icon,
+  label,
+  collapsed,
+  isLandingPage = false,
+  delay = 0,
+  isSubItem = false,
+  isMobile = false,
+  onClick,
+}: SidebarLinkProps) => {
   const pathname = usePathname()
   const isActive = pathname === href || pathname?.startsWith(href) || (pathname === "/" && href === "/dashboard")
+  const [isHovered, setIsHovered] = useState(false)
 
   return (
-    <Link href={href} className="w-full">
-      <div
-        className={`relative flex cursor-pointer items-center transition-all duration-300 
+    <Link href={href} onClick={onClick}>
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={`relative flex items-center ${collapsed && !isMobile ? "justify-center" : "justify-start"} 
+          rounded-md cursor-pointer transition-all duration-200
           ${
-            isLandingPage
-              ? isActive
-                ? "bg-gray-100/50"
-                : "hover:bg-gray-200/50"
-              : isActive
+            isActive
+              ? "bg-gradient-to-r from-cyan-500/10 to-blue-500/10 text-cyan-600"
+              : isHovered
                 ? "bg-gray-100 dark:bg-gray-800"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700"
-          } 
-          justify-start ${collapsed ? "px-0 py-4 flex-col" : "px-8 py-3 gap-3"} hover:scale-[1.02] transform`}
+                : "text-gray-700 dark:text-gray-300"
+          }
+          ${isSubItem ? "py-1.5" : "py-2"}
+          ${collapsed && !isMobile ? "px-2" : "px-3"}
+        `}
       >
-        {isActive && <div className="absolute left-0 top-0 h-[100%] w-[5px] bg-cyan-500" />}
+        {isActive && (
+          <motion.div
+            layoutId={isMobile ? undefined : "activeIndicator"}
+            className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-r-full"
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          />
+        )}
 
         <Icon
-          className={`${collapsed ? "h-5 w-5 mx-auto" : "h-5 w-5"} 
-            ${isActive ? "text-cyan-600" : isLandingPage ? "text-gray-700" : "text-gray-700 dark:text-gray-300"}`}
+          className={`${collapsed && !isMobile ? "h-5 w-5" : "h-4 w-4 mr-3"} 
+            ${isActive ? "text-cyan-600" : isHovered ? "text-cyan-500" : ""}
+          `}
         />
 
-        {!collapsed && (
-          <span
-            className={`font-medium 
-            ${isActive ? "text-cyan-600" : isLandingPage ? "text-gray-700" : "text-gray-700 dark:text-gray-300"}`}
-          >
-            {label}
-          </span>
-        )}
-
-        {collapsed && (
-          <span
-            className={`text-[10px] mt-1 font-medium text-center truncate w-full px-1 
-            ${isLandingPage ? "text-gray-700" : "text-gray-700 dark:text-gray-300"}`}
-          >
-            {label.split(" ")[0]}
-          </span>
-        )}
-      </div>
+        <AnimatePresence>
+          {(!collapsed || isMobile) && (
+            <motion.span
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "auto" }}
+              exit={{ opacity: 0, width: 0 }}
+              className={`whitespace-nowrap ${isActive ? "font-medium" : ""}`}
+            >
+              {label}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.div>
     </Link>
   )
 }

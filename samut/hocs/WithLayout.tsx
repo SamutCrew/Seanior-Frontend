@@ -1,37 +1,20 @@
-// app/hocs/WithLayout.tsx
-import React from "react";
-import DashboardWrapper from "@/app/dashboardWrapper";
-import { LayoutType } from "@/types/layout";
 
-interface WithLayoutOptions {
-  showHeader?: boolean;
+// Create a HOC to handle different layout types
+import type React from "react"
+import type { LayoutType } from "@/types/layout"
+
+
+const withLayout = (Component: React.ComponentType<any>, layoutType: LayoutType) => {
+  // Return a new component that wraps the original component
+  const WithLayoutComponent = (props: any) => {
+    // Add a data attribute to the component to identify the layout type
+    return <Component {...props} data-layout={layoutType} />
+  }
+
+  // Set the display name for better debugging
+  WithLayoutComponent.displayName = `withLayout(${Component.displayName || Component.name || "Component"})`
+
+  return WithLayoutComponent
 }
 
-const withLayout = (
-  Component: React.ComponentType<any>,
-  layoutType: LayoutType,
-  options: WithLayoutOptions = {}
-) => {
-  const WrappedComponent = (props: any) => {
-    //layoutType is None, render without wrapper
-    if (layoutType === LayoutType.None) {
-      return <Component {...props} />;
-    }
-
-    // Pass layoutType to DashboardWrapper
-    return (
-      <DashboardWrapper layoutType={layoutType}>
-        <Component {...props} />
-      </DashboardWrapper>
-    );
-  };
-
-  // Set display name for debugging
-  WrappedComponent.displayName = `WithLayout(${
-    Component.displayName || Component.name || "Component"
-  })`;
-
-  return WrappedComponent;
-};
-
-export default withLayout;
+export default withLayout
