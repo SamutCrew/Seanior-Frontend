@@ -6,25 +6,31 @@ import { UserCreate } from "@/types/model/user"
 import { APIEndpoints } from "@/constants/apiEndpoints";
 
 export const checkAlreadyHaveUserInDb = async (firebase_uid: string) => {
-    const url = APIEndpoints.USER.RETRIEVE.CHECK_ISEXIST;
-    try {
-      const response = await apiClient.post(url, { firebase_uid });
-      console.log("User existence check response:", response.data);
-      return response.data;
-    } catch (error: any) {
-      console.error("Error checking user existence:", {
-        message: error.message,
-        response: error.response ? {
-          status: error.response.status,
-          data: error.response.data,
-        } : null,
-      });
-      throw error;
+  const url = APIEndpoints.USER.RETRIEVE.CHECK_ISEXIST;
+  try {
+    const response = await apiClient.post(url, { firebase_uid });
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.status === 404) {
+      console.log('User not found in DB, returning null');
+      return null; // Treat 404 as "user not found"
     }
-  };
+    console.error('Error checking user existence:', {
+      message: error.message,
+      response: error.response
+        ? {
+            status: error.response.status,
+            data: error.response.data,
+          }
+        : null,
+    });
+    throw error;
+  }
+};
 
 export const createUser = async (userData: UserCreate) => {
     const url = APIEndpoints.USER.CREATE;
+    console.log('Attempting to create user with data:', userData);
     try {
       const response = await apiClient.post(url, userData);
       console.log("User creation response:", response.data);

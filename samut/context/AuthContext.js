@@ -1,4 +1,4 @@
-
+// authContext.js
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
@@ -23,6 +23,7 @@ export function AuthProvider({ children }) {
     if (firebaseUser) {
       try {
         let dbUser = await checkAlreadyHaveUserInDb(firebaseUser.uid);
+        console.log('dbUser after check:', dbUser);
   
         if (dbUser === null) {
           const newUser = {
@@ -35,6 +36,8 @@ export function AuthProvider({ children }) {
   
           dbUser = await createUser(newUser);
           console.log('New user created:', dbUser);
+        } else {
+          console.log('User already exists in DB:', dbUser);
         }
   
         setUser(dbUser);
@@ -49,13 +52,17 @@ export function AuthProvider({ children }) {
       } catch (error) {
         console.error('Error in handleNewRegister:', {
           message: error.message,
-          response: error.response ? {
-            status: error.response.status,
-            data: error.response.data,
-          } : null,
+          response: error.response
+            ? {
+                status: error.response.status,
+                data: error.response.data,
+              }
+            : null,
+          stack: error.stack,
         });
         await auth.signOut();
         setUser(null);
+        throw error;
       }
     } else {
       console.log('No Firebase user, signing out');

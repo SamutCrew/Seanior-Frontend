@@ -26,7 +26,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
   // Get authentication state from context
-  const { user, logout } = useAuth()
+  const { user, logOut } = useAuth()
 
   // Add state for user dropdown menu
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
@@ -79,7 +79,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
   // Handle user logout
   const handleLogout = async () => {
     try {
-      await logout()
+      await logOut()
       setIsUserMenuOpen(false)
       // You might want to redirect the user after logout
     } catch (error) {
@@ -334,7 +334,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
                   </Link>
                   <div className={`border-t ${isDarkMode ? "border-slate-700" : "border-gray-200"} my-1`}></div>
                   <button
-                    onClick={handleLogout}
+                    onClick={logOut}
                     className={`flex items-center gap-2 px-4 py-2 text-sm w-full text-left ${
                       isDarkMode ? "text-red-400 hover:bg-slate-700" : "text-red-600 hover:bg-gray-100"
                     }`}

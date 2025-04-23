@@ -27,6 +27,7 @@ import { useAppDispatch, useAppSelector } from "@/app/redux"
 import { setIsSidebarCollapsed, toggleMobileSidebar } from "@/state"
 import type { LucideIcon } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useAuth } from "@/context/AuthContext"
 
 interface SidebarProps {
   isLandingPage?: boolean
@@ -35,6 +36,7 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "student" }: SidebarProps) => {
+  const { user } = useAuth()
   const [devMode, setDevMode] = useState(false)
   const [userRoleState, setUserRoleState] = useState(userRole)
   const [showClasses, setShowClasses] = useState(true)
@@ -513,10 +515,10 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
                   </div>
                   <div className="ml-3">
                     <p className="text-sm font-medium dark:text-white">
-                      {userRoleState === "teacher" ? "Alex Johnson" : "Jamie Smith"}
+                      {user?.name || "User Name"}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {userRoleState === "teacher" ? "Swimming Instructor" : "Swimming Student"}
+                    {user?.name || "User Name"}
                     </p>
                   </div>
                 </div>
