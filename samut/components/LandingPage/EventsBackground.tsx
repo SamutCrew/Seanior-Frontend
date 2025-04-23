@@ -32,8 +32,10 @@ const EventsBackground = () => {
       {/* Ripple horizon effect */}
       <div className="absolute inset-0">
         {/* Horizontal ripple lines */}
+        {/* Optimize background elements for mobile */}
+        {/* Reduce the number of ripple lines on mobile */}
         <div className="absolute inset-0">
-          {[...Array(8)].map((_, i) => (
+          {[...Array(4)].map((_, i) => (
             <motion.div
               key={`ripple-${i}`}
               className={`absolute h-[1px] left-0 right-0 ${
@@ -42,7 +44,7 @@ const EventsBackground = () => {
                   : "bg-gradient-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0"
               }`}
               style={{
-                top: `${15 + i * 10}%`,
+                top: `${15 + i * 20}%`,
                 y: y1,
                 opacity: 0.5 + (i % 3) * 0.1,
               }}
@@ -51,24 +53,25 @@ const EventsBackground = () => {
         </div>
 
         {/* Floating accent elements */}
+        {/* Reduce the number of floating accent elements on mobile */}
         <motion.div className="absolute inset-0" style={{ opacity }}>
-          {[...Array(12)].map((_, i) => (
+          {[...Array(6)].map((_, i) => (
             <motion.div
               key={`accent-${i}`}
               className={`absolute rounded-full ${isDarkMode ? "bg-cyan-500/5" : "bg-cyan-500/3"}`}
               style={{
-                width: `${Math.random() * 8 + 4}rem`,
-                height: `${Math.random() * 8 + 4}rem`,
+                width: `${Math.random() * 6 + 3}rem`,
+                height: `${Math.random() * 6 + 3}rem`,
                 left: `${Math.random() * 90 + 5}%`,
                 top: `${Math.random() * 90 + 5}%`,
                 opacity: Math.random() * 0.07 + 0.03,
               }}
               animate={{
-                x: [0, Math.random() * 20 - 10],
-                y: [0, Math.random() * 20 - 10],
+                x: [0, Math.random() * 10 - 5],
+                y: [0, Math.random() * 10 - 5],
               }}
               transition={{
-                duration: Math.random() * 10 + 20,
+                duration: Math.random() * 8 + 15,
                 repeat: Number.POSITIVE_INFINITY,
                 repeatType: "reverse",
                 ease: "easeInOut",
@@ -102,8 +105,9 @@ const EventsBackground = () => {
         />
 
         {/* Water ripple animations */}
+        {/* Reduce the number of water ripple animations on mobile */}
         <div className="absolute inset-0 water-ripples">
-          {[...Array(5)].map((_, i) => (
+          {[...Array(3)].map((_, i) => (
             <div
               key={`ripple-container-${i}`}
               className="absolute"

@@ -16,7 +16,7 @@ export const CTASection = ({ title, description, buttonText, onButtonClick }: CT
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
   return (
-    <section className="py-24 relative overflow-hidden">
+    <section className="py-12 sm:py-16 md:py-24 relative overflow-hidden">
       {/* Dynamic background based on dark mode */}
       <div
         className={`absolute inset-0 ${
@@ -65,7 +65,7 @@ export const CTASection = ({ title, description, buttonText, onButtonClick }: CT
         />
 
         {/* Floating bubbles */}
-        {[...Array(8)].map((_, i) => (
+        {[...Array(window.innerWidth < 640 ? 4 : 8)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute rounded-full bg-white/30 backdrop-blur-sm"
@@ -105,7 +105,7 @@ export const CTASection = ({ title, description, buttonText, onButtonClick }: CT
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           viewport={{ once: true }}
-          className="text-3xl md:text-5xl font-bold mb-6 text-white"
+          className="text-2xl sm:text-3xl md:text-5xl font-bold mb-4 sm:mb-6 text-white"
         >
           {title}
         </motion.h2>
@@ -115,7 +115,7 @@ export const CTASection = ({ title, description, buttonText, onButtonClick }: CT
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
           viewport={{ once: true }}
-          className="mb-10 text-lg md:text-xl text-white/90 max-w-3xl mx-auto"
+          className="mb-6 sm:mb-10 text-base sm:text-lg md:text-xl text-white/90 max-w-3xl mx-auto px-4"
         >
           {description}
         </motion.p>
@@ -125,13 +125,13 @@ export const CTASection = ({ title, description, buttonText, onButtonClick }: CT
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
           viewport={{ once: true }}
-          className="flex flex-col sm:flex-row gap-4 justify-center"
+          className="flex flex-col sm:flex-row gap-4 justify-center px-4 sm:px-0 w-full sm:w-auto"
         >
-          <Button variant="gradient" size="lg" onClick={onButtonClick} showArrow className="group">
+          <Button variant="gradient" size="lg" onClick={onButtonClick} showArrow className="group w-full sm:w-auto">
             {buttonText}
           </Button>
 
-          <Button variant="outline" size="lg" className="backdrop-blur-sm">
+          <Button variant="outline" size="lg" className="backdrop-blur-sm w-full sm:w-auto">
             Learn More
           </Button>
         </motion.div>
@@ -142,27 +142,27 @@ export const CTASection = ({ title, description, buttonText, onButtonClick }: CT
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
           viewport={{ once: true }}
-          className="mt-12 flex flex-wrap justify-center items-center gap-8"
+          className="mt-8 sm:mt-12 flex flex-wrap justify-center items-center gap-4 sm:gap-8 px-4"
         >
-          <div className="flex items-center bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mr-3">
-              <span className="text-white font-bold">800+</span>
+          <div className="flex items-center bg-white/10 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-lg">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/20 flex items-center justify-center mr-2 sm:mr-3">
+              <span className="text-white text-sm sm:text-base font-bold">800+</span>
             </div>
-            <span className="text-white text-sm">Happy Students</span>
+            <span className="text-white text-xs sm:text-sm">Happy Students</span>
           </div>
 
-          <div className="flex items-center bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mr-3">
-              <span className="text-white font-bold">50+</span>
+          <div className="flex items-center bg-white/10 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-lg">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/20 flex items-center justify-center mr-2 sm:mr-3">
+              <span className="text-white text-sm sm:text-base font-bold">50+</span>
             </div>
-            <span className="text-white text-sm">Expert Instructors</span>
+            <span className="text-white text-xs sm:text-sm">Expert Instructors</span>
           </div>
 
-          <div className="flex items-center bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg">
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mr-3">
-              <span className="text-white font-bold">15+</span>
+          <div className="flex items-center bg-white/10 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-lg">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/20 flex items-center justify-center mr-2 sm:mr-3">
+              <span className="text-white text-sm sm:text-base font-bold">15+</span>
             </div>
-            <span className="text-white text-sm">Pool Locations</span>
+            <span className="text-white text-xs sm:text-sm">Pool Locations</span>
           </div>
         </motion.div>
       </div>

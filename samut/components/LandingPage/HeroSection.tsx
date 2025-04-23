@@ -38,7 +38,7 @@ export const HeroSection = ({
   const heroRef = useRef<HTMLDivElement>(null)
   const [scrollY, setScrollY] = useState(0)
   const [windowHeight, setWindowHeight] = useState(0)
-  const [windowWidth, setWindowWidth] = useState(0)
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 0)
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
   // For parallax scrolling effect
@@ -95,9 +95,9 @@ export const HeroSection = ({
       ref={heroRef}
       className="relative w-full overflow-hidden"
       style={{
-        height: "150vh", // 150% of viewport height
-        minHeight: "1000px",
-        marginTop: isAtTop ? "-80px" : "0", // Move hero up when at top to compensate for navbar height
+        height: windowWidth < 640 ? "130vh" : "150vh", // Shorter height on mobile
+        minHeight: windowWidth < 640 ? "800px" : "1000px",
+        marginTop: isAtTop ? "-80px" : "0",
         transition: "margin-top 0.3s ease-in-out",
       }}
     >
@@ -163,7 +163,7 @@ export const HeroSection = ({
       {/* Content Container - positioned absolutely within the parent */}
       <motion.div className="absolute inset-0 flex flex-col items-center z-20" style={{ opacity }}>
         {/* Left social icons - centered vertically with hover animations */}
-        <div className="absolute left-4 md:left-8 top-1/2 transform -translate-y-1/2 flex flex-col gap-6 text-white text-xl md:text-2xl z-10">
+        <div className="absolute left-4 md:left-8 top-1/2 transform -translate-y-1/2 hidden sm:flex flex-col gap-6 text-white text-xl md:text-2xl z-10">
           <motion.a
             href="#"
             whileHover={{ y: -3, scale: 1.1, color: "#4267B2" }}
@@ -202,7 +202,7 @@ export const HeroSection = ({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-4 md:mb-6 drop-shadow-lg"
+            className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-3 md:mb-6 drop-shadow-lg"
             style={{
               textShadow: isDarkMode ? "0 4px 16px rgba(0,0,0,0.5)" : "0 4px 12px rgba(0,0,0,0.3)",
               letterSpacing: "-0.02em",
@@ -214,7 +214,7 @@ export const HeroSection = ({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
-            className="text-lg sm:text-xl md:text-2xl text-white/90 mb-6 md:mb-10 max-w-2xl drop-shadow-md mx-auto"
+            className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-5 md:mb-10 max-w-2xl drop-shadow-md mx-auto"
             style={{ textShadow: isDarkMode ? "0 2px 10px rgba(0,0,0,0.5)" : "0 2px 8px rgba(0,0,0,0.3)" }}
           >
             {subtitle}
@@ -223,15 +223,26 @@ export const HeroSection = ({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.6, ease: "easeOut" }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center"
           >
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
-              <Button variant="gradient" size="lg" onClick={primaryAction.onClick} showArrow className="group">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
+              <Button
+                variant="gradient"
+                size={windowWidth < 640 ? "md" : "lg"}
+                onClick={primaryAction.onClick}
+                showArrow
+                className="group w-full sm:w-auto"
+              >
                 {primaryAction.text}
               </Button>
             </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
-              <Button variant="outline" size="lg" onClick={secondaryAction.onClick} className="backdrop-blur-sm">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                size={windowWidth < 640 ? "md" : "lg"}
+                onClick={secondaryAction.onClick}
+                className="backdrop-blur-sm w-full sm:w-auto"
+              >
                 <span
                   className={
                     isDarkMode ? "bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent" : ""
@@ -245,28 +256,28 @@ export const HeroSection = ({
         </div>
 
         {/* Feature cards at absolute bottom with staggered animations */}
-        <div className="absolute bottom-0 left-0 right-0 px-4 z-20 mb-[220px] sm:mb-[250px] md:mb-[280px]">
+        <div className="absolute bottom-0 left-0 right-0 px-4 z-20 mb-[180px] sm:mb-[220px] md:mb-[280px]">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.9 }}
-            className="w-full max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-6"
+            className="w-full max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-6"
           >
             {[
               {
                 title: "Find Instructors",
                 description: "Certified swimming instructors near you",
-                icon: <FaChalkboardTeacher className="text-xl md:text-2xl" />,
+                icon: <FaChalkboardTeacher className="text-lg sm:text-xl md:text-2xl" />,
               },
               {
                 title: "All Levels",
                 description: "From beginners to advanced swimmers",
-                icon: <FaSwimmer className="text-xl md:text-2xl" />,
+                icon: <FaSwimmer className="text-lg sm:text-xl md:text-2xl" />,
               },
               {
                 title: "Pool Locations",
                 description: "Find lessons at convenient locations",
-                icon: <FaWater className="text-xl md:text-2xl" />,
+                icon: <FaWater className="text-lg sm:text-xl md:text-2xl" />,
               },
             ].map((item, i) => (
               <motion.div
@@ -275,28 +286,28 @@ export const HeroSection = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.9 + i * 0.2 }}
                 whileHover={{
-                  y: -8,
-                  scale: 1.03,
+                  y: windowWidth < 640 ? -4 : -8,
+                  scale: windowWidth < 640 ? 1.02 : 1.03,
                   boxShadow: isDarkMode
                     ? "0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)"
                     : "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
                 }}
-                className={`flex items-start gap-3 md:gap-4 ${
+                className={`flex items-start gap-2 sm:gap-3 md:gap-4 ${
                   isDarkMode
                     ? "bg-slate-800/60 backdrop-blur-md border-slate-700/50"
                     : "bg-white/15 backdrop-blur-md border-white/30"
-                } p-4 md:p-6 rounded-xl border text-white shadow-lg transition-all duration-300`}
+                } p-3 sm:p-4 md:p-6 rounded-xl border text-white shadow-lg transition-all duration-300`}
               >
                 <div
-                  className={`p-2 md:p-3 rounded-full ${
+                  className={`p-1.5 sm:p-2 md:p-3 rounded-full ${
                     isDarkMode ? "bg-blue-600/30" : "bg-white/20"
                   } flex items-center justify-center`}
                 >
                   {item.icon}
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg md:text-xl mb-1 md:mb-2">{item.title}</h3>
-                  <p className="text-sm md:text-base text-white/90">{item.description}</p>
+                  <h3 className="font-bold text-base sm:text-lg md:text-xl mb-0.5 sm:mb-1 md:mb-2">{item.title}</h3>
+                  <p className="text-xs sm:text-sm md:text-base text-white/90">{item.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -305,13 +316,13 @@ export const HeroSection = ({
       </motion.div>
 
       {/* Enhanced scroll indicator - positioned to be visible */}
-      <ScrollDownButton targetId="features" isDarkMode={isDarkMode} />
+      {windowWidth > 640 && <ScrollDownButton targetId="features" isDarkMode={isDarkMode} />}
 
       {/* Floating particles effect */}
       <Particles isDarkMode={isDarkMode} />
 
       {/* Enhanced wave divider with multiple layers and gradients */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 overflow-hidden h-[120px] sm:h-[150px] md:h-[180px]">
+      <div className="absolute bottom-0 left-0 right-0 z-10 overflow-hidden h-[100px] sm:h-[120px] md:h-[150px] lg:h-[180px]">
         {/* Gradient overlay for smoother transition */}
         <div
           className={`absolute bottom-0 left-0 right-0 h-64 ${
@@ -420,9 +431,23 @@ export const HeroSection = ({
 
 // Floating particles component
 const Particles = ({ isDarkMode }: { isDarkMode: boolean }) => {
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 0)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth)
+    }
+
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
+  // Determine number of particles based on screen size
+  const particleCount = windowWidth < 640 ? 8 : 15
+
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {[...Array(15)].map((_, i) => (
+      {[...Array(particleCount)].map((_, i) => (
         <motion.div
           key={i}
           className={`absolute rounded-full ${isDarkMode ? "bg-blue-400/20" : "bg-white/30"}`}
@@ -479,13 +504,7 @@ const ScrollDownButtonWithDarkMode = ({ targetId, isDarkMode }: { targetId: stri
           isDarkMode ? "bg-blue-600/30" : "bg-white/30"
         } flex items-center justify-center backdrop-blur-sm`}
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
+        <svg xmlns="http://wwww3org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
         </svg>
       </motion.div>

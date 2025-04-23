@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { FaSearch, FaFilter, FaMapMarkerAlt } from "react-icons/fa"
-import { TeacherCard } from "@/components/TeachersManage/TeacherCard"
+import { TeacherCard } from "@/components/Common/TeacherCard"
 import { SectionTitle } from "@/components/Common/SectionTitle"
 import { Button } from "@/components/Common/Button"
 

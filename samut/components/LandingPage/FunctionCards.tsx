@@ -114,7 +114,7 @@ export const AnimatedNumber = ({ value, duration = 2000, color, darkColor }: Ani
   return (
     <div
       ref={ref}
-      className={`text-4xl md:text-5xl font-bold bg-gradient-to-r ${isDarkMode ? darkColor : color} bg-clip-text text-transparent mb-1`}
+      className={`text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r ${isDarkMode ? darkColor : color} bg-clip-text text-transparent mb-1`}
     >
       {count}+
     </div>
@@ -150,19 +150,19 @@ export const FunctionCards = () => {
   return (
     <div
       id="features"
-      className={`relative py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 xl:px-32 overflow-hidden ${
+      className={`relative py-12 sm:py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 xl:px-32 overflow-hidden ${
         isDarkMode ? "bg-slate-900 text-white" : "bg-white text-gray-900"
       } transition-all duration-1000`}
     >
-      {/* Animated background elements */}
+      {/* Animated background elements - reduce complexity on mobile */}
       <div className="absolute inset-0 overflow-hidden -z-10">
         <motion.div
-          className={`absolute top-20 left-10 w-64 h-64 rounded-full ${
+          className={`absolute top-20 left-10 w-40 sm:w-64 h-40 sm:h-64 rounded-full ${
             isDarkMode ? "bg-blue-900/20" : "bg-blue-200/20"
           } blur-3xl`}
           animate={{
-            x: [0, 50, 0],
-            y: [0, 30, 0],
+            x: [0, 30, 0],
+            y: [0, 20, 0],
           }}
           transition={{
             duration: 20,
@@ -171,12 +171,12 @@ export const FunctionCards = () => {
           }}
         />
         <motion.div
-          className={`absolute bottom-20 right-10 w-80 h-80 rounded-full ${
+          className={`absolute bottom-20 right-10 w-40 sm:w-80 h-40 sm:h-80 rounded-full ${
             isDarkMode ? "bg-cyan-900/20" : "bg-cyan-200/20"
           } blur-3xl`}
           animate={{
-            x: [0, -50, 0],
-            y: [0, -30, 0],
+            x: [0, -30, 0],
+            y: [0, -20, 0],
           }}
           transition={{
             duration: 25,
@@ -185,11 +185,11 @@ export const FunctionCards = () => {
           }}
         />
 
-        {/* Additional decorative elements */}
+        {/* Additional decorative elements - hide on small screens */}
         <svg
-          className={`absolute top-1/4 right-1/4 w-64 h-64 ${
+          className={`absolute top-1/4 right-1/4 w-40 sm:w-64 h-40 sm:h-64 ${
             isDarkMode ? "text-blue-900" : "text-blue-100"
-          } opacity-20`}
+          } opacity-20 hidden sm:block`}
           viewBox="0 0 200 200"
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -207,11 +207,11 @@ export const FunctionCards = () => {
         initial="hidden"
         animate={isInView ? "visible" : "hidden"}
         variants={containerVariants}
-        className="max-w-7xl mx-auto mb-16 sm:mb-20 md:mb-24 pt-8 sm:pt-12 md:pt-16 transition-all duration-700"
+        className="max-w-7xl mx-auto mb-10 sm:mb-16 md:mb-20 lg:mb-24 pt-6 sm:pt-8 md:pt-12 lg:pt-16 transition-all duration-700"
       >
         <motion.h2
           variants={itemVariants}
-          className={`text-3xl md:text-4xl font-bold text-center mb-6 ${isDarkMode ? "text-white" : "text-gray-900"}`}
+          className={`text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-4 sm:mb-6 ${isDarkMode ? "text-white" : "text-gray-900"} px-4`}
         >
           Our <span className="bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">Impact</span>{" "}
           in Numbers
@@ -219,21 +219,21 @@ export const FunctionCards = () => {
 
         <motion.div
           variants={itemVariants}
-          className="w-24 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 mx-auto mb-16 rounded-full"
+          className="w-16 sm:w-24 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 mx-auto mb-8 sm:mb-16 rounded-full"
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-10">
           {stats.map((stat, index) => (
             <motion.div
               key={index}
               variants={itemVariants}
               whileHover={{
-                y: -8,
+                y: [-8, -4][+(window.innerWidth < 640)], // Smaller hover lift on mobile
                 boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
               }}
               className={`${
                 isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"
-              } p-6 md:p-8 rounded-2xl shadow-lg border text-center transition-all duration-300 relative overflow-hidden group`}
+              } p-4 sm:p-6 md:p-8 rounded-2xl shadow-lg border text-center transition-all duration-300 relative overflow-hidden group`}
             >
               <div
                 className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-${isDarkMode ? "10" : "5"} transition-opacity duration-500 -z-10`}
@@ -244,133 +244,131 @@ export const FunctionCards = () => {
               </p>
 
               {/* Decorative element */}
-              <div className="absolute -bottom-6 -right-6 w-24 h-24 rounded-full bg-gradient-to-br opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
+              <div className="absolute -bottom-6 -right-6 w-16 sm:w-24 h-16 sm:h-24 rounded-full bg-gradient-to-br opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
             </motion.div>
           ))}
         </div>
       </motion.div>
 
-      <div className="relative max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true, margin: "-100px" }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-6">
-            What We Offer
-          </h2>
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true, margin: "-100px" }}
+        className="text-center mb-10 sm:mb-16"
+      >
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-4 sm:mb-6 px-4">
+          What We Offer
+        </h2>
 
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <motion.div
-              className="w-12 h-[3px] bg-gradient-to-r from-blue-600 to-cyan-500"
-              initial={{ width: 0 }}
-              whileInView={{ width: 48 }}
-              transition={{ duration: 1 }}
-              viewport={{ once: true }}
-            />
-            <span className={`text-lg ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-              Discover our comprehensive swimming services
-            </span>
-            <motion.div
-              className="w-12 h-[3px] bg-gradient-to-r from-cyan-500 to-blue-600"
-              initial={{ width: 0 }}
-              whileInView={{ width: 48 }}
-              transition={{ duration: 1 }}
-              viewport={{ once: true }}
-            />
-          </div>
-        </motion.div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
-          {cards.map((card, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: index * 0.1 }}
-              viewport={{ once: true, margin: "-50px" }}
-              onHoverStart={() => setHoveredCard(index)}
-              onHoverEnd={() => setHoveredCard(null)}
-            >
-              <Link href={card.link} className="group block">
-                <motion.div
-                  className={`relative h-[350px] rounded-2xl overflow-hidden transition-all duration-500 ${
-                    isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"
-                  } border`}
-                  whileHover={{
-                    y: -10,
-                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-                  }}
-                >
-                  {/* Card top section with image */}
-                  <div className="h-[200px] relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10" />
-                    <Image
-                      src={card.image || "/placeholder.svg?height=400&width=600&query=swimming feature"}
-                      alt={card.title}
-                      fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-110"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                    />
-
-                    {/* Floating badge */}
-                    <div
-                      className={`absolute top-4 left-4 ${
-                        isDarkMode ? "bg-gray-800/90 text-blue-400" : "bg-white/90 text-blue-600"
-                      } backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold z-20 flex items-center gap-1.5 shadow-sm`}
-                    >
-                      {card.icon}
-                      <span>Featured</span>
-                    </div>
-                  </div>
-
-                  {/* Card content */}
-                  <div className="p-6 relative">
-                    <h3
-                      className={`text-xl font-bold ${
-                        isDarkMode ? "text-white group-hover:text-blue-400" : "text-gray-900 group-hover:text-blue-600"
-                      } mb-2 transition-colors duration-300`}
-                    >
-                      {card.title}
-                    </h3>
-                    <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"} text-sm mb-4`}>
-                      {card.shortDescription}
-                    </p>
-
-                    {/* Action button */}
-                    <div
-                      className={`flex items-center ${
-                        isDarkMode ? "text-blue-400" : "text-blue-600"
-                      } font-medium text-sm`}
-                    >
-                      <span>Learn more</span>
-                      <motion.div animate={{ x: hoveredCard === index ? 5 : 0 }} transition={{ duration: 0.3 }}>
-                        <ChevronRight className="w-4 h-4 ml-1" />
-                      </motion.div>
-                    </div>
-
-                    {/* Decorative corner accent */}
-                    <div
-                      className={`absolute bottom-0 right-0 w-16 h-16 bg-gradient-to-tl ${
-                        isDarkMode ? "from-blue-900" : "from-blue-100"
-                      } to-transparent rounded-tl-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
-                    />
-                  </div>
-
-                  {/* Animated highlight line */}
-                  <motion.div
-                    className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-500"
-                    initial={{ scaleX: 0, originX: 0 }}
-                    animate={{ scaleX: hoveredCard === index ? 1 : 0 }}
-                    transition={{ duration: 0.4 }}
-                  />
-                </motion.div>
-              </Link>
-            </motion.div>
-          ))}
+        <div className="flex items-center justify-center space-x-2 sm:space-x-3 mb-4">
+          <motion.div
+            className="w-8 sm:w-12 h-[3px] bg-gradient-to-r from-blue-600 to-cyan-500"
+            initial={{ width: 0 }}
+            whileInView={{ width: 32 }}
+            transition={{ duration: 1 }}
+            viewport={{ once: true }}
+          />
+          <span className={`text-base sm:text-lg ${isDarkMode ? "text-gray-300" : "text-gray-600"} px-2`}>
+            Discover our swimming services
+          </span>
+          <motion.div
+            className="w-8 sm:w-12 h-[3px] bg-gradient-to-r from-cyan-500 to-blue-600"
+            initial={{ width: 0 }}
+            whileInView={{ width: 32 }}
+            transition={{ duration: 1 }}
+            viewport={{ once: true }}
+          />
         </div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 md:gap-10">
+        {cards.map((card, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: index * 0.1 }}
+            viewport={{ once: true, margin: "-50px" }}
+            onHoverStart={() => setHoveredCard(index)}
+            onHoverEnd={() => setHoveredCard(null)}
+          >
+            <Link href={card.link} className="group block">
+              <motion.div
+                className={`relative h-[280px] sm:h-[320px] md:h-[350px] rounded-2xl overflow-hidden transition-all duration-500 ${
+                  isDarkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"
+                } border`}
+                whileHover={{
+                  y: [-10, -5][+(window.innerWidth < 640)], // Smaller hover lift on mobile
+                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                }}
+              >
+                {/* Card top section with image */}
+                <div className="h-[150px] sm:h-[180px] md:h-[200px] relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10" />
+                  <Image
+                    src={card.image || "/placeholder.svg?height=400&width=600&query=swimming feature"}
+                    alt={card.title}
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  />
+
+                  {/* Floating badge */}
+                  <div
+                    className={`absolute top-3 sm:top-4 left-3 sm:left-4 ${
+                      isDarkMode ? "bg-gray-800/90 text-blue-400" : "bg-white/90 text-blue-600"
+                    } backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full text-xs font-semibold z-20 flex items-center gap-1 sm:gap-1.5 shadow-sm`}
+                  >
+                    {card.icon}
+                    <span>Featured</span>
+                  </div>
+                </div>
+
+                {/* Card content */}
+                <div className="p-4 sm:p-6 relative">
+                  <h3
+                    className={`text-lg sm:text-xl font-bold ${
+                      isDarkMode ? "text-white group-hover:text-blue-400" : "text-gray-900 group-hover:text-blue-600"
+                    } mb-1 sm:mb-2 transition-colors duration-300`}
+                  >
+                    {card.title}
+                  </h3>
+                  <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"} text-xs sm:text-sm mb-3 sm:mb-4`}>
+                    {card.shortDescription}
+                  </p>
+
+                  {/* Action button */}
+                  <div
+                    className={`flex items-center ${
+                      isDarkMode ? "text-blue-400" : "text-blue-600"
+                    } font-medium text-xs sm:text-sm`}
+                  >
+                    <span>Learn more</span>
+                    <motion.div animate={{ x: hoveredCard === index ? 5 : 0 }} transition={{ duration: 0.3 }}>
+                      <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
+                    </motion.div>
+                  </div>
+
+                  {/* Decorative corner accent */}
+                  <div
+                    className={`absolute bottom-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-tl ${
+                      isDarkMode ? "from-blue-900" : "from-blue-100"
+                    } to-transparent rounded-tl-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+                  />
+                </div>
+
+                {/* Animated highlight line */}
+                <motion.div
+                  className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-500"
+                  initial={{ scaleX: 0, originX: 0 }}
+                  animate={{ scaleX: hoveredCard === index ? 1 : 0 }}
+                  transition={{ duration: 0.4 }}
+                />
+              </motion.div>
+            </Link>
+          </motion.div>
+        ))}
       </div>
     </div>
   )

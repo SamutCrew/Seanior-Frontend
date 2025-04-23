@@ -86,7 +86,7 @@ const events: Event[] = [
     time: "6:00 PM - 9:00 PM",
     location: "Downtown Lounge, NYC",
     category: "Networking",
-    imageUrl: "/Events/Feature1.jpeg",
+    imageUrl: "/Events/3.jpeg",
   },
 ]
 
@@ -158,7 +158,7 @@ const EventsCarousel = () => {
       </div>
 
       {/* Slides Container */}
-      <div className="relative h-[500px] md:h-[550px] lg:h-[600px] overflow-hidden">
+      <div className="relative h-[350px] sm:h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden">
         <AnimatePresence initial={false} mode="wait">
           <motion.div
             key={index}
@@ -179,12 +179,12 @@ const EventsCarousel = () => {
             />
 
             {/* Content */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 z-20 text-white">
+            <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-10 z-20 text-white">
               <div className="max-w-4xl mx-auto">
                 <motion.span
                   className={`${
                     isDarkMode ? "bg-cyan-600" : "bg-cyan-600"
-                  } text-xs font-semibold px-3 py-1.5 rounded-full mb-3 inline-block`}
+                  } text-xs font-semibold px-2 py-1 sm:px-3 sm:py-1.5 rounded-full mb-2 sm:mb-3 inline-block`}
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
@@ -200,14 +200,14 @@ const EventsCarousel = () => {
                   <div
                     className={`flex items-center ${
                       isDarkMode ? "bg-slate-800/70" : "bg-white/20"
-                    } backdrop-blur-sm px-3 py-1.5 rounded-full`}
+                    } backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full`}
                   >
-                    <Calendar className="w-3.5 h-3.5 mr-2" />
-                    <span className="text-sm">{carouselEvents[index].date}</span>
+                    <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 sm:mr-2" />
+                    <span className="text-xs sm:text-sm">{carouselEvents[index].date}</span>
                   </div>
                 </motion.div>
                 <motion.h2
-                  className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight mb-4"
+                  className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold leading-tight mb-2 sm:mb-4"
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.4 }}
@@ -220,14 +220,14 @@ const EventsCarousel = () => {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.5 }}
                 >
-                  <MapPin className="w-3.5 h-3.5 mr-2 text-cyan-300" />
-                  <span className="text-cyan-100">{carouselEvents[index].location}</span>
+                  <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1 sm:mr-2 text-cyan-300" />
+                  <span className="text-xs sm:text-sm text-cyan-100">{carouselEvents[index].location}</span>
                 </motion.div>
 
                 <motion.button
-                  className={`mt-6 ${
+                  className={`mt-4 sm:mt-6 ${
                     isDarkMode ? "bg-cyan-600 hover:bg-cyan-700" : "bg-cyan-600 hover:bg-cyan-700"
-                  } text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all duration-300 text-sm`}
+                  } text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg flex items-center gap-2 transition-all duration-300 text-xs sm:text-sm`}
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.6 }}
@@ -245,7 +245,7 @@ const EventsCarousel = () => {
       {/* Navigation Arrows */}
       <motion.button
         onClick={prevSlide}
-        className={`absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2 ${
+        className={`absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-2 ${
           isDarkMode ? "bg-slate-800/70 hover:bg-slate-700/70" : "bg-white/20 hover:bg-white/30"
         } backdrop-blur-sm rounded-full transition-all duration-300`}
         whileHover={{ scale: 1.1 }}
@@ -254,11 +254,11 @@ const EventsCarousel = () => {
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.7 }}
       >
-        <ChevronLeft className="text-white text-lg" />
+        <ChevronLeft className="text-white text-base sm:text-lg" />
       </motion.button>
       <motion.button
         onClick={nextSlide}
-        className={`absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 ${
+        className={`absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 p-2 sm:p-2 ${
           isDarkMode ? "bg-slate-800/70 hover:bg-slate-700/70" : "bg-white/20 hover:bg-white/30"
         } backdrop-blur-sm rounded-full transition-all duration-300`}
         whileHover={{ scale: 1.1 }}
@@ -267,7 +267,7 @@ const EventsCarousel = () => {
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.7 }}
       >
-        <ChevronRight className="text-white text-lg" />
+        <ChevronRight className="text-white text-base sm:text-lg" />
       </motion.button>
 
       {/* Slider Bar with Indicators */}
@@ -332,7 +332,7 @@ const EventSection = () => {
           className="text-center mb-12 md:mb-16"
         >
           <motion.span
-            className={`inline-block ${isDarkMode ? "text-cyan-400" : "text-cyan-600"} font-medium mb-4 tracking-wider text-sm`}
+            className={`inline-block ${isDarkMode ? "text-cyan-400" : "text-cyan-600"} font-medium mb-2 sm:mb-4 tracking-wider text-xs sm:text-sm`}
             variants={{
               hidden: { opacity: 0, y: 20 },
               visible: { opacity: 1, y: 0, transition: { duration: 0.8 } },
@@ -341,7 +341,7 @@ const EventSection = () => {
             UPCOMING EVENTS
           </motion.span>
           <motion.h2
-            className={`text-3xl md:text-4xl lg:text-5xl font-bold ${isDarkMode ? "text-white" : "text-gray-900"} mb-6`}
+            className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold ${isDarkMode ? "text-white" : "text-gray-900"} mb-3 sm:mb-6`}
             variants={{
               hidden: { opacity: 0, y: 20 },
               visible: { opacity: 1, y: 0, transition: { duration: 0.8 } },
@@ -357,18 +357,20 @@ const EventSection = () => {
             }}
           >
             <motion.div
-              className={`w-16 h-0.5 ${isDarkMode ? "bg-cyan-700" : "bg-cyan-400"} mx-4`}
+              className={`w-12 sm:w-16 h-0.5 ${isDarkMode ? "bg-cyan-700" : "bg-cyan-400"} mx-3 sm:mx-4`}
               initial={{ width: 0 }}
-              animate={{ width: 64 }}
+              animate={{ width: 48 }}
               transition={{ duration: 1, delay: 0.5 }}
             />
-            <p className={`${isDarkMode ? "text-slate-300" : "text-gray-600"} max-w-2xl mx-auto text-lg`}>
+            <p
+              className={`${isDarkMode ? "text-slate-300" : "text-gray-600"} max-w-2xl mx-auto text-sm sm:text-base md:text-lg`}
+            >
               Join our community for unforgettable experiences and networking opportunities
             </p>
             <motion.div
-              className={`w-16 h-0.5 ${isDarkMode ? "bg-cyan-700" : "bg-cyan-400"} mx-4`}
+              className={`w-12 sm:w-16 h-0.5 ${isDarkMode ? "bg-cyan-700" : "bg-cyan-400"} mx-3 sm:mx-4`}
               initial={{ width: 0 }}
-              animate={{ width: 64 }}
+              animate={{ width: 48 }}
               transition={{ duration: 1, delay: 0.5 }}
             />
           </motion.div>
@@ -393,16 +395,16 @@ const EventSection = () => {
           className="text-center mt-12 md:mt-16"
         >
           <motion.button
-            className={`px-6 py-3 ${
+            className={`px-4 py-2 sm:px-6 sm:py-3 ${
               isDarkMode
                 ? "bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800"
                 : "bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800"
-            } text-white rounded-lg text-base font-medium transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 mx-auto`}
+            } text-white rounded-lg text-sm sm:text-base font-medium transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 mx-auto`}
             whileHover={{ scale: 1.03, y: -2 }}
             whileTap={{ scale: 0.98 }}
           >
             <span>View All Events</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
           </motion.button>
         </motion.div>
       </div>

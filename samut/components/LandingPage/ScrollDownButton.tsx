@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { useEffect, useState } from "react"
 
 interface ScrollDownButtonProps {
   targetId: string
@@ -8,14 +9,30 @@ interface ScrollDownButtonProps {
 }
 
 const ScrollDownButton = ({ targetId, isDarkMode = false }: ScrollDownButtonProps) => {
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 0)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth)
+    }
+
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
   const handleClick = () => {
     document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth" })
   }
 
+  // Adjust size based on screen width
+  const buttonSize = windowWidth < 640 ? "w-6 h-6" : "w-8 h-8"
+  const iconSize = windowWidth < 640 ? "h-3 w-3" : "h-4 w-4"
+  const textSize = windowWidth < 640 ? "text-xs" : "text-sm"
+
   return (
     <motion.button
       onClick={handleClick}
-      className={`absolute bottom-10 left-1/2 transform -translate-x-1/2 z-30 flex flex-col items-center justify-center ${
+      className={`absolute bottom-6 sm:bottom-10 left-1/2 transform -translate-x-1/2 z-30 flex flex-col items-center justify-center ${
         isDarkMode ? "text-blue-300" : "text-white"
       }`}
       initial={{ opacity: 0, y: 20 }}
@@ -23,7 +40,7 @@ const ScrollDownButton = ({ targetId, isDarkMode = false }: ScrollDownButtonProp
       transition={{ delay: 1.5, duration: 0.8 }}
       whileHover={{ scale: 1.1 }}
     >
-      <span className="text-sm font-medium mb-2">Scroll Down</span>
+      <span className={`${textSize} font-medium mb-2`}>Scroll Down</span>
       <motion.div
         animate={{
           y: [0, 8, 0],
@@ -33,13 +50,13 @@ const ScrollDownButton = ({ targetId, isDarkMode = false }: ScrollDownButtonProp
           repeat: Number.POSITIVE_INFINITY,
           repeatType: "loop",
         }}
-        className={`w-8 h-8 rounded-full ${
+        className={`${buttonSize} rounded-full ${
           isDarkMode ? "bg-blue-600/30" : "bg-white/30"
         } flex items-center justify-center backdrop-blur-sm`}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4"
+          className={iconSize}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
