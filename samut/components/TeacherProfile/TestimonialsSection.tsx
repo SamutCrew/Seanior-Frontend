@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import Image from "next/image"
 import { FaStar, FaQuoteLeft, FaChevronLeft, FaChevronRight } from "react-icons/fa"
 import type { Testimonial } from "@/types/teacher"
+import { useAppSelector } from "@/app/redux"
 
 interface TestimonialsSectionProps {
   testimonials: Testimonial[]
@@ -12,6 +13,7 @@ interface TestimonialsSectionProps {
 
 export default function TestimonialsSection({ testimonials }: TestimonialsSectionProps) {
   const [activeIndex, setActiveIndex] = useState(0)
+  const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
   const nextTestimonial = () => {
     setActiveIndex((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1))
@@ -24,14 +26,14 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
   if (!testimonials.length) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">No testimonials yet.</p>
+        <p className={isDarkMode ? "text-gray-400" : "text-gray-500"}>No testimonials yet.</p>
       </div>
     )
   }
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Student Testimonials</h2>
+      <h2 className={`text-2xl font-bold mb-6 ${isDarkMode ? "text-white" : "text-gray-800"}`}>Student Testimonials</h2>
 
       <div className="relative">
         {/* Featured testimonial */}
@@ -41,9 +43,13 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.5 }}
-          className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 md:p-8 relative"
+          className={`rounded-xl p-6 md:p-8 relative ${
+            isDarkMode ? "bg-gradient-to-br from-slate-700 to-slate-800" : "bg-gradient-to-br from-blue-50 to-cyan-50"
+          }`}
         >
-          <FaQuoteLeft className="absolute top-6 left-6 text-blue-200 text-3xl" />
+          <FaQuoteLeft
+            className={`absolute top-6 left-6 text-3xl ${isDarkMode ? "text-blue-500/30" : "text-blue-200"}`}
+          />
 
           <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
             <div className="flex-shrink-0">
@@ -65,17 +71,24 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
                 {[...Array(5)].map((_, i) => (
                   <FaStar
                     key={i}
-                    className={`${i < testimonials[activeIndex].rating ? "text-yellow-400" : "text-gray-300"} text-xl`}
+                    className={i < testimonials[activeIndex].rating ? "text-yellow-400" : "text-gray-300"}
+                    size={20}
                   />
                 ))}
               </div>
 
-              <p className="text-gray-700 italic mb-4 text-lg">{testimonials[activeIndex].text}</p>
+              <p className={`italic mb-4 text-lg ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}>
+                {testimonials[activeIndex].text}
+              </p>
 
               <div>
-                <p className="font-semibold text-gray-800">{testimonials[activeIndex].name}</p>
-                <p className="text-gray-500 text-sm">{testimonials[activeIndex].course}</p>
-                <p className="text-gray-400 text-xs mt-1">{testimonials[activeIndex].date}</p>
+                <p className={`font-semibold ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                  {testimonials[activeIndex].name}
+                </p>
+                <p className={isDarkMode ? "text-gray-300" : "text-gray-500"}>{testimonials[activeIndex].course}</p>
+                <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-400"}`}>
+                  {testimonials[activeIndex].date}
+                </p>
               </div>
             </div>
           </div>
@@ -84,14 +97,22 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
           <div className="absolute bottom-4 right-4 flex gap-2">
             <button
               onClick={prevTestimonial}
-              className="p-2 rounded-full bg-white text-blue-600 hover:bg-blue-600 hover:text-white transition-colors shadow-sm"
+              className={`p-2 rounded-full shadow-sm ${
+                isDarkMode
+                  ? "bg-slate-600 text-white hover:bg-cyan-600"
+                  : "bg-white text-blue-600 hover:bg-blue-600 hover:text-white"
+              } transition-colors`}
               aria-label="Previous testimonial"
             >
               <FaChevronLeft />
             </button>
             <button
               onClick={nextTestimonial}
-              className="p-2 rounded-full bg-white text-blue-600 hover:bg-blue-600 hover:text-white transition-colors shadow-sm"
+              className={`p-2 rounded-full shadow-sm ${
+                isDarkMode
+                  ? "bg-slate-600 text-white hover:bg-cyan-600"
+                  : "bg-white text-blue-600 hover:bg-blue-600 hover:text-white"
+              } transition-colors`}
               aria-label="Next testimonial"
             >
               <FaChevronRight />
@@ -106,7 +127,13 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
               key={index}
               onClick={() => setActiveIndex(index)}
               className={`w-3 h-3 rounded-full transition-colors ${
-                index === activeIndex ? "bg-blue-600" : "bg-gray-300 hover:bg-gray-400"
+                index === activeIndex
+                  ? isDarkMode
+                    ? "bg-cyan-500"
+                    : "bg-blue-600"
+                  : isDarkMode
+                    ? "bg-gray-600 hover:bg-gray-500"
+                    : "bg-gray-300 hover:bg-gray-400"
               }`}
               aria-label={`Go to testimonial ${index + 1}`}
             />
@@ -122,11 +149,15 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
-            className={`p-4 rounded-lg border ${
+            className={`p-4 rounded-lg border cursor-pointer transition-colors ${
               index === activeIndex
-                ? "border-blue-300 bg-blue-50"
-                : "border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50"
-            } cursor-pointer transition-colors`}
+                ? isDarkMode
+                  ? "border-cyan-600 bg-slate-700"
+                  : "border-blue-300 bg-blue-50"
+                : isDarkMode
+                  ? "border-slate-600 bg-slate-800 hover:border-cyan-800 hover:bg-slate-700"
+                  : "border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50"
+            }`}
             onClick={() => setActiveIndex(index)}
           >
             <div className="flex items-start gap-3">
@@ -144,14 +175,18 @@ export default function TestimonialsSection({ testimonials }: TestimonialsSectio
 
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <p className="font-medium text-gray-800">{testimonial.name}</p>
+                  <p className={`font-medium ${isDarkMode ? "text-white" : "text-gray-800"}`}>{testimonial.name}</p>
                   <div className="flex items-center">
                     <FaStar className="text-yellow-400 mr-1" />
-                    <span className="text-sm text-gray-600">{testimonial.rating}</span>
+                    <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                      {testimonial.rating}
+                    </span>
                   </div>
                 </div>
 
-                <p className="text-gray-500 text-sm line-clamp-2 mt-1">{testimonial.text}</p>
+                <p className={`text-sm line-clamp-2 mt-1 ${isDarkMode ? "text-gray-300" : "text-gray-500"}`}>
+                  {testimonial.text}
+                </p>
               </div>
             </div>
           </motion.div>

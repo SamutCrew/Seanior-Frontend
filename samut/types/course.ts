@@ -1,3 +1,5 @@
+export type CourseType = "private-location" | "public-pool" | "teacher-pool"
+
 export interface Course {
   id: number
   title: string
@@ -12,4 +14,10 @@ export interface Course {
   location: {
     address: string
   }
+  courseType: CourseType
+  description?: string
+  curriculum?: string[]
+  requirements?: string[]
+  maxStudents?: number
+  image?: string
 }

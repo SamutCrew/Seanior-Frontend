@@ -1,0 +1,526 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
+import Image from "next/image"
+import { motion } from "framer-motion"
+import {
+  FaStar,
+  FaUsers,
+  FaCalendarAlt,
+  FaClock,
+  FaMapMarkerAlt,
+  FaArrowLeft,
+  FaSwimmer,
+  FaHome,
+  FaBuilding,
+  FaSwimmingPool,
+} from "react-icons/fa"
+import { Button } from "@/components/Common/Button"
+import { useAppSelector } from "@/app/redux"
+import Link from "next/link"
+
+// Define course types
+type CourseType = "private-location" | "public-pool" | "teacher-pool"
+
+// Extended Course interface with course type
+interface Course {
+  id: number
+  title: string
+  focus: string
+  level: string
+  duration: string
+  schedule: string
+  instructor: string
+  instructorId: string
+  rating: number
+  students: number
+  maxStudents: number
+  price: number
+  courseType: CourseType
+  location: {
+    address: string
+  }
+  description: string
+  curriculum: string[]
+  requirements: string[]
+  image: string
+}
+
+// Sample courses data
+const sampleCourses: Course[] = [
+  {
+    id: 1,
+    title: "Freestyle Mastery",
+    focus: "Perfect your freestyle technique with Olympic-level instruction",
+    level: "Intermediate",
+    duration: "8 weeks",
+    schedule: "Mon/Wed 5-6pm",
+    instructor: "Michael Phelps",
+    instructorId: "1",
+    rating: 4.8,
+    students: 24,
+    maxStudents: 30,
+    price: 299,
+    courseType: "public-pool",
+    location: {
+      address: "Aquatic Center, Los Angeles, CA",
+    },
+    description:
+      "This comprehensive course focuses on perfecting your freestyle technique through detailed instruction and practice. You'll learn advanced breathing techniques, efficient arm movements, and proper body positioning to maximize your speed and endurance in the water. Suitable for intermediate swimmers who want to take their freestyle to the next level.",
+    curriculum: [
+      "Week 1-2: Body positioning and balance",
+      "Week 3-4: Arm stroke mechanics and efficiency",
+      "Week 5-6: Breathing techniques and timing",
+      "Week 7-8: Speed development and endurance training",
+    ],
+    requirements: [
+      "Ability to swim 100m freestyle without stopping",
+      "Basic understanding of freestyle technique",
+      "Own swimming equipment (goggles, swim cap)",
+      "Commitment to attend at least 80% of sessions",
+    ],
+    image: "/focused-freestyle.png",
+  },
+  {
+    id: 2,
+    title: "Beginner Swimming",
+    focus: "Learn the fundamentals of swimming in a supportive environment",
+    level: "Beginner",
+    duration: "6 weeks",
+    schedule: "Tue/Thu 4-5pm",
+    instructor: "Michael Phelps",
+    instructorId: "1",
+    rating: 4.9,
+    students: 18,
+    maxStudents: 20,
+    price: 249,
+    courseType: "teacher-pool",
+    location: {
+      address: "Instructor's Private Pool, Beverly Hills, CA",
+    },
+    description:
+      "Start your swimming journey with confidence in this beginner-friendly course. You'll learn water safety, basic floating techniques, and the fundamentals of all four swimming strokes. Our small class size ensures personalized attention in a comfortable, private pool setting.",
+    curriculum: [
+      "Week 1: Water comfort and basic floating",
+      "Week 2: Breath control and submersion",
+      "Week 3-4: Introduction to freestyle and backstroke",
+      "Week 5-6: Introduction to breaststroke and water safety",
+    ],
+    requirements: [
+      "No prior swimming experience necessary",
+      "Comfort being around water",
+      "Swimsuit and towel",
+      "Positive attitude and willingness to learn",
+    ],
+    image: "/swimmer-in-motion.png",
+  },
+  {
+    id: 3,
+    title: "Competition Prep",
+    focus: "Advanced training for competitive swimmers",
+    level: "Advanced",
+    duration: "10 weeks",
+    schedule: "Mon/Wed/Fri 7-8:30pm",
+    instructor: "Michael Phelps",
+    instructorId: "1",
+    rating: 4.7,
+    students: 12,
+    maxStudents: 15,
+    price: 399,
+    courseType: "private-location",
+    location: {
+      address: "Your pool or facility",
+    },
+    description:
+      "Designed for serious swimmers preparing for competition, this intensive course focuses on race strategy, advanced techniques in all four strokes, and competition-specific training. The instructor will come to your pool, allowing for customized training in your familiar environment.",
+    curriculum: [
+      "Week 1-2: Stroke analysis and technique refinement",
+      "Week 3-4: Start and turn optimization",
+      "Week 5-6: Race pace training and strategy",
+      "Week 7-8: Tapering and competition preparation",
+      "Week 9-10: Mental preparation and race simulation",
+    ],
+    requirements: [
+      "Competitive swimming experience",
+      "Access to a suitable swimming pool",
+      "Complete set of training equipment",
+      "Commitment to rigorous training schedule",
+    ],
+    image: "/swimmer-in-motion.png",
+  },
+]
+
+export default function CourseDetailPage() {
+  const { id: teacherId, courseId } = useParams()
+  const router = useRouter()
+  const [course, setCourse] = useState<Course | null>(null)
+  const [loading, setLoading] = useState(true)
+  const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
+
+  useEffect(() => {
+    // Simulate API call to fetch course data
+    const fetchCourse = async () => {
+      try {
+        // Find the course with the matching ID
+        const foundCourse = sampleCourses.find((c) => c.id.toString() === courseId)
+
+        if (foundCourse) {
+          setCourse(foundCourse)
+        }
+      } catch (error) {
+        console.error("Failed to fetch course data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCourse()
+  }, [courseId])
+
+  const handleBack = () => {
+    router.back()
+  }
+
+  // Function to get course type icon and color
+  const getCourseTypeInfo = (type: CourseType) => {
+    switch (type) {
+      case "private-location":
+        return {
+          icon: <FaHome className="mr-2" />,
+          label: "Private Location",
+          description: "Instructor comes to your pool",
+          color: isDarkMode
+            ? "bg-purple-900/30 text-purple-400 border-purple-800/50"
+            : "bg-purple-100 text-purple-800 border border-purple-200",
+        }
+      case "public-pool":
+        return {
+          icon: <FaBuilding className="mr-2" />,
+          label: "Public Pool",
+          description: "Lessons at a public swimming facility",
+          color: isDarkMode
+            ? "bg-blue-900/30 text-blue-400 border-blue-800/50"
+            : "bg-blue-100 text-blue-800 border border-blue-200",
+        }
+      case "teacher-pool":
+        return {
+          icon: <FaSwimmingPool className="mr-2" />,
+          label: "Teacher's Pool",
+          description: "Lessons at the instructor's private pool",
+          color: isDarkMode
+            ? "bg-green-900/30 text-green-400 border-green-800/50"
+            : "bg-green-100 text-green-800 border border-green-200",
+        }
+      default:
+        return {
+          icon: <FaSwimmingPool className="mr-2" />,
+          label: "Standard",
+          description: "Regular swimming lessons",
+          color: isDarkMode ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-800",
+        }
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? "bg-slate-900" : "bg-blue-50"}`}>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    )
+  }
+
+  if (!course) {
+    return (
+      <div
+        className={`min-h-screen flex items-center justify-center ${isDarkMode ? "bg-slate-900 text-white" : "bg-blue-50 text-gray-800"}`}
+      >
+        <div className="text-center max-w-md mx-auto px-4">
+          <h1 className="text-2xl font-bold mb-4">Course Not Found</h1>
+          <p className={isDarkMode ? "text-gray-300 mb-6" : "text-gray-600 mb-6"}>
+            The course you're looking for doesn't exist or has been removed.
+          </p>
+          <Button variant="primary" onClick={handleBack}>
+            <FaArrowLeft className="mr-2" /> Go Back
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  const courseTypeInfo = getCourseTypeInfo(course.courseType)
+
+  return (
+    <div className={`min-h-screen ${isDarkMode ? "bg-slate-900 text-white" : "bg-blue-50 text-gray-900"}`}>
+      {/* Course Header */}
+      <div className={`relative ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-md`}>
+        <div className="absolute top-4 left-4 z-10">
+          <button
+            onClick={handleBack}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+              isDarkMode
+                ? "bg-slate-700 text-white hover:bg-slate-600"
+                : "bg-white text-gray-700 hover:bg-gray-100 shadow-sm"
+            } transition-colors`}
+          >
+            <FaArrowLeft /> <span>Back</span>
+          </button>
+        </div>
+
+        <div className="relative h-64 md:h-80 lg:h-96 overflow-hidden">
+          <Image
+            src={course.image || "/placeholder.svg?height=600&width=1200&query=swimming course"}
+            alt={course.title}
+            fill
+            className="object-cover"
+            priority
+          />
+          <div
+            className={`absolute inset-0 ${isDarkMode ? "bg-gradient-to-t from-slate-900 via-slate-900/70 to-transparent" : "bg-gradient-to-t from-black/70 via-black/40 to-transparent"}`}
+          ></div>
+
+          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex flex-wrap items-center gap-3 mb-3">
+                <span
+                  className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                    course.level === "Beginner"
+                      ? isDarkMode
+                        ? "bg-green-900/30 text-green-400 border border-green-800/50"
+                        : "bg-green-100 text-green-800 border border-green-200"
+                      : course.level === "Intermediate"
+                        ? isDarkMode
+                          ? "bg-blue-900/30 text-blue-400 border border-blue-800/50"
+                          : "bg-blue-100 text-blue-800 border border-blue-200"
+                        : isDarkMode
+                          ? "bg-purple-900/30 text-purple-400 border border-purple-800/50"
+                          : "bg-purple-100 text-purple-800 border border-purple-200"
+                  }`}
+                >
+                  {course.level}
+                </span>
+                <div className="flex items-center gap-1 text-amber-400">
+                  <FaStar />
+                  <span className="font-medium">{course.rating.toFixed(1)}</span>
+                </div>
+              </div>
+
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-2">{course.title}</h1>
+              <p className="text-lg text-gray-200 mb-4">{course.focus}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Course Content */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Course Type Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
+            >
+              <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>Course Type</h2>
+
+              <div className={`flex items-center p-4 rounded-lg ${courseTypeInfo.color}`}>
+                <div className="text-2xl mr-4">{courseTypeInfo.icon}</div>
+                <div>
+                  <h3 className="font-bold text-lg">{courseTypeInfo.label}</h3>
+                  <p>{courseTypeInfo.description}</p>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                {course.courseType === "private-location" && (
+                  <p className={isDarkMode ? "text-gray-300" : "text-gray-600"}>
+                    This course is taught at your location. The instructor will travel to your pool or facility,
+                    allowing for personalized instruction in a familiar environment.
+                  </p>
+                )}
+                {course.courseType === "public-pool" && (
+                  <p className={isDarkMode ? "text-gray-300" : "text-gray-600"}>
+                    This course takes place at a public swimming facility. You'll join other students in a professional
+                    environment with all necessary amenities.
+                  </p>
+                )}
+                {course.courseType === "teacher-pool" && (
+                  <p className={isDarkMode ? "text-gray-300" : "text-gray-600"}>
+                    This course is held at the instructor's private pool. You'll benefit from a controlled environment
+                    specifically designed for optimal learning.
+                  </p>
+                )}
+              </div>
+            </motion.div>
+
+            {/* Course Description */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
+            >
+              <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                Course Description
+              </h2>
+              <p className={isDarkMode ? "text-gray-300" : "text-gray-600"}>{course.description}</p>
+            </motion.div>
+
+            {/* Curriculum */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
+            >
+              <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                Course Curriculum
+              </h2>
+              <ul className="space-y-3">
+                {course.curriculum.map((item, index) => (
+                  <li key={index} className="flex items-start">
+                    <FaSwimmer className={`mt-1 mr-3 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                    <span className={isDarkMode ? "text-gray-300" : "text-gray-600"}>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+
+            {/* Requirements */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
+            >
+              <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>Requirements</h2>
+              <ul className="space-y-3">
+                {course.requirements.map((item, index) => (
+                  <li key={index} className="flex items-start">
+                    <div
+                      className={`min-w-5 h-5 rounded-full ${isDarkMode ? "bg-slate-700" : "bg-blue-100"} flex items-center justify-center mr-3 mt-0.5`}
+                    >
+                      <span className={`text-xs font-bold ${isDarkMode ? "text-cyan-400" : "text-blue-600"}`}>
+                        {index + 1}
+                      </span>
+                    </div>
+                    <span className={isDarkMode ? "text-gray-300" : "text-gray-600"}>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Course Info Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
+            >
+              <div className="space-y-4">
+                <div className="flex justify-between items-center pb-4 border-b border-gray-200 dark:border-gray-700">
+                  <span className={isDarkMode ? "text-gray-300" : "text-gray-600"}>Price</span>
+                  <span className={`text-2xl font-bold ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                    ${course.price}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <FaCalendarAlt className={`mr-3 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                    <div>
+                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Duration</p>
+                      <p className={isDarkMode ? "text-white" : "text-gray-800"}>{course.duration}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center">
+                    <FaClock className={`mr-3 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                    <div>
+                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Schedule</p>
+                      <p className={isDarkMode ? "text-white" : "text-gray-800"}>{course.schedule}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center">
+                    <FaMapMarkerAlt className={`mr-3 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                    <div>
+                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Location</p>
+                      <p className={isDarkMode ? "text-white" : "text-gray-800"}>{course.location.address}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center">
+                    <FaUsers className={`mr-3 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                    <div>
+                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Enrollment</p>
+                      <p className={isDarkMode ? "text-white" : "text-gray-800"}>
+                        {course.students}/{course.maxStudents} students
+                      </p>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ width: `${(course.students / course.maxStudents) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Button variant={isDarkMode ? "gradient" : "primary"} className="w-full mt-4 py-3">
+                  Enroll Now
+                </Button>
+              </div>
+            </motion.div>
+
+            {/* Instructor Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
+            >
+              <h3 className={`font-bold text-lg mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>Instructor</h3>
+
+              <Link href={`/teacher/${course.instructorId}`}>
+                <div className="flex items-center gap-4 group cursor-pointer">
+                  <div className="w-16 h-16 rounded-full overflow-hidden">
+                    <Image
+                      src="/confident-swim-coach.png"
+                      alt={course.instructor}
+                      width={64}
+                      height={64}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                  <div>
+                    <h4
+                      className={`font-medium group-hover:text-blue-500 transition-colors ${isDarkMode ? "text-white" : "text-gray-800"}`}
+                    >
+                      {course.instructor}
+                    </h4>
+                    <p className={isDarkMode ? "text-gray-300" : "text-gray-600"}>Olympic Swimming Coach</p>
+                  </div>
+                </div>
+              </Link>
+
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <Link href={`/teacher/${course.instructorId}`}>
+                  <Button variant="outline" className="w-full">
+                    View Instructor Profile
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
