@@ -152,15 +152,16 @@ const SearchPage = () => {
   }
 
   // Handle map click to select a new location
-  const handleMapClick = (e: any) => {
+  const handleMapClick = (location: { lat: number; lng: number }) => {
     const newLocation = {
-      lat: e.latLng.lat(),
-      lng: e.latLng.lng(),
+      lat: location.lat,
+      lng: location.lng,
       address: "Selected location",
-    }
-    setSelectedLocation(newLocation)
-    setUserLocation(newLocation)
-  }
+    };
+    setSelectedLocation(newLocation);
+    setUserLocation(newLocation);
+    setMapCenter({ lat: location.lat, lng: location.lng });
+  };
 
   // Toggle map visibility
   const toggleMap = () => {
