@@ -55,20 +55,6 @@ export default function ProfileHeader({ teacher }: ProfileHeaderProps) {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10">
-        {/* Edit Profile Button - Positioned at the top right */}
-        <div className="absolute top-4 right-4 sm:top-8 sm:right-8">
-          <Link href={`/teacher/${teacher.id}/edit`}>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-3 py-2 rounded-lg transition-all duration-200"
-            >
-              <FaEdit />
-              <span className="hidden sm:inline">Edit Profile</span>
-            </motion.button>
-          </Link>
-        </div>
-
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -122,13 +108,32 @@ export default function ProfileHeader({ teacher }: ProfileHeaderProps) {
             </div>
 
             <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-4">
+              <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full">
+                <FaMapMarkerAlt className="text-xs" />
+                <span className="text-xs">{teacher.location.address}</span>
+              </div>
+              <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full">
+                <FaSwimmer className="text-xs" />
+                <span className="text-xs">{teacher.experience} years experience</span>
+              </div>
+              <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full">
+                <FaAward className="text-xs" />
+                <span className="text-xs">{teacher.certifications.length} certifications</span>
+              </div>
+              <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full">
+                <FaCalendarCheck className="text-xs" />
+                <span className="text-xs">{teacher.lessonType}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-4">
               {teacher.styles.map((style, index) => (
-                <span key={index} className="bg-blue-700/70 text-white px-3 py-1 rounded-full text-sm">
+                <span key={index} className="bg-blue-700/70 text-white px-2 py-0.5 text-xs rounded-full">
                   {style}
                 </span>
               ))}
               {teacher.levels.map((level, index) => (
-                <span key={index} className="bg-cyan-700/70 text-white px-3 py-1 rounded-full text-sm">
+                <span key={index} className="bg-cyan-700/70 text-white px-2 py-0.5 text-xs rounded-full">
                   {level}
                 </span>
               ))}
@@ -141,14 +146,30 @@ export default function ProfileHeader({ teacher }: ProfileHeaderProps) {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="flex flex-col gap-3"
           >
-            <Button variant="secondary" className="whitespace-nowrap px-6 py-3 text-lg font-semibold">
-              Book a Lesson
-            </Button>
-            <div className="text-center bg-white/10 backdrop-blur-sm rounded-lg p-3">
-              <p className="text-sm text-blue-100">Starting from</p>
-              <p className="text-2xl font-bold">${teacher.price}/hr</p>
+            <div className="flex flex-col items-center">
+              <Button variant="secondary" className="whitespace-nowrap px-6 py-3 text-lg font-semibold w-full">
+                Book a Lesson
+              </Button>
+              <div className="text-center bg-white/10 backdrop-blur-sm rounded-lg p-3 mt-2 w-full">
+                <p className="text-sm text-blue-100">Starting from</p>
+                <p className="text-2xl font-bold">${teacher.price}/hr</p>
+              </div>
             </div>
           </motion.div>
+        </div>
+
+        {/* Edit Profile Button - Bottom Right */}
+        <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-8">
+          <Link href={`/teacher/${teacher.id}/edit`}>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg font-medium shadow-lg transition-all duration-200"
+            >
+              <FaEdit className="text-blue-600" />
+              <span>Edit Profile</span>
+            </motion.button>
+          </Link>
         </div>
       </div>
     </div>
