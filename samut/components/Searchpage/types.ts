@@ -53,3 +53,7 @@ export interface Location {
     priceRange: string;
     maxDistance: number;
   }
+  export interface OSMMapSelectorProps {
+    center: { lat: number; lng: number };
+    onLocationSelect: (location: { lat: number; lng: number }) => void;
+  }
