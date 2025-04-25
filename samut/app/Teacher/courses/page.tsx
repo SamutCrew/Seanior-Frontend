@@ -28,6 +28,7 @@ const initialCourses: Course[] = [
     location: {
       address: "Skyline Aquatic Center, Pool 2",
     },
+    courseType: "public-pool",
   },
   {
     id: 2,
@@ -43,6 +44,7 @@ const initialCourses: Course[] = [
     location: {
       address: "Skyline Aquatic Center, Pool 1",
     },
+    courseType: "public-pool",
   },
   {
     id: 3,
@@ -58,8 +60,11 @@ const initialCourses: Course[] = [
     location: {
       address: "Olympic Training Pool",
     },
+    courseType: "teacher-pool",
   },
 ]
+
+
 
 export default function CourseManagement() {
   const [courses, setCourses] = useState<Course[]>(initialCourses)
