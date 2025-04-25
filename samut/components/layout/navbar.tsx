@@ -322,6 +322,18 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
                     <UserCircle className="w-4 h-4" />
                     <span>Profile</span>
                   </Link>
+                  {user.user_type === "admin" && (
+                    <Link
+                      href="/admin"
+                      className={`flex items-center gap-2 px-4 py-2 text-sm ${
+                        isDarkMode ? "text-gray-200 hover:bg-slate-700" : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <Settings className="w-4 h-4" /> {/* You can use a different icon if preferred */}
+                      <span>Admin</span>
+                    </Link>
+                  )}
                   <Link
                     href="/settings"
                     className={`flex items-center gap-2 px-4 py-2 text-sm ${
