@@ -1,5 +1,6 @@
 import { FaCalendarAlt, FaUsers, FaChalkboardTeacher } from "react-icons/fa"
-import type { ScheduleItem, Course } from "@/types/schedule"
+import type { ScheduleItem } from "@/types/schedule"
+import type { Course } from "@/types/course"
 import { useAppSelector } from "@/app/redux"
 
 interface TeacherStatsProps {

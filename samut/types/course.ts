@@ -8,6 +8,7 @@ export interface Course {
   duration: string
   schedule: string
   instructor: string
+  instructorId?: string
   rating: number
   students: number
   price: number
@@ -20,4 +21,35 @@ export interface Course {
   requirements?: string[]
   maxStudents?: number
   image?: string
+  progress?: CourseProgress
+}
+
+export interface CourseProgress {
+  overallCompletion: number
+  modules: CourseModule[]
+  lastUpdated: string
+  sessionDetails?: StudySessionDetail[]
+}
+
+export interface CourseModule {
+  id: number
+  title: string
+  completion: number
+  topics: CourseTopic[]
+}
+
+export interface CourseTopic {
+  id: number
+  title: string
+  completed: boolean
+}
+
+export interface StudySessionDetail {
+  id: string
+  date: string
+  title: string
+  description: string
+  images: string[]
+  moduleId: number
+  topicId: number
 }

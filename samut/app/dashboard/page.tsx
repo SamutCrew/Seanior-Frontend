@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import { FaPlus, FaCalendarAlt, FaChalkboardTeacher } from "react-icons/fa"
-import TeacherHeader from "@/components/TeachersManage/TeacherHeader"
-import TeacherStats from "@/components/TeachersManage/TeacherStats"
-import CalendarView from "@/components/TeachersManage/CalendarView"
-import RequestsPanel from "@/components/TeachersManage/RequestsPanel"
-import TeachingSchedule from "@/components/TeachersManage/TeachingSchedule"
-import AvailableCourses from "@/components/TeachersManage/AvailableCourses"
+import TeacherHeader from "@/components/Dashboard/TeacherHeader"
+import TeacherStats from "@/components/Dashboard/TeacherStats"
+import CalendarView from "@/components/Dashboard/CalendarView"
+import RequestsPanel from "@/components/Dashboard/RequestsPanel"
+import TeachingSchedule from "@/components/Dashboard/TeachingSchedule"
+import AvailableCourses from "@/components/Dashboard/AvailableCourses"
 import CourseGrid from "@/components/Course/CourseGrid"
 import CourseList from "@/components/Course/CourseList"
 import CourseFilters from "@/components/Course/CourseFilters"
@@ -15,11 +15,11 @@ import CourseEmptyState from "@/components/Course/CourseEmptyState"
 import CreateCourseModal from "@/components/Course/Modals/CreateCourseModal"
 import EditCourseModal from "@/components/Course/Modals/EditCourseModal"
 import DeleteCourseModal from "@/components/Course/Modals/DeleteCourseModal"
-import type { ScheduleItem, Course as ScheduleCourse } from "@/types/schedule"
-import type { Course } from "@/types/course"
+import type { ScheduleItem } from "@/types/schedule"
+import type { Course, CourseType } from "@/types/course"
 import { useAppSelector } from "@/app/redux"
 
-export default function TeacherManagement() {
+export default function TeacherDashboard() {
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
   // Schedule data
@@ -84,24 +84,40 @@ export default function TeacherManagement() {
   ])
 
   // Available courses (not yet scheduled)
-  const [availableCourses, setAvailableCourses] = useState<ScheduleCourse[]>([
+  const [availableCourses, setAvailableCourses] = useState<Course[]>([
     {
       id: 201,
       title: "Freestyle Mastery",
+      focus: "Technique Improvement",
       level: "Intermediate",
+      duration: "8 weeks",
       schedule: "Not Scheduled",
+      instructor: "Alex Johnson",
+      rating: 4.5,
       students: 0,
+      price: 299,
+      location: {
+        address: "TBD",
+      },
+      courseType: "public-pool" as CourseType,
       maxStudents: 12,
-      location: "TBD",
     },
     {
       id: 202,
       title: "Water Safety",
+      focus: "Safety Fundamentals",
       level: "Beginner",
+      duration: "6 weeks",
       schedule: "Not Scheduled",
+      instructor: "Sarah Miller",
+      rating: 4.7,
       students: 0,
+      price: 249,
+      location: {
+        address: "TBD",
+      },
+      courseType: "public-pool" as CourseType,
       maxStudents: 15,
-      location: "TBD",
     },
   ])
 

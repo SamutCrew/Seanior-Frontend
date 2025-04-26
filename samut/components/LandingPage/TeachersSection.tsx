@@ -3,7 +3,7 @@ import { useRef } from "react"
 import { motion, useInView } from "framer-motion"
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
-import { TeacherCard, type Teacher } from "../TeachersManage/TeacherCard"
+import { TeacherCard, type Teacher } from "../Dashboard/TeacherCard"
 import { useAppSelector } from "@/app/redux"
 
 interface TeachersSectionProps {

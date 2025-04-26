@@ -11,41 +11,19 @@ import {
   FaClock,
   FaMapMarkerAlt,
   FaArrowLeft,
-  FaSwimmer,
   FaHome,
   FaBuilding,
   FaSwimmingPool,
+  FaChartLine,
+  FaBookOpen,
+  FaCheck,
 } from "react-icons/fa"
 import { Button } from "@/components/Common/Button"
 import { useAppSelector } from "@/app/redux"
-import Link from "next/link"
+import type { Course } from "@/types/course"
 
 // Define course types
 type CourseType = "private-location" | "public-pool" | "teacher-pool"
-
-// Extended Course interface with course type
-interface Course {
-  id: number
-  title: string
-  focus: string
-  level: string
-  duration: string
-  schedule: string
-  instructor: string
-  instructorId: string
-  rating: number
-  students: number
-  maxStudents: number
-  price: number
-  courseType: CourseType
-  location: {
-    address: string
-  }
-  description: string
-  curriculum: string[]
-  requirements: string[]
-  image: string
-}
 
 // Sample courses data
 const sampleCourses: Course[] = [
@@ -81,6 +59,65 @@ const sampleCourses: Course[] = [
       "Commitment to attend at least 80% of sessions",
     ],
     image: "/focused-freestyle.png",
+    progress: {
+      overallCompletion: 65,
+      modules: [
+        {
+          id: 1,
+          title: "Body positioning and balance",
+          completion: 100,
+          topics: [
+            { id: 101, title: "Horizontal body position", completed: true },
+            { id: 102, title: "Core engagement", completed: true },
+            { id: 103, title: "Head position in water", completed: true },
+          ],
+        },
+        {
+          id: 2,
+          title: "Arm stroke mechanics",
+          completion: 75,
+          topics: [
+            { id: 201, title: "Entry and catch phase", completed: true },
+            { id: 202, title: "Pull phase technique", completed: true },
+            { id: 203, title: "Recovery phase", completed: true },
+            { id: 204, title: "Hand position optimization", completed: false },
+          ],
+        },
+        {
+          id: 3,
+          title: "Breathing techniques",
+          completion: 33,
+          topics: [
+            { id: 301, title: "Bilateral breathing", completed: true },
+            { id: 302, title: "Breath timing", completed: false },
+            { id: 303, title: "Breath control exercises", completed: false },
+          ],
+        },
+        {
+          id: 4,
+          title: "Speed development",
+          completion: 0,
+          topics: [
+            { id: 401, title: "Interval training", completed: false },
+            { id: 402, title: "Sprint technique", completed: false },
+            { id: 403, title: "Race pace training", completed: false },
+          ],
+        },
+      ],
+      lastUpdated: "2023-05-15T14:30:00Z",
+      sessionDetails: [
+        {
+          id: "session-1",
+          date: "2023-05-10",
+          title: "Body Position Fundamentals",
+          description:
+            "Focused on horizontal body alignment and core engagement. Students practiced floating exercises and basic streamline position.",
+          images: ["/placeholder.svg?key=tla5q"],
+          moduleId: 1,
+          topicId: 101,
+        },
+      ],
+    },
   },
   {
     id: 2,
@@ -114,6 +151,42 @@ const sampleCourses: Course[] = [
       "Positive attitude and willingness to learn",
     ],
     image: "/swimmer-in-motion.png",
+    progress: {
+      overallCompletion: 25,
+      modules: [
+        {
+          id: 1,
+          title: "Water comfort and safety",
+          completion: 100,
+          topics: [
+            { id: 101, title: "Pool safety rules", completed: true },
+            { id: 102, title: "Water entry techniques", completed: true },
+            { id: 103, title: "Basic floating", completed: true },
+          ],
+        },
+        {
+          id: 2,
+          title: "Breath control",
+          completion: 0,
+          topics: [
+            { id: 201, title: "Submersion exercises", completed: false },
+            { id: 202, title: "Rhythmic breathing", completed: false },
+            { id: 203, title: "Breath holding techniques", completed: false },
+          ],
+        },
+        {
+          id: 3,
+          title: "Basic strokes",
+          completion: 0,
+          topics: [
+            { id: 301, title: "Freestyle introduction", completed: false },
+            { id: 302, title: "Backstroke basics", completed: false },
+            { id: 303, title: "Kick techniques", completed: false },
+          ],
+        },
+      ],
+      lastUpdated: "2023-05-10T09:15:00Z",
+    },
   },
   {
     id: 3,
@@ -157,6 +230,7 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState<Course | null>(null)
   const [loading, setLoading] = useState(true)
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
+  const [activeTab, setActiveTab] = useState<"details" | "curriculum">("details")
 
   useEffect(() => {
     // Simulate API call to fetch course data
@@ -220,6 +294,11 @@ export default function CourseDetailPage() {
           color: isDarkMode ? "bg-gray-700 text-gray-300" : "bg-gray-100 text-gray-800",
         }
     }
+  }
+
+  // Navigate to the course management page in the dashboard
+  const handleManageCourse = () => {
+    router.push(`/dashboard/courses/manage/${courseId}`)
   }
 
   if (loading) {
@@ -312,214 +391,349 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
+      {/* Tab Navigation */}
+      <div className={`border-b ${isDarkMode ? "border-slate-700" : "border-gray-200"}`}>
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab("details")}
+              className={`py-4 px-6 font-medium border-b-2 transition-colors ${
+                activeTab === "details"
+                  ? isDarkMode
+                    ? "border-cyan-500 text-cyan-400"
+                    : "border-blue-600 text-blue-600"
+                  : isDarkMode
+                    ? "border-transparent text-gray-400 hover:text-gray-300"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Course Details
+            </button>
+            <button
+              onClick={() => setActiveTab("curriculum")}
+              className={`py-4 px-6 font-medium border-b-2 transition-colors flex items-center gap-2 ${
+                activeTab === "curriculum"
+                  ? isDarkMode
+                    ? "border-cyan-500 text-cyan-400"
+                    : "border-blue-600 text-blue-600"
+                  : isDarkMode
+                    ? "border-transparent text-gray-400 hover:text-gray-300"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <FaBookOpen className="h-4 w-4" /> Curriculum
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Course Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Course Type Section */}
+        {activeTab === "details" ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Course Type Section */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
+              >
+                <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>Course Type</h2>
+
+                <div className={`flex items-center p-4 rounded-lg ${courseTypeInfo.color}`}>
+                  <div className="text-2xl mr-4">{courseTypeInfo.icon}</div>
+                  <div>
+                    <h3 className="font-bold text-lg">{courseTypeInfo.label}</h3>
+                    <p>{courseTypeInfo.description}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  {course.courseType === "private-location" && (
+                    <p className={isDarkMode ? "text-gray-300" : "text-gray-600"}>
+                      This course is taught at your location. The instructor will travel to your pool or facility,
+                      allowing for personalized instruction in a familiar environment.
+                    </p>
+                  )}
+                  {course.courseType === "public-pool" && (
+                    <p className={isDarkMode ? "text-gray-300" : "text-gray-600"}>
+                      This course takes place at a public swimming facility. You'll join other students in a
+                      professional environment with all necessary amenities.
+                    </p>
+                  )}
+                  {course.courseType === "teacher-pool" && (
+                    <p className={isDarkMode ? "text-gray-300" : "text-gray-600"}>
+                      This course is held at the instructor's private pool. You'll benefit from a controlled environment
+                      specifically designed for optimal learning.
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Course Description */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
+              >
+                <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                  Course Description
+                </h2>
+                <p className={isDarkMode ? "text-gray-300" : "text-gray-600"}>{course.description}</p>
+              </motion.div>
+
+              {/* Requirements */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
+              >
+                <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                  Requirements
+                </h2>
+                <ul className="space-y-3">
+                  {course.requirements?.map((item, index) => (
+                    <li key={index} className="flex items-start">
+                      <div
+                        className={`min-w-5 h-5 rounded-full ${isDarkMode ? "bg-slate-700" : "bg-blue-100"} flex items-center justify-center mr-3 mt-0.5`}
+                      >
+                        <span className={`text-xs font-bold ${isDarkMode ? "text-cyan-400" : "text-blue-600"}`}>
+                          {index + 1}
+                        </span>
+                      </div>
+                      <span className={isDarkMode ? "text-gray-300" : "text-gray-600"}>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Course Info Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
+              >
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center pb-4 border-b border-gray-200 dark:border-gray-700">
+                    <span className={isDarkMode ? "text-gray-300" : "text-gray-600"}>Price</span>
+                    <span className={`text-2xl font-bold ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                      ${course.price}
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center">
+                      <FaCalendarAlt className={`mr-3 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                      <div>
+                        <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Duration</p>
+                        <p className={isDarkMode ? "text-white" : "text-gray-800"}>{course.duration}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center">
+                      <FaClock className={`mr-3 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                      <div>
+                        <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Schedule</p>
+                        <p className={isDarkMode ? "text-white" : "text-gray-800"}>{course.schedule}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center">
+                      <FaMapMarkerAlt className={`mr-3 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                      <div>
+                        <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Location</p>
+                        <p className={isDarkMode ? "text-white" : "text-gray-800"}>{course.location.address}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center">
+                      <FaUsers className={`mr-3 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                      <div>
+                        <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Enrollment</p>
+                        <p className={isDarkMode ? "text-white" : "text-gray-800"}>
+                          {course.students}/{course.maxStudents || course.students} students
+                        </p>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full"
+                            style={{ width: `${(course.students / (course.maxStudents || course.students)) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* For teachers only - link to dashboard */}
+                  <Button
+                    variant={isDarkMode ? "gradient" : "primary"}
+                    className="w-full mt-4 py-3"
+                    onClick={handleManageCourse}
+                  >
+                    <FaChartLine className="mr-2" /> Manage in Dashboard
+                  </Button>
+                </div>
+              </motion.div>
+
+              {/* Instructor Info */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
+              >
+                <h3 className={`font-bold text-lg mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                  About the Instructor
+                </h3>
+
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 rounded-full overflow-hidden mr-3">
+                    <Image
+                      src="/confident-swim-coach.png"
+                      alt={course.instructor}
+                      width={48}
+                      height={48}
+                      className="object-cover"
+                    />
+                  </div>
+                  <div>
+                    <h4 className={`font-medium ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                      {course.instructor}
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Swimming Coach</p>
+                  </div>
+                </div>
+
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => router.push(`/teacher/${course.instructorId}`)}
+                >
+                  View Profile
+                </Button>
+              </motion.div>
+            </div>
+          </div>
+        ) : (
+          // Curriculum Tab
+          <div className="max-w-4xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
               className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
             >
-              <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>Course Type</h2>
-
-              <div className={`flex items-center p-4 rounded-lg ${courseTypeInfo.color}`}>
-                <div className="text-2xl mr-4">{courseTypeInfo.icon}</div>
-                <div>
-                  <h3 className="font-bold text-lg">{courseTypeInfo.label}</h3>
-                  <p>{courseTypeInfo.description}</p>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                {course.courseType === "private-location" && (
-                  <p className={isDarkMode ? "text-gray-300" : "text-gray-600"}>
-                    This course is taught at your location. The instructor will travel to your pool or facility,
-                    allowing for personalized instruction in a familiar environment.
-                  </p>
-                )}
-                {course.courseType === "public-pool" && (
-                  <p className={isDarkMode ? "text-gray-300" : "text-gray-600"}>
-                    This course takes place at a public swimming facility. You'll join other students in a professional
-                    environment with all necessary amenities.
-                  </p>
-                )}
-                {course.courseType === "teacher-pool" && (
-                  <p className={isDarkMode ? "text-gray-300" : "text-gray-600"}>
-                    This course is held at the instructor's private pool. You'll benefit from a controlled environment
-                    specifically designed for optimal learning.
-                  </p>
-                )}
-              </div>
-            </motion.div>
-
-            {/* Course Description */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
-            >
-              <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                Course Description
-              </h2>
-              <p className={isDarkMode ? "text-gray-300" : "text-gray-600"}>{course.description}</p>
-            </motion.div>
-
-            {/* Curriculum */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
-            >
-              <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+              <h2 className={`text-xl font-bold mb-6 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
                 Course Curriculum
               </h2>
-              <ul className="space-y-3">
-                {course.curriculum.map((item, index) => (
-                  <li key={index} className="flex items-start">
-                    <FaSwimmer className={`mt-1 mr-3 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
-                    <span className={isDarkMode ? "text-gray-300" : "text-gray-600"}>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
 
-            {/* Requirements */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
-            >
-              <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>Requirements</h2>
-              <ul className="space-y-3">
-                {course.requirements.map((item, index) => (
-                  <li key={index} className="flex items-start">
-                    <div
-                      className={`min-w-5 h-5 rounded-full ${isDarkMode ? "bg-slate-700" : "bg-blue-100"} flex items-center justify-center mr-3 mt-0.5`}
-                    >
-                      <span className={`text-xs font-bold ${isDarkMode ? "text-cyan-400" : "text-blue-600"}`}>
-                        {index + 1}
-                      </span>
-                    </div>
-                    <span className={isDarkMode ? "text-gray-300" : "text-gray-600"}>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          </div>
+              <div className="space-y-6">
+                {course.progress?.modules.map((module, moduleIndex) => (
+                  <div
+                    key={module.id}
+                    className={`rounded-lg border ${
+                      isDarkMode ? "border-slate-700 bg-slate-800/50" : "border-gray-200 bg-gray-50"
+                    }`}
+                  >
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className={`font-medium ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                          {moduleIndex + 1}. {module.title}
+                        </h3>
+                        <span
+                          className={`text-sm font-medium px-2 py-1 rounded-full ${
+                            module.completion === 100
+                              ? isDarkMode
+                                ? "bg-green-900/30 text-green-400"
+                                : "bg-green-100 text-green-800"
+                              : isDarkMode
+                                ? "bg-slate-700 text-gray-300"
+                                : "bg-gray-200 text-gray-700"
+                          }`}
+                        >
+                          {module.completion}% Complete
+                        </span>
+                      </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Course Info Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
-            >
-              <div className="space-y-4">
-                <div className="flex justify-between items-center pb-4 border-b border-gray-200 dark:border-gray-700">
-                  <span className={isDarkMode ? "text-gray-300" : "text-gray-600"}>Price</span>
-                  <span className={`text-2xl font-bold ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                    ${course.price}
-                  </span>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center">
-                    <FaCalendarAlt className={`mr-3 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
-                    <div>
-                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Duration</p>
-                      <p className={isDarkMode ? "text-white" : "text-gray-800"}>{course.duration}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center">
-                    <FaClock className={`mr-3 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
-                    <div>
-                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Schedule</p>
-                      <p className={isDarkMode ? "text-white" : "text-gray-800"}>{course.schedule}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center">
-                    <FaMapMarkerAlt className={`mr-3 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
-                    <div>
-                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Location</p>
-                      <p className={isDarkMode ? "text-white" : "text-gray-800"}>{course.location.address}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center">
-                    <FaUsers className={`mr-3 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
-                    <div>
-                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Enrollment</p>
-                      <p className={isDarkMode ? "text-white" : "text-gray-800"}>
-                        {course.students}/{course.maxStudents} students
-                      </p>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1">
+                      <div className="w-full h-1.5 rounded-full bg-gray-200 dark:bg-slate-700 mb-4">
                         <div
-                          className="bg-blue-600 h-2 rounded-full"
-                          style={{ width: `${(course.students / course.maxStudents) * 100}%` }}
+                          className={`h-1.5 rounded-full ${
+                            module.completion === 100 ? "bg-green-500" : "bg-gradient-to-r from-cyan-500 to-blue-600"
+                          }`}
+                          style={{ width: `${module.completion}%` }}
                         ></div>
                       </div>
+
+                      <ul className="space-y-2 mt-3">
+                        {module.topics.map((topic) => {
+                          // Check if there are session details for this topic
+                          const hasSessionDetails = course.progress?.sessionDetails?.some(
+                            (detail) => detail.moduleId === module.id && detail.topicId === topic.id,
+                          )
+
+                          return (
+                            <li key={topic.id} className="flex items-center justify-between py-1">
+                              <div className="flex items-center">
+                                {topic.completed ? (
+                                  <div
+                                    className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                                      isDarkMode ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-600"
+                                    } mr-3`}
+                                  >
+                                    <FaCheck className="h-3 w-3" />
+                                  </div>
+                                ) : (
+                                  <div
+                                    className={`w-5 h-5 rounded-full border ${
+                                      isDarkMode ? "border-gray-600" : "border-gray-300"
+                                    } mr-3`}
+                                  ></div>
+                                )}
+                                <span
+                                  className={`${
+                                    topic.completed
+                                      ? isDarkMode
+                                        ? "text-gray-400"
+                                        : "text-gray-500"
+                                      : isDarkMode
+                                        ? "text-gray-200"
+                                        : "text-gray-700"
+                                  }`}
+                                >
+                                  {topic.title}
+                                </span>
+
+                                {/* Show indicator if this topic has session details */}
+                                {hasSessionDetails && (
+                                  <span
+                                    className={`ml-2 text-xs px-2 py-0.5 rounded ${
+                                      isDarkMode
+                                        ? "bg-cyan-900/30 text-cyan-400 border border-cyan-800/50"
+                                        : "bg-blue-100 text-blue-800"
+                                    }`}
+                                  >
+                                    Notes
+                                  </span>
+                                )}
+                              </div>
+                            </li>
+                          )
+                        })}
+                      </ul>
                     </div>
                   </div>
-                </div>
-
-                <Button variant={isDarkMode ? "gradient" : "primary"} className="w-full mt-4 py-3">
-                  Enroll Now
-                </Button>
-              </div>
-            </motion.div>
-
-            {/* Instructor Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className={`rounded-xl p-6 ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
-            >
-              <h3 className={`font-bold text-lg mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>Instructor</h3>
-
-              <Link href={`/teacher/${course.instructorId}`}>
-                <div className="flex items-center gap-4 group cursor-pointer">
-                  <div className="w-16 h-16 rounded-full overflow-hidden">
-                    <Image
-                      src="/confident-swim-coach.png"
-                      alt={course.instructor}
-                      width={64}
-                      height={64}
-                      className="object-cover w-full h-full"
-                    />
-                  </div>
-                  <div>
-                    <h4
-                      className={`font-medium group-hover:text-blue-500 transition-colors ${isDarkMode ? "text-white" : "text-gray-800"}`}
-                    >
-                      {course.instructor}
-                    </h4>
-                    <p className={isDarkMode ? "text-gray-300" : "text-gray-600"}>Olympic Swimming Coach</p>
-                  </div>
-                </div>
-              </Link>
-
-              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <Link href={`/teacher/${course.instructorId}`}>
-                  <Button variant="outline" className="w-full">
-                    View Instructor Profile
-                  </Button>
-                </Link>
+                ))}
               </div>
             </motion.div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )
