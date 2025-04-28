@@ -7,6 +7,8 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import Image from "next/image"
+import { getAuthUser } from "@/context/authToken"
 
 // Add these imports at the top of the file
 import { useAuth } from "@/context/AuthContext"
@@ -107,7 +109,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
   // Get display name from user object
   const getDisplayName = () => {
     if (!user) return ""
-    if (user.displayName) return user.displayName
+    if (user.name) return user.name
     if (user.email) {
       // Extract name from email (before @)
       const emailName = user.email.split("@")[0]
@@ -115,6 +117,27 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
     }
     return "User"
   }
+
+  useEffect(() => {
+    const handleKeyUp = async (event: KeyboardEvent) => {
+      console.log("Key pressed", event.key);
+  
+      const input = event.key;
+      if (input === "n") {
+        console.log("You have pressed the secret code");
+        const firebase_user = await getAuthUser();
+        console.log(firebase_user);
+      }
+    };
+  
+    // Add event listener to the window
+    window.addEventListener("keyup", handleKeyUp);
+  
+    // Cleanup event listener on component unmount
+    return () => {
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
 
   return (
     <motion.nav
@@ -267,25 +290,25 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
                 }`}
               >
                 <div className="relative">
-                  {user.photoURL ? (
-                    <img
-                      src={user.photoURL || "/placeholder.svg"}
-                      alt={getDisplayName()}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        isLandingPage && isAtTop
-                          ? "bg-white/20 text-white"
-                          : isDarkMode
-                            ? "bg-cyan-600 text-white"
-                            : "bg-cyan-100 text-cyan-600"
-                      }`}
-                    >
-                      {getDisplayName().charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                {user.profile_img ? (
+                  <img
+                    src={user.profile_img || "/placeholder.svg"}
+                    alt={getDisplayName()}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      isLandingPage && isAtTop
+                        ? "bg-white/20 text-white"
+                        : isDarkMode
+                          ? "bg-cyan-600 text-white"
+                          : "bg-cyan-100 text-cyan-600"
+                    }`}
+                  >
+                    {getDisplayName().charAt(0).toUpperCase()}
+                  </div>
+                )}
                   <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800"></div>
                 </div>
                 <span
@@ -313,7 +336,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
                   }`}
                 >
                   <Link
-                    href="/profile"
+                    href={`/profile/${user.user_id}`}
                     className={`flex items-center gap-2 px-4 py-2 text-sm ${
                       isDarkMode ? "text-gray-200 hover:bg-slate-700" : "text-gray-700 hover:bg-gray-100"
                     }`}
@@ -484,16 +507,20 @@ const AnimatedMobileMenu: React.FC<AnimatedMobileMenuProps> = ({
           className={`p-4 mb-2 border-b ${isDarkMode ? "border-gray-800" : "border-gray-200"}`}
         >
           <div className="flex items-center gap-3">
-            {user.photoURL ? (
+            {user.profile_img ? (
               <img
-                src={user.photoURL || "/placeholder.svg"}
+                src={user.profile_img || "/placeholder.svg"}
                 alt={getDisplayName()}
-                className="w-10 h-10 rounded-full object-cover"
+                className="w-8 h-8 rounded-full object-cover"
               />
             ) : (
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  isDarkMode ? "bg-cyan-600 text-white" : "bg-cyan-100 text-cyan-600"
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  isLandingPage && isAtTop
+                    ? "bg-white/20 text-white"
+                    : isDarkMode
+                      ? "bg-cyan-600 text-white"
+                      : "bg-cyan-100 text-cyan-600"
                 }`}
               >
                 {getDisplayName().charAt(0).toUpperCase()}
@@ -536,7 +563,7 @@ const AnimatedMobileMenu: React.FC<AnimatedMobileMenuProps> = ({
               transition={{ delay: navItems.length * 0.1 }}
             >
               <Link
-                href="/profile"
+                href={`/profile/${user.user_id}`}
                 className={`flex items-center gap-2 py-2 px-3 rounded-md ${
                   isDarkMode ? "text-gray-200 hover:bg-gray-800" : "text-gray-800 hover:bg-gray-100"
                 } transition-colors duration-200`}

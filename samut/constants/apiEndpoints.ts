@@ -4,20 +4,25 @@ export const APIEndpoints = Object.freeze({
     },
     USER: {
         RETRIEVE: {
-        ALL: "/users/retrieve/all",
-        CHECK_ISEXIST: "/users/retrieve/checkUser",
+            ALL: "/users/retrieve/all",
+            CHECK_ISEXIST: "/users/retrieve/checkUser",
+            DATA_BY_USERID: "/users/retrieve/[userId]",
         },
         CREATE: "/users/create/createUser",
+        UPDATE: {
+            USER: "/users/update/[userId]",
+        },
     },
     RESOURCE: {
-        RETRIEVE: {
-            ALL: "/resources/retrieve/all",
-            ALL_BY_USERID: "/resources/retrieve/all/[userId]",
-        },
         CREATE: {
-            UPLOAD: "/resources/upload/[userId]",
-        },
-        DELETE: "/resources/delete/[userId]",
+            UPLOAD: '/resources/upload/[userId]',
+            UPLOAD_PROFILE_IMAGE: '/resources/upload-profile-image/[userId]',
+          },
+          RETRIEVE: {
+            ALL: '/resources/retrieve/all',
+            ALL_BY_USERID: '/resources/retrieve/all/[userId]',
+          },
+          DELETE: '/resources/delete/[userId]'
     },
         
 });

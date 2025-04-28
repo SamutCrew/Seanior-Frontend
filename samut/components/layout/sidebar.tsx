@@ -213,6 +213,18 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
     dispatch(setIsSidebarCollapsed(false))
   }
 
+  // Get display name from user object
+  const getDisplayName = () => {
+    if (!user) return ""
+    if (user.name) return user.name
+    if (user.email) {
+      // Extract name from email (before @)
+      const emailName = user.email.split("@")[0]
+      return emailName.charAt(0).toUpperCase() + emailName.slice(1)
+    }
+    return "User"
+  }
+
   // Calculate the height of fixed sections (approximate values)
   const topSectionsHeight = isMobile ? 140 : 120 // Logo + Role section + Dev toggle (if visible)
   const bottomSectionHeight = 80 // User profile section
@@ -546,13 +558,31 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
                   <div className="flex items-center mb-2">
                     <div className="relative">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
-                        <User className="h-4 w-4 text-white" />
+                      {user && user.profile_img ? (
+                        <img
+                          src={user.profile_img || "/placeholder.svg"}
+                          alt={getDisplayName()}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            isLandingPage && isAtTop
+                              ? "bg-white/20 text-white"
+                              : isDarkMode
+                                ? "bg-cyan-600 text-white"
+                                : "bg-cyan-100 text-cyan-600"
+                          }`}
+                        >
+                          {getDisplayName().charAt(0).toUpperCase()}
+                        </div>
+                      )} 
                       </div>
                       <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-900"></div>
                     </div>
                     <div className="ml-3">
-                      <p className="text-sm font-medium dark:text-white">{user?.name || "User Name"}</p>
-                      <p className="text-xs text-gray-500">{user?.name || "User Name"}</p>
+                      <p className="text-sm font-medium dark:text-white">{user?.name || "Name"}</p>
+                      <p className="text-xs text-gray-500">{user?.email || "Email"}</p>
                     </div>
                   </div>
 
@@ -574,7 +604,25 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
                 >
                   <div className="relative mb-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
-                      <User className="h-4 w-4 text-white" />
+                    {user && user.profile_img ? (
+                      <img
+                        src={user.profile_img || "/placeholder.svg"}
+                        alt={getDisplayName()}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          isLandingPage && isAtTop
+                            ? "bg-white/20 text-white"
+                            : isDarkMode
+                              ? "bg-cyan-600 text-white"
+                              : "bg-cyan-100 text-cyan-600"
+                        }`}
+                      >
+                        {getDisplayName().charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     </div>
                     <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-900"></div>
                   </div>
