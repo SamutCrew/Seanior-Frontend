@@ -71,6 +71,36 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Add refreshUser method to fetch the latest user data
+  const refreshUser = async () => {
+    if (!user || !user.firebase_uid) {
+      console.log('No user or firebase_uid available to refresh');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const updatedUser = await checkAlreadyHaveUserInDb(user.firebase_uid);
+      if (updatedUser) {
+        console.log('Refreshed user data:', updatedUser);
+        setUser(updatedUser);
+      } else {
+        console.error('User not found during refresh, signing out');
+        await auth.signOut();
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Error refreshing user data:', {
+        message: error.message,
+        stack: error.stack,
+      });
+      await auth.signOut();
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setLoading(true);
@@ -178,6 +208,7 @@ export function AuthProvider({ children }) {
         googleSignIn,
         loading,
         resetPassword,
+        refreshUser,
       }}
     >
       {children}

@@ -1,5 +1,4 @@
 // user_api.ts
-
 import apiClient from "@/api/api_client";
 import { getAuthToken } from "@/context/authToken";
 import { UserCreate } from "@/types/model/user"
@@ -58,4 +57,54 @@ export const verifyUserToken = async (): Promise<boolean> => {
         console.error("Error verifying token:", error);
         return false;
     }
-} 
+}
+
+export const getUserData = async (userId: string) => {
+  const url = APIEndpoints.USER.RETRIEVE.DATA_BY_USERID.replace("[userId]", userId);
+  try {
+    const token = await getAuthToken();
+    const response = await apiClient.get(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log("User data response:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching user data:", {
+      message: error.message,
+      response: error.response
+        ? {
+            status: error.response.status,
+            data: error.response.data,
+          }
+        : null,
+    });
+    throw error;
+  }
+};
+
+export const updateUserData = async (userId: string, userData: any) => {
+  const url = APIEndpoints.USER.UPDATE.USER.replace("[userId]", userId);
+  try {
+    const token = await getAuthToken();
+    const response = await apiClient.put(url, userData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log("User update response:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error updating user data:", {
+      message: error.message,
+      response: error.response
+        ? {
+            status: error.response.status,
+            data: error.response.data,
+          }
+        : null,
+    });
+    throw error;
+  }
+};

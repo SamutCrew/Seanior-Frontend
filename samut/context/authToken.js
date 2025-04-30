@@ -20,8 +20,5 @@ export const getAuthUser = () => {
     if (user) {
         return user;
     }
-
-    console.log(user);
-
     return null;
 }
