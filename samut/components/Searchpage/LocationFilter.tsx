@@ -17,6 +17,15 @@ interface LocationFilterProps {
   handleMapClick: (location: { lat: number; lng: number }) => void;
   mapCenter: { lat: number; lng: number };
   setMaxDistance: (distance: number) => void;
+  teachers?: {  // เพิ่ม prop นี้
+    id: number;
+    name: string;
+    location: {
+      lat: number;
+      lng: number;
+      address?: string;
+    };
+  }[];
 }
 
 export const LocationFilter = ({
@@ -31,7 +40,8 @@ export const LocationFilter = ({
   toggleMap,
   handleMapClick,
   mapCenter,
-  setMaxDistance
+  setMaxDistance,
+  teachers = []  // กำหนดค่าเริ่มต้น
 }: LocationFilterProps) => (
   <div className="mt-4">
     <label className="block text-sm font-medium text-gray-700 mb-1">Distance (km)</label>
@@ -65,9 +75,11 @@ export const LocationFilter = ({
     
     {showMap && (
       <div className="mt-4 border rounded-lg overflow-hidden">
+        <p>Map should be visible</p>
         <OSMMapSelector 
-          center={mapCenter} 
-          onLocationSelect={handleMapClick} 
+          center={mapCenter}
+          teachers={teachers || []}  // ส่งข้อมูลครู
+          onLocationSelect={handleMapClick}
         />
         <div className="p-2 bg-gray-50 text-sm">
           {selectedLocation && (
