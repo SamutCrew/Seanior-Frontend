@@ -42,7 +42,7 @@ const teachers: Teacher[] = [
     bio: "Olympic gold medalist specializing in competitive swimming techniques",
     lessonType: "Private",
     price: 80,
-    location: { lat: 40.7128, lng: -74.006, address: "New York, NY" },
+    location: { lat: 13.7563, lng: 100.5018, address: "Bangkok, Thailand" },
   },
   {
     id: 2,
@@ -57,7 +57,7 @@ const teachers: Teacher[] = [
     bio: "World record holder focusing on freestyle technique and endurance",
     lessonType: "Group",
     price: 65,
-    location: { lat: 34.0522, lng: -118.2437, address: "Los Angeles, CA" },
+    location: { lat: 13.745, lng: 100.535, address: "Siam, Bangkok" },
   },
 ]
 
@@ -73,7 +73,7 @@ const courses: Course[] = [
     rating: 4.7,
     students: 12,
     price: 400,
-    location: { lat: 40.7128, lng: -74.006, address: "New York, NY" },
+    location: { lat: 13.7563, lng: 100.5018, address: "Bangkok, Thailand" },
   },
   {
     id: 2,
@@ -86,7 +86,7 @@ const courses: Course[] = [
     rating: 4.5,
     students: 8,
     price: 300,
-    location: { lat: 34.0522, lng: -118.2437, address: "Los Angeles, CA" },
+    location: { lat: 13.745, lng: 100.535, address: "Siam, Bangkok" },
   },
 ]
 
@@ -298,6 +298,16 @@ const SearchPage = () => {
                 ? setTeacherFilters({ ...teacherFilters, maxDistance: distance })
                 : setCourseFilters({ ...courseFilters, maxDistance: distance })
             }}
+            teacherLocations={filteredTeachers.map(t => ({
+              id: t.id,
+              name: t.name,
+              location: t.location,
+            }))}
+            courseLocations={filteredCourses.map(c => ({
+              id: c.id,
+              name: c.title,
+              location: c.location,
+            }))}
           />
         </div>
 
