@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 import { FaPlus, FaCalendarAlt, FaChalkboardTeacher } from "react-icons/fa"
-import TeacherHeader from "@/components/Dashboard/TeacherHeader"
-import TeacherStats from "@/components/Dashboard/TeacherStats"
-import CalendarView from "@/components/Dashboard/CalendarView"
-import RequestsPanel from "@/components/Dashboard/RequestsPanel"
-import TeachingSchedule from "@/components/Dashboard/TeachingSchedule"
-import AvailableCourses from "@/components/Dashboard/AvailableCourses"
+import TeacherHeader from "@/components/PageDashboard/TeacherHeader"
+import TeacherStats from "@/components/PageDashboard/TeacherStats"
+import CalendarView from "@/components/PageDashboard/CalendarView"
+import RequestsPanel from "@/components/PageDashboard/RequestsPanel"
+import TeachingSchedule from "@/components/PageDashboard/TeachingSchedule"
+import AvailableCourses from "@/components/PageDashboard/AvailableCourses"
 import CourseGrid from "@/components/Course/CourseGrid"
 import CourseList from "@/components/Course/CourseList"
 import CourseFilters from "@/components/Course/CourseFilters"
@@ -83,7 +83,7 @@ export default function TeacherDashboard() {
     },
   ])
 
-  // Available courses (not yet scheduled)
+  // Available courses (not yet scheduled) - Added images
   const [availableCourses, setAvailableCourses] = useState<Course[]>([
     {
       id: 201,
@@ -92,8 +92,8 @@ export default function TeacherDashboard() {
       level: "Intermediate",
       duration: "8 weeks",
       schedule: "Not Scheduled",
-      instructor: "Alex Johnson",
-      rating: 4.5,
+      instructor: "Emma Johnson",
+      rating: 4.8,
       students: 0,
       price: 299,
       location: {
@@ -101,6 +101,7 @@ export default function TeacherDashboard() {
       },
       courseType: "public-pool" as CourseType,
       maxStudents: 12,
+      image: "/freestyle-swimming.png",
     },
     {
       id: 202,
@@ -109,8 +110,8 @@ export default function TeacherDashboard() {
       level: "Beginner",
       duration: "6 weeks",
       schedule: "Not Scheduled",
-      instructor: "Sarah Miller",
-      rating: 4.7,
+      instructor: "Michael Chen",
+      rating: 4.5,
       students: 0,
       price: 249,
       location: {
@@ -118,6 +119,44 @@ export default function TeacherDashboard() {
       },
       courseType: "public-pool" as CourseType,
       maxStudents: 15,
+      image: "/water-safety-swimming.png"
+    },
+    {
+      id: 203,
+      title: "Advanced Butterfly",
+      focus: "Technique Mastery",
+      level: "Advanced",
+      duration: "10 weeks",
+      schedule: "Not Scheduled",
+      instructor: "Sophia Rodriguez",
+      rating: 4.9,
+      students: 0,
+      price: 349,
+      location: {
+        address: "TBD",
+      },
+      courseType: "private-location" as CourseType,
+      maxStudents: 8,
+      image: "/butterfly-swimming.png",
+
+    },
+    {
+      id: 204,
+      title: "Breaststroke Technique",
+      focus: "Stroke Improvement",
+      level: "Intermediate",
+      duration: "8 weeks",
+      schedule: "Not Scheduled",
+      instructor: "James Wilson",
+      rating: 4.6,
+      students: 0,
+      price: 299,
+      location: {
+        address: "TBD",
+      },
+      courseType: "teacher-pool" as CourseType,
+      maxStudents: 10,
+      image: "/breaststroke-swimming.png",
     },
   ])
 

@@ -29,6 +29,7 @@ export interface CourseProgress {
   modules: CourseModule[]
   lastUpdated: string
   sessionDetails?: StudySessionDetail[]
+  weeklyUpdates?: WeeklyUpdate[]
 }
 
 export interface CourseModule {
@@ -52,4 +53,26 @@ export interface StudySessionDetail {
   images: string[]
   moduleId: number
   topicId: number
+}
+
+export interface WeeklyUpdate {
+  id: string
+  weekNumber: number
+  date: string
+  title: string
+  content: string
+  achievements: string
+  challenges: string
+  nextSteps: string
+  images: string[]
+}
+
+export interface StudentProgress {
+  studentId: string
+  studentName: string
+  attendance: number
+  completedLessons: number
+  totalLessons: number
+  lastAttendance: string
+  notes: string
 }

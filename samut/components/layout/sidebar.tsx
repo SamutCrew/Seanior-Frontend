@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import {
   ChevronLeft,
@@ -27,6 +27,7 @@ import { useAppDispatch, useAppSelector } from "@/app/redux"
 import { setIsSidebarCollapsed, toggleMobileSidebar } from "@/state"
 import type { LucideIcon } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useAuth } from "@/context/AuthContext"
 
 interface SidebarProps {
   isLandingPage?: boolean
@@ -35,6 +36,8 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "student" }: SidebarProps) => {
+  const { user, logOut } = useAuth()
+
   const [devMode, setDevMode] = useState(false)
   const [userRoleState, setUserRoleState] = useState(userRole)
   const [showClasses, setShowClasses] = useState(true)
@@ -42,6 +45,10 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
   const [isMenuHovered, setIsMenuHovered] = useState(false)
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 0)
   const pathname = usePathname()
+  const dispatch = useAppDispatch()
+  const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed)
+  const isMobileSidebarOpen = useAppSelector((state) => state.global.isMobileSidebarOpen)
+  const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
   // Check if we're on an auth page
   const isAuthPage = pathname.startsWith("/auth/")
@@ -51,31 +58,43 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
     return null
   }
 
-  const dispatch = useAppDispatch()
-  const isSidebarCollapsed = useAppSelector((state) => state.global.isSidebarCollapsed)
-  const isMobileSidebarOpen = useAppSelector((state) => state.global.isMobileSidebarOpen)
-  const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
-
   // Track window resize
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout
+
     const handleResize = () => {
-      setWindowWidth(window.innerWidth)
-      // Auto-collapse sidebar on small screens
-      if (window.innerWidth < 768 && !isSidebarCollapsed) {
-        dispatch(setIsSidebarCollapsed(true))
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => {
+        setWindowWidth(window.innerWidth)
+        // Auto-collapse sidebar on small screens
+        if (window.innerWidth < 768 && !isSidebarCollapsed) {
+          dispatch(setIsSidebarCollapsed(true))
+        }
+      }, 100) // Debounce the resize event
+    }
+
+    if (typeof window !== "undefined") {
+      setWindowWidth(window.innerWidth) // Set initial width
+      window.addEventListener("resize", handleResize)
+      handleResize() // Check initial size
+
+      return () => {
+        window.removeEventListener("resize", handleResize)
+        clearTimeout(timeoutId)
       }
     }
 
-    window.addEventListener("resize", handleResize)
-    handleResize() // Check initial size
-
-    return () => window.removeEventListener("resize", handleResize)
+    return () => clearTimeout(timeoutId)
   }, [dispatch, isSidebarCollapsed])
 
-  const handleSignOut = () => {
-    alert("Signed out!")
+  const handleLogout = async () => {
+    try {
+      await logOut()
+      // You might want to redirect the user after logout
+    } catch (error) {
+      console.error("Error logging out:", error)
+    }
   }
-
   // Add this constant to determine if we're at the top of the page
   const isAtTop = scrollPosition < 50 && isLandingPage
 
@@ -94,7 +113,7 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
 
   // Define navigation items for each role
   const teacherNavItems = [
-    { icon: Home, label: "Dashboard", href: "/dashboard" },
+    { icon: Home, label: "Dashboard", href: "/Teacher/manage" },
     { icon: BookOpen, label: "My Courses", href: "/Teacher/profile/courses" },
     { icon: User, label: "Profile", href: "/Teacher/profile/edit" },
     { icon: Calendar, label: "Schedule", href: "/Teacher/schedule" },
@@ -181,18 +200,34 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
     return null
   }
 
-  const toggleSidebar = useCallback(() => {
+  const toggleSidebar = () => {
     dispatch(toggleMobileSidebar())
-  }, [dispatch])
+  }
 
-  const collapseSidebar = useCallback(() => {
+  const collapseSidebar = () => {
     dispatch(setIsSidebarCollapsed(true))
     setShowClasses(false)
-  }, [dispatch])
+  }
 
-  const expandSidebar = useCallback(() => {
+  const expandSidebar = () => {
     dispatch(setIsSidebarCollapsed(false))
-  }, [dispatch])
+  }
+
+  // Get display name from user object
+  const getDisplayName = () => {
+    if (!user) return ""
+    if (user.name) return user.name
+    if (user.email) {
+      // Extract name from email (before @)
+      const emailName = user.email.split("@")[0]
+      return emailName.charAt(0).toUpperCase() + emailName.slice(1)
+    }
+    return "User"
+  }
+
+  // Calculate the height of fixed sections (approximate values)
+  const topSectionsHeight = isMobile ? 140 : 120 // Logo + Role section + Dev toggle (if visible)
+  const bottomSectionHeight = 80 // User profile section
 
   return (
     <>
@@ -212,20 +247,15 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
         initial={false}
         animate={(isMobile && !isMobileSidebarOpen) || (!isMobile && isSidebarCollapsed) ? "collapsed" : "expanded"}
         variants={sidebarVariants}
-        className={`flex flex-col z-40 fixed ${isMobile ? "top-0 left-0 bottom-0 pt-16" : ""}`}
+        className="fixed z-40 flex flex-col"
         style={{
           opacity: isLandingPage ? opacity : 1,
           transform: isLandingPage && scrollPosition < 50 && !isMobile ? "translateX(-100%)" : "none",
           backgroundColor: isDarkMode ? "rgba(15, 23, 42, 0.95)" : "rgba(255, 255, 255, 0.95)",
           backdropFilter: "blur(10px)",
-          maxHeight: "100vh",
-          height: isMobile ? "100%" : "calc(100vh - 64px)",
-          display: "flex",
-          flexDirection: "column",
-          overflowY: "hidden",
-          overflowX: "hidden",
+          height: isMobile ? "100%" : "calc(100vh - 64px)", // Adjusted height for desktop
           left: 0,
-          top: isMobile ? 0 : "64px", // Position below navbar on mobile
+          top: isMobile ? 0 : "64px", // Position below navbar on desktop
           bottom: 0,
           boxShadow: isDarkMode ? "0 0 15px rgba(0, 0, 0, 0.2)" : "0 0 15px rgba(0, 0, 0, 0.05)",
         }}
@@ -293,9 +323,10 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
           </motion.div>
         )}
 
-        <div className="flex flex-grow flex-col overflow-y-auto">
-          {/* Top Logo */}
-          <div className="flex items-center justify-center h-16 border-b border-gray-100 dark:border-gray-800">
+        {/* Main sidebar content with improved height structure */}
+        <div className="flex flex-col h-full">
+          {/* Top Logo - Fixed height */}
+          <div className="flex-shrink-0 flex items-center justify-center h-12 border-b border-gray-100 dark:border-gray-800">
             <AnimatePresence mode="wait">
               {(isMobile ? false : isSidebarCollapsed) ? (
                 <motion.div
@@ -326,9 +357,9 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
             </AnimatePresence>
           </div>
 
-          {/* Development Mode Toggle - only visible in development */}
+          {/* Development Mode Toggle - only visible in development - Fixed height */}
           {process.env.NODE_ENV === "development" && (
-            <div className="flex items-center justify-center py-2 px-2 border-b border-gray-100 dark:border-gray-800">
+            <div className="flex-shrink-0 flex items-center justify-center py-1 px-2 border-b border-gray-100 dark:border-gray-800">
               <div className="flex items-center gap-2">
                 {(!isMobile && !isSidebarCollapsed) || isMobile ? (
                   <span className="text-xs text-gray-600 dark:text-gray-300">
@@ -355,7 +386,7 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
             </div>
           )}
 
-          {/* Role Section */}
+          {/* Role Section - Fixed height */}
           <AnimatePresence mode="wait">
             {(!isMobile && !isSidebarCollapsed) || isMobile ? (
               <motion.div
@@ -364,7 +395,7 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
-                className="flex items-center gap-3 px-4 py-4 border-b border-gray-100 dark:border-gray-800"
+                className="flex-shrink-0 flex items-center gap-3 px-4 py-2 border-b border-gray-100 dark:border-gray-800"
               >
                 <div className={`bg-${userRoleState === "teacher" ? "cyan" : "blue"}-600 rounded-full p-2`}>
                   {userRoleState === "teacher" ? (
@@ -389,7 +420,7 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.3 }}
-                className="flex justify-center py-4 border-b border-gray-100 dark:border-gray-800"
+                className="flex-shrink-0 flex justify-center py-2 border-b border-gray-100 dark:border-gray-800"
               >
                 <div className={`bg-${userRoleState === "teacher" ? "cyan" : "blue"}-600 rounded-full p-2`}>
                   {userRoleState === "teacher" ? (
@@ -402,170 +433,210 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
             )}
           </AnimatePresence>
 
-          {/* Navigation Section */}
-          <div className="mt-2 px-2">
-            <AnimatePresence>
-              {((!isMobile && !isSidebarCollapsed) || isMobile) && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="mb-2 px-2"
-                >
-                  <h3 className="text-xs uppercase text-gray-500 font-medium tracking-wider">Navigation</h3>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          {/* Scrollable content area - KEY FIX: Added explicit max-height calculation */}
+          <div
+            className="flex-grow overflow-y-auto"
+            style={{
+              maxHeight: `calc(100% - ${topSectionsHeight + bottomSectionHeight}px)`,
+            }}
+          >
+            {/* Navigation Section */}
+            <div className="px-2 pt-1">
+              <AnimatePresence>
+                {((!isMobile && !isSidebarCollapsed) || isMobile) && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="mb-1 px-2"
+                  >
+                    <h3 className="text-xs uppercase text-gray-500 font-medium tracking-wider">Navigation</h3>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-            {/* Navbar Links */}
-            <nav className="space-y-1">
-              {navItems.map((item, index) => (
-                <SidebarLink
-                  key={item.href}
-                  icon={item.icon}
-                  label={item.label}
-                  href={item.href}
-                  collapsed={!isMobile && isSidebarCollapsed}
-                  isLandingPage={isLandingPage}
-                  delay={index * 0.05}
-                  isMobile={isMobile}
-                  onClick={isMobile ? toggleSidebar : undefined}
-                />
-              ))}
-            </nav>
-          </div>
+              {/* Navbar Links */}
+              <nav className="space-y-0.5">
+                {navItems.map((item, index) => (
+                  <SidebarLink
+                    key={item.href}
+                    icon={item.icon}
+                    label={item.label}
+                    href={item.href}
+                    collapsed={!isMobile && isSidebarCollapsed}
+                    isLandingPage={isLandingPage}
+                    delay={index * 0.05}
+                    isMobile={isMobile}
+                    onClick={isMobile ? toggleSidebar : undefined}
+                  />
+                ))}
+              </nav>
+            </div>
 
-          {/* Classes Section */}
-          <div className="mt-6 px-2">
-            <AnimatePresence>
-              {((!isMobile && !isSidebarCollapsed) || isMobile) && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex items-center justify-between mb-2 px-2"
-                >
-                  <h3 className="text-xs uppercase text-gray-500 font-medium tracking-wider">
-                    {userRoleState === "teacher" ? "My Classes" : "My Learning"}
-                  </h3>
+            {/* Classes Section */}
+            <div className="px-2 pt-2">
+              <AnimatePresence>
+                {((!isMobile && !isSidebarCollapsed) || isMobile) && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex items-center justify-between mb-1 px-2"
+                  >
+                    <h3 className="text-xs uppercase text-gray-500 font-medium tracking-wider">
+                      {userRoleState === "teacher" ? "My Classes" : "My Learning"}
+                    </h3>
+                    <button
+                      onClick={() => setShowClasses((prev) => !prev)}
+                      className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      {showClasses ? (
+                        <ChevronLeft className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 text-gray-500" />
+                      )}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {!isMobile && isSidebarCollapsed && (
+                <div className="flex justify-center mb-1">
                   <button
                     onClick={() => setShowClasses((prev) => !prev)}
-                    className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    onMouseEnter={() => setIsMenuHovered(true)}
+                    onMouseLeave={() => setIsMenuHovered(false)}
+                    className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   >
-                    {showClasses ? (
-                      <ChevronLeft className="h-4 w-4 text-gray-500" />
+                    <Menu className={`h-4 w-4 ${isMenuHovered ? "text-cyan-500" : "text-gray-500"}`} />
+                  </button>
+                </div>
+              )}
+
+              <AnimatePresence>
+                {showClasses && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-0.5">
+                      {classItems.map((item, index) => (
+                        <SidebarLink
+                          key={item.href}
+                          icon={item.icon}
+                          label={item.label}
+                          href={item.href}
+                          collapsed={!isMobile && isSidebarCollapsed}
+                          isLandingPage={isLandingPage}
+                          delay={0.1 + index * 0.05}
+                          isSubItem
+                          isMobile={isMobile}
+                          onClick={isMobile ? toggleSidebar : undefined}
+                        />
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* User Profile Section - KEY FIX: Ensured it stays at the bottom with proper spacing */}
+          <div className="flex-shrink-0 border-t border-gray-100 dark:border-gray-800 py-2 px-2 mt-auto">
+            <AnimatePresence mode="wait">
+              {(!isMobile && !isSidebarCollapsed) || isMobile ? (
+                <motion.div
+                  key="expanded-profile"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col px-2"
+                >
+                  <div className="flex items-center mb-2">
+                    <div className="relative">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
+                      {user && user.profile_img ? (
+                        <img
+                          src={user.profile_img || "/placeholder.svg"}
+                          alt={getDisplayName()}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            isLandingPage && isAtTop
+                              ? "bg-white/20 text-white"
+                              : isDarkMode
+                                ? "bg-cyan-600 text-white"
+                                : "bg-cyan-100 text-cyan-600"
+                          }`}
+                        >
+                          {getDisplayName().charAt(0).toUpperCase()}
+                        </div>
+                      )} 
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-900"></div>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium dark:text-white">{user?.name || "Name"}</p>
+                      <p className="text-xs text-gray-500">{user?.email || "Email"}</p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign out</span>
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="collapsed-profile"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="flex flex-col items-center"
+                >
+                  <div className="relative mb-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
+                    {user && user.profile_img ? (
+                      <img
+                        src={user.profile_img || "/placeholder.svg"}
+                        alt={getDisplayName()}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
                     ) : (
-                      <ChevronRight className="h-4 w-4 text-gray-500" />
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          isLandingPage && isAtTop
+                            ? "bg-white/20 text-white"
+                            : isDarkMode
+                              ? "bg-cyan-600 text-white"
+                              : "bg-cyan-100 text-cyan-600"
+                        }`}
+                      >
+                        {getDisplayName().charAt(0).toUpperCase()}
+                      </div>
                     )}
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-900"></div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    title="Sign out"
+                  >
+                    <LogOut className="h-4 w-4 text-gray-700 dark:text-gray-300" />
                   </button>
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {!isMobile && isSidebarCollapsed && (
-              <div className="flex justify-center mb-2">
-                <button
-                  onClick={() => setShowClasses((prev) => !prev)}
-                  onMouseEnter={() => setIsMenuHovered(true)}
-                  onMouseLeave={() => setIsMenuHovered(false)}
-                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <Menu className={`h-4 w-4 ${isMenuHovered ? "text-cyan-500" : "text-gray-500"}`} />
-                </button>
-              </div>
-            )}
-
-            <AnimatePresence>
-              {showClasses && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden"
-                >
-                  <div className="space-y-1">
-                    {classItems.map((item, index) => (
-                      <SidebarLink
-                        key={item.href}
-                        icon={item.icon}
-                        label={item.label}
-                        href={item.href}
-                        collapsed={!isMobile && isSidebarCollapsed}
-                        isLandingPage={isLandingPage}
-                        delay={0.1 + index * 0.05}
-                        isSubItem
-                        isMobile={isMobile}
-                        onClick={isMobile ? toggleSidebar : undefined}
-                      />
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
-        </div>
-
-        {/* User Profile Section */}
-        <div className="mt-auto border-t border-gray-100 dark:border-gray-800 py-4 px-2 sticky bottom-0 bg-inherit">
-          <AnimatePresence mode="wait">
-            {(!isMobile && !isSidebarCollapsed) || isMobile ? (
-              <motion.div
-                key="expanded-profile"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col px-2"
-              >
-                <div className="flex items-center mb-3">
-                  <div className="relative">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
-                      <User className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-900"></div>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium dark:text-white">
-                      {userRoleState === "teacher" ? "Alex Johnson" : "Jamie Smith"}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {userRoleState === "teacher" ? "Swimming Instructor" : "Swimming Student"}
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Sign out</span>
-                </button>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="collapsed-profile"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="flex flex-col items-center"
-              >
-                <div className="relative mb-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
-                    <User className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-900"></div>
-                </div>
-                <button
-                  onClick={handleSignOut}
-                  className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  title="Sign out"
-                >
-                  <LogOut className="h-4 w-4 text-gray-700 dark:text-gray-300" />
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </motion.div>
     </>
@@ -616,7 +687,7 @@ const SidebarLink = ({
                 ? "bg-gray-100 dark:bg-gray-800"
                 : "text-gray-700 dark:text-gray-300"
           }
-          ${isSubItem ? "py-1.5" : "py-2"}
+          ${isSubItem ? "py-1" : "py-1.5"}
           ${collapsed && !isMobile ? "px-2" : "px-3"}
         `}
       >
