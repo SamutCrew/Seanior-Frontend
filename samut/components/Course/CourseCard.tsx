@@ -1,12 +1,12 @@
 "use client"
 import { FaEdit, FaTrash, FaCalendarAlt, FaClock, FaMapMarkerAlt, FaChalkboardTeacher, FaStar } from "react-icons/fa"
-import type { Course } from "@/app/types/course"
+import type { Course } from "@/types/course"
 import { getLevelColor } from "@/utils/courseHelpers"
 
 interface CourseCardProps {
   course: Course
-  onEdit: (course: Course) => void
-  onDelete: (course: Course) => void
+  onEdit?: (course: Course) => void
+  onDelete?: (course: Course) => void
 }
 
 export default function CourseCard({ course, onEdit, onDelete }: CourseCardProps) {
@@ -58,19 +58,19 @@ export default function CourseCard({ course, onEdit, onDelete }: CourseCardProps
 
       <div className="p-4 bg-gray-50 border-t">
         <div className="flex justify-between">
-          <button
-            onClick={() => onEdit(course)}
-            className="bg-sky-100 hover:bg-sky-200 text-sky-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
-          >
-            <FaEdit /> Edit
-          </button>
-          <button
-            onClick={() => onDelete(course)}
-            className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
-          >
-            <FaTrash /> Delete
+        <button
+          onClick={() => onEdit && onEdit(course)}
+          className="bg-sky-100 hover:bg-sky-200 text-sky-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
+        >
+          <FaEdit /> Edit
+        </button>
 
-          </button>
+        <button
+          onClick={() => onDelete && onDelete(course)}
+          className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200"
+        >
+          <FaTrash /> Delete
+        </button>
         </div>
       </div>
     </div>

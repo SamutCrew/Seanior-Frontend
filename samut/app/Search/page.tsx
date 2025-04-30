@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 import { SearchHeader } from "@/components/Searchpage/SearchHeader"
 import { LocationFilter } from "@/components/Searchpage/LocationFilter"
@@ -8,6 +8,7 @@ import { ResultsSection } from "@/components/Searchpage/ResultsSection"
 import { TeacherFiltersComponent } from "@/components/Searchpage/TeacherFilters"
 import { CourseFiltersComponent } from "@/components/Searchpage/CourseFilters"
 import type { Teacher, Course, TeacherFilters, CourseFilters, Location } from "@/components/Searchpage/types"
+import { fetchTeachers, fetchCourses } from "@/api/teacherCourseApi"
 
 // Dynamically import the Map component
 
@@ -27,70 +28,9 @@ function deg2rad(deg: number) {
   return deg * (Math.PI / 180)
 }
 
-// Sample data
-const teachers: Teacher[] = [
-  {
-    id: 1,
-    name: "Michael Phelps",
-    specialty: "Competitive Swimming",
-    styles: ["Freestyle", "Butterfly"],
-    levels: ["Intermediate", "Advanced"],
-    certification: ["ASCA", "RedCross"],
-    rating: 4.9,
-    experience: 15,
-    image: "/teacher1.jpg",
-    bio: "Olympic gold medalist specializing in competitive swimming techniques",
-    lessonType: "Private",
-    price: 80,
-    location: { lat: 13.7563, lng: 100.5018, address: "Bangkok, Thailand" },
-  },
-  {
-    id: 2,
-    name: "Katie Ledecky",
-    specialty: "Freestyle Technique",
-    styles: ["Freestyle"],
-    levels: ["Beginner", "Intermediate", "Advanced"],
-    certification: ["USMS", "RedCross"],
-    rating: 4.8,
-    experience: 10,
-    image: "/teacher2.jpg",
-    bio: "World record holder focusing on freestyle technique and endurance",
-    lessonType: "Group",
-    price: 65,
-    location: { lat: 13.745, lng: 100.535, address: "Siam, Bangkok" },
-  },
-]
-
-const courses: Course[] = [
-  {
-    id: 1,
-    title: "Freestyle Mastery",
-    focus: "Technique",
-    level: "Intermediate",
-    duration: "8 weeks",
-    schedule: "Mon/Wed 6-7pm",
-    instructor: "Michael Phelps",
-    rating: 4.7,
-    students: 12,
-    price: 400,
-    location: { lat: 13.7563, lng: 100.5018, address: "Bangkok, Thailand" },
-  },
-  {
-    id: 2,
-    title: "Beginner Swimming",
-    focus: "Fundamentals",
-    level: "Beginner",
-    duration: "6 weeks",
-    schedule: "Tue/Thu 5-6pm",
-    instructor: "Katie Ledecky",
-    rating: 4.5,
-    students: 8,
-    price: 300,
-    location: { lat: 13.745, lng: 100.535, address: "Siam, Bangkok" },
-  },
-]
-
 const SearchPage = () => {
+  const [teachers, setTeachers] = useState<Teacher[]>([])
+  const [courses, setCourses] = useState<Course[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [searchType, setSearchType] = useState<"teacher" | "course">("teacher")
 
@@ -248,6 +188,23 @@ const SearchPage = () => {
 
   const resultsCount = searchType === "teacher" ? filteredTeachers.length : filteredCourses.length
   const resultsText = searchType === "teacher" ? "Teachers" : "Courses"
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [teacherData, courseData] = await Promise.all([
+          fetchTeachers(),
+          fetchCourses(),
+        ])
+        setTeachers(teacherData)
+        setCourses(courseData)
+      } catch (err) {
+        console.error("Error loading teachers or courses:", err)
+      }
+    }
+  
+    loadData()
+  }, [])
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
