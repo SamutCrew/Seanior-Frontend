@@ -1,4 +1,4 @@
-import type { Course } from "@/app/types/course"
+import type { Course } from "@/types/course"
 import CourseCard from "./CourseCard"
 
 interface CourseGridProps {

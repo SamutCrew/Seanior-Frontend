@@ -13,6 +13,7 @@ interface ButtonProps {
   icon?: React.ReactNode
   showArrow?: boolean
   size?: "sm" | "md" | "lg"
+  disabled?: boolean
 }
 
 export const Button = ({
@@ -24,16 +25,17 @@ export const Button = ({
   icon,
   showArrow = false,
   size = "md",
+  disabled = false,
   ...props
 }: ButtonProps) => {
   // Base classes for all buttons
   const baseClasses = "relative rounded-lg font-medium transition-all duration-300 flex items-center justify-center"
 
-  // Size variations
+  // Size variations - increased touch target size for mobile
   const sizeClasses = {
-    sm: "px-4 py-2 text-sm",
-    md: "px-6 py-3 text-base",
-    lg: "px-8 py-4 text-lg",
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-5 py-2.5 text-base",
+    lg: "px-7 py-3.5 text-lg",
   }
 
   // Style variations
@@ -53,6 +55,7 @@ export const Button = ({
       whileTap={{ scale: 0.97 }}
       className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
       onClick={onClick}
+      disabled={disabled}
       {...props}
     >
       {icon && <span className="mr-2">{icon}</span>}

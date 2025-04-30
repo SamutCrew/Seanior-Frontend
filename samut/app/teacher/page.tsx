@@ -5,9 +5,10 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { FaSearch, FaFilter, FaMapMarkerAlt } from "react-icons/fa"
-import { TeacherCard } from "@/components/TeachersManage/TeacherCard"
+import { TeacherCard } from "@/components/PageDashboard/TeacherCard"
 import { SectionTitle } from "@/components/Common/SectionTitle"
 import { Button } from "@/components/Common/Button"
+import { useAppSelector } from "@/app/redux"
 
 // Sample data for teachers
 const sampleTeachers = [
@@ -20,7 +21,7 @@ const sampleTeachers = [
     certification: ["ASCA", "RedCross"],
     rating: 4.9,
     experience: 15,
-    image: "/placeholder.svg?height=400&width=600&query=swimming instructor male",
+    image: "/placeholder.svg?key=wqdzw",
     bio: "Olympic gold medalist specializing in competitive swimming techniques",
     lessonType: "Private",
     price: 80,
@@ -35,7 +36,7 @@ const sampleTeachers = [
     certification: ["USMS", "RedCross"],
     rating: 4.8,
     experience: 12,
-    image: "/placeholder.svg?height=400&width=600&query=swimming instructor female",
+    image: "/placeholder.svg?key=5xd6c",
     bio: "World record holder focusing on freestyle technique and endurance",
     lessonType: "Private",
     price: 75,
@@ -50,7 +51,7 @@ const sampleTeachers = [
     certification: ["ASCA", "RedCross"],
     rating: 4.7,
     experience: 10,
-    image: "/placeholder.svg?height=400&width=600&query=swimming instructor male",
+    image: "/placeholder.svg?key=nq5bj",
     bio: "Olympic gold medalist specializing in backstroke techniques",
     lessonType: "Group",
     price: 70,
@@ -65,7 +66,7 @@ const sampleTeachers = [
     certification: ["ASCA", "RedCross"],
     rating: 4.9,
     experience: 8,
-    image: "/placeholder.svg?height=400&width=600&query=swimming instructor female",
+    image: "/placeholder.svg?key=xurfu",
     bio: "Olympic gold medalist focusing on sprint techniques and fundamentals",
     lessonType: "Private",
     price: 85,
@@ -87,6 +88,7 @@ export default function TeachersDirectoryPage() {
 
   const [teachers, setTeachers] = useState(sampleTeachers)
   const [filteredTeachers, setFilteredTeachers] = useState(sampleTeachers)
+  const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
   // Apply filters and search
   useEffect(() => {
@@ -141,25 +143,37 @@ export default function TeachersDirectoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12">
+    <div className={`min-h-screen ${isDarkMode ? "bg-slate-900" : "bg-gradient-to-b from-blue-50 to-white"} py-12`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionTitle className="mb-8">Find Swimming Instructors</SectionTitle>
+        <SectionTitle className={`mb-8 ${isDarkMode ? "text-white" : ""}`}>Find Swimming Instructors</SectionTitle>
 
         {/* Search and Filter Bar */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <div
+          className={`${isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white"} rounded-xl shadow-sm p-6 mb-8`}
+        >
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <FaSearch className="absolute left-3 top-3 text-gray-400" />
+              <FaSearch className={`absolute left-3 top-3 ${isDarkMode ? "text-gray-500" : "text-gray-400"}`} />
               <input
                 type="text"
                 placeholder="Search by name, specialty, or keyword..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full pl-10 pr-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                  isDarkMode
+                    ? "bg-slate-700 border-slate-600 text-white placeholder-gray-400"
+                    : "border border-gray-300 focus:border-blue-500"
+                }`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 
-            <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 ${
+                isDarkMode ? "border-slate-600 text-white hover:bg-slate-700" : ""
+              }`}
+            >
               <FaFilter /> {showFilters ? "Hide Filters" : "Show Filters"}
             </Button>
           </div>
@@ -167,12 +181,18 @@ export default function TeachersDirectoryPage() {
           {showFilters && (
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Swimming Style</label>
+                <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                  Swimming Style
+                </label>
                 <select
                   name="style"
                   value={filters.style}
                   onChange={handleFilterChange}
-                  className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full rounded-lg p-2 focus:ring-2 focus:ring-blue-500 ${
+                    isDarkMode
+                      ? "bg-slate-700 border-slate-600 text-white"
+                      : "border border-gray-300 focus:border-blue-500"
+                  }`}
                 >
                   <option value="">All Styles</option>
                   <option value="Freestyle">Freestyle</option>
@@ -183,12 +203,18 @@ export default function TeachersDirectoryPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Level</label>
+                <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                  Level
+                </label>
                 <select
                   name="level"
                   value={filters.level}
                   onChange={handleFilterChange}
-                  className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full rounded-lg p-2 focus:ring-2 focus:ring-blue-500 ${
+                    isDarkMode
+                      ? "bg-slate-700 border-slate-600 text-white"
+                      : "border border-gray-300 focus:border-blue-500"
+                  }`}
                 >
                   <option value="">All Levels</option>
                   <option value="Beginner">Beginner</option>
@@ -198,12 +224,18 @@ export default function TeachersDirectoryPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Lesson Type</label>
+                <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                  Lesson Type
+                </label>
                 <select
                   name="lessonType"
                   value={filters.lessonType}
                   onChange={handleFilterChange}
-                  className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full rounded-lg p-2 focus:ring-2 focus:ring-blue-500 ${
+                    isDarkMode
+                      ? "bg-slate-700 border-slate-600 text-white"
+                      : "border border-gray-300 focus:border-blue-500"
+                  }`}
                 >
                   <option value="">All Types</option>
                   <option value="Private">Private</option>
@@ -212,12 +244,18 @@ export default function TeachersDirectoryPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Rating</label>
+                <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                  Minimum Rating
+                </label>
                 <select
                   name="minRating"
                   value={filters.minRating}
                   onChange={handleFilterChange}
-                  className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full rounded-lg p-2 focus:ring-2 focus:ring-blue-500 ${
+                    isDarkMode
+                      ? "bg-slate-700 border-slate-600 text-white"
+                      : "border border-gray-300 focus:border-blue-500"
+                  }`}
                 >
                   <option value="0">Any Rating</option>
                   <option value="3">3+ Stars</option>
@@ -227,7 +265,7 @@ export default function TeachersDirectoryPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
                   Maximum Price: ${filters.maxPrice}
                 </label>
                 <input
@@ -237,7 +275,7 @@ export default function TeachersDirectoryPage() {
                   step="5"
                   value={filters.maxPrice}
                   onChange={handlePriceChange}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
                 />
               </div>
             </div>
@@ -246,9 +284,11 @@ export default function TeachersDirectoryPage() {
 
         {/* Results Count */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-800">{filteredTeachers.length} Instructors Found</h2>
+          <h2 className={`text-xl font-semibold ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+            {filteredTeachers.length} Instructors Found
+          </h2>
 
-          <div className="flex items-center text-gray-600">
+          <div className={`flex items-center ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
             <FaMapMarkerAlt className="mr-2" />
             <span>Los Angeles, CA</span>
           </div>
@@ -259,15 +299,22 @@ export default function TeachersDirectoryPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {filteredTeachers.map((teacher) => (
               <div key={teacher.id} className="cursor-pointer" onClick={() => viewTeacherProfile(teacher.id)}>
-                <TeacherCard teacher={teacher} />
+                <TeacherCard teacher={teacher} isDarkMode={isDarkMode} />
               </div>
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">No Instructors Found</h3>
-            <p className="text-gray-600 mb-4">Try adjusting your search filters to find more instructors.</p>
+          <div
+            className={`${isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white"} rounded-xl shadow-sm p-8 text-center`}
+          >
+            <h3 className={`text-xl font-semibold mb-2 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+              No Instructors Found
+            </h3>
+            <p className={`mb-4 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+              Try adjusting your search filters to find more instructors.
+            </p>
             <Button
+              variant={isDarkMode ? "gradient" : "primary"}
               onClick={() => {
                 setSearchTerm("")
                 setFilters({
@@ -290,28 +337,49 @@ export default function TeachersDirectoryPage() {
             <nav className="inline-flex rounded-md shadow">
               <a
                 href="#"
-                className="px-4 py-2 rounded-l-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                className={`px-4 py-2 rounded-l-md border ${
+                  isDarkMode
+                    ? "border-slate-600 bg-slate-800 text-gray-300 hover:bg-slate-700"
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
               >
                 Previous
               </a>
-              <a href="#" className="px-4 py-2 border-t border-b border-gray-300 bg-blue-600 text-white">
+              <a
+                href="#"
+                className={`px-4 py-2 border-t border-b ${
+                  isDarkMode ? "border-slate-600" : "border-gray-300"
+                } bg-blue-600 text-white`}
+              >
                 1
               </a>
               <a
                 href="#"
-                className="px-4 py-2 border-t border-b border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                className={`px-4 py-2 border-t border-b ${
+                  isDarkMode
+                    ? "border-slate-600 bg-slate-800 text-gray-300 hover:bg-slate-700"
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
               >
                 2
               </a>
               <a
                 href="#"
-                className="px-4 py-2 border-t border-b border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                className={`px-4 py-2 border-t border-b ${
+                  isDarkMode
+                    ? "border-slate-600 bg-slate-800 text-gray-300 hover:bg-slate-700"
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
               >
                 3
               </a>
               <a
                 href="#"
-                className="px-4 py-2 rounded-r-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                className={`px-4 py-2 rounded-r-md border ${
+                  isDarkMode
+                    ? "border-slate-600 bg-slate-800 text-gray-300 hover:bg-slate-700"
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
               >
                 Next
               </a>

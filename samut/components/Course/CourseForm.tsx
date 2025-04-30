@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { FaCalendarAlt, FaClock, FaMapMarkerAlt } from "react-icons/fa"
+import { useAppSelector } from "@/app/redux"
 
 interface CourseFormProps {
   initialData?: any
@@ -10,6 +11,7 @@ interface CourseFormProps {
 }
 
 export default function CourseForm({ initialData, onSubmit, onCancel }: CourseFormProps) {
+  const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
   const [title, setTitle] = useState(initialData?.title || "")
   const [focus, setFocus] = useState(initialData?.focus || "")
   const [level, setLevel] = useState(initialData?.level || "")
@@ -33,45 +35,54 @@ export default function CourseForm({ initialData, onSubmit, onCancel }: CourseFo
     })
   }
 
+  const inputClasses = `mt-1 block w-full rounded-md ${
+    isDarkMode
+      ? "bg-slate-700 border-slate-600 text-white focus:border-cyan-500 focus:ring-cyan-500"
+      : "border-gray-300 focus:border-sky-500 focus:ring-sky-500"
+  } shadow-sm sm:text-sm`
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="title"
+          className={`block text-sm font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+        >
           Title
         </label>
         <input
           type="text"
           id="title"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm"
+          className={inputClasses}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
         />
       </div>
       <div>
-        <label htmlFor="focus" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="focus"
+          className={`block text-sm font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+        >
           Focus
         </label>
         <input
           type="text"
           id="focus"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm"
+          className={inputClasses}
           value={focus}
           onChange={(e) => setFocus(e.target.value)}
           required
         />
       </div>
       <div>
-        <label htmlFor="level" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="level"
+          className={`block text-sm font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+        >
           Level
         </label>
-        <select
-          id="level"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm"
-          value={level}
-          onChange={(e) => setLevel(e.target.value)}
-          required
-        >
+        <select id="level" className={inputClasses} value={level} onChange={(e) => setLevel(e.target.value)} required>
           <option value="">Select Level</option>
           <option value="Beginner">Beginner</option>
           <option value="Intermediate">Intermediate</option>
@@ -79,7 +90,10 @@ export default function CourseForm({ initialData, onSubmit, onCancel }: CourseFo
         </select>
       </div>
       <div>
-        <label htmlFor="duration" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="duration"
+          className={`block text-sm font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+        >
           Duration
         </label>
         <div className="relative">
@@ -87,7 +101,7 @@ export default function CourseForm({ initialData, onSubmit, onCancel }: CourseFo
           <input
             type="text"
             id="duration"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm pl-10"
+            className={`${inputClasses} pl-10`}
             value={duration}
             onChange={(e) => setDuration(e.target.value)}
             placeholder="e.g., 8 weeks"
@@ -96,7 +110,10 @@ export default function CourseForm({ initialData, onSubmit, onCancel }: CourseFo
         </div>
       </div>
       <div>
-        <label htmlFor="schedule" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="schedule"
+          className={`block text-sm font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+        >
           Schedule
         </label>
         <div className="relative">
@@ -104,7 +121,7 @@ export default function CourseForm({ initialData, onSubmit, onCancel }: CourseFo
           <input
             type="text"
             id="schedule"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm pl-10"
+            className={`${inputClasses} pl-10`}
             value={schedule}
             onChange={(e) => setSchedule(e.target.value)}
             placeholder="e.g., Mon/Wed 5-6pm"
@@ -113,7 +130,10 @@ export default function CourseForm({ initialData, onSubmit, onCancel }: CourseFo
         </div>
       </div>
       <div>
-        <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="address"
+          className={`block text-sm font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+        >
           Address
         </label>
         <div className="relative">
@@ -121,7 +141,7 @@ export default function CourseForm({ initialData, onSubmit, onCancel }: CourseFo
           <input
             type="text"
             id="address"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm pl-10"
+            className={`${inputClasses} pl-10`}
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="e.g., Skyline Aquatic Center, Pool 2"
@@ -130,26 +150,32 @@ export default function CourseForm({ initialData, onSubmit, onCancel }: CourseFo
         </div>
       </div>
       <div>
-        <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="price"
+          className={`block text-sm font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+        >
           Price
         </label>
         <input
           type="number"
           id="price"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm"
+          className={inputClasses}
           value={price}
           onChange={(e) => setPrice(e.target.value)}
           required
         />
       </div>
       <div>
-        <label htmlFor="students" className="block text-sm font-medium text-gray-700">
+        <label
+          htmlFor="students"
+          className={`block text-sm font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+        >
           Students
         </label>
         <input
           type="number"
           id="students"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-sm"
+          className={inputClasses}
           value={students}
           onChange={(e) => setStudents(e.target.value)}
           required
@@ -159,13 +185,19 @@ export default function CourseForm({ initialData, onSubmit, onCancel }: CourseFo
         <button
           type="button"
           onClick={onCancel}
-          className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors duration-200"
+          className={`${
+            isDarkMode ? "bg-slate-700 hover:bg-slate-600 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-800"
+          } px-4 py-2 rounded-lg transition-colors duration-200`}
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+          className={`${
+            isDarkMode
+              ? "bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600"
+              : "bg-sky-600 hover:bg-sky-700"
+          } text-white px-4 py-2 rounded-lg transition-colors duration-200`}
         >
           Submit
         </button>
