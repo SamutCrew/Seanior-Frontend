@@ -99,7 +99,7 @@ export default function AvailableCourses({ availableCourses }: AvailableCoursesP
                       <div className="mt-2 mb-3">
                         <div className={`w-full h-1.5 ${isDarkMode ? "bg-slate-700" : "bg-gray-200"} rounded-full`}>
                           <div
-                            className="bg-blue-500 rounded-full h-1.5"
+                            className={`${isDarkMode ? "bg-cyan-500" : "bg-blue-500"} rounded-full h-1.5`}
                             style={{
                               width: `${Math.min((course.students / (course.maxStudents || 1)) * 100, 100)}%`,
                             }}
@@ -122,7 +122,7 @@ export default function AvailableCourses({ availableCourses }: AvailableCoursesP
                       <button
                         onClick={() => toggleExpand(course.id)}
                         className={`p-2 rounded-full ${
-                          isDarkMode ? "hover:bg-slate-700" : "hover:bg-gray-100"
+                          isDarkMode ? "hover:bg-slate-600" : "hover:bg-gray-100"
                         } transition-colors`}
                       >
                         {expandedCourse === course.id ? (
