@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import TeacherHeader from "@/components/TeachersManage/TeacherHeader"
-import TeacherStats from "@/components/TeachersManage/TeacherStats"
-import CalendarView from "@/components/TeachersManage/CalendarView"
-import RequestsPanel from "@/components/TeachersManage/RequestsPanel"
-import TeachingSchedule from "@/components/TeachersManage/TeachingSchedule"
-import AvailableCourses from "@/components/TeachersManage/AvailableCourses"
+import TeacherHeader from "@/components/PageDashboard/TeacherHeader"
+import TeacherStats from "@/components/PageDashboard/TeacherStats"
+import CalendarView from "@/components/PageDashboard/CalendarView"
+import RequestsPanel from "@/components/PageDashboard/RequestsPanel"
+import TeachingSchedule from "@/components/PageDashboard/TeachingSchedule"
+import AvailableCourses from "@/components/PageDashboard/AvailableCourses"
 import type { ScheduleItem, Course } from "@/types/schedule"
 
 export default function TeacherManagement() {
