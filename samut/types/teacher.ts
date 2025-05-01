@@ -1,31 +1,80 @@
+export interface Location {
+  lat: number;
+  lng: number;
+  address?: string;
+}
+
+export interface TeacherDescription {
+  id: string
+  name: string
+  profileImage: string
+  specialty: string;
+  styles: string[];
+  levels: string[];
+  certification: string[];
+  rating: number;
+  experience: number;
+  lessonType: string;
+  price: number;
+  location: Location;
+  bio: string
+  teachingPhilosophy: string
+  image: string;
+  email: string
+  phone: string
+  contactHours: string
+  specializations: Specialization[]
+  certifications: Certification[]
+  testimonials: Testimonial[]
+  availability: Availability
+}
+
 export interface Teacher {
-    id: string
-    name: string
-    profileImage: string
-    specialty: string
-    bio: string
-    teachingPhilosophy: string
-    styles: string[]
-    levels: string[]
-    certification: string[]
-    rating: number
-    experience: number
-    lessonType: string
-    price: number
-    email: string
-    phone: string
-    contactHours: string
-    location: {
-      lat: number
-      lng: number
-      address: string
-    }
-    specializations: Specialization[]
-    certifications: Certification[]
-    testimonials: Testimonial[]
-    availability: Availability
-  }
-  
+  id: number;
+  name: string;
+  email: string;
+  profile_img: string;
+  description: TeacherDescription;
+}
+
+export interface Course {
+  id: number;
+  title: string;
+  focus: string;
+  level: string;
+  duration: string;
+  schedule: string;
+  instructor: string;
+  rating: number;
+  students: number;
+  price: number;
+  location: Location;
+}
+
+export interface TeacherFilters {
+  style: string;
+  level: string;
+  lessonType: string;
+  certification: string;
+  minRating: number;
+  priceRange: string;
+  maxDistance: number;
+}
+
+export interface CourseFilters {
+  focus: string;
+  level: string;
+  duration: string;
+  schedule: string;
+  minRating: number;
+  priceRange: string;
+  maxDistance: number;
+}
+export interface OSMMapSelectorProps {
+  center: { lat: number; lng: number };
+  onLocationSelect: (location: { lat: number; lng: number }) => void;
+}
+
   export interface Specialization {
     title: string
     description: string
@@ -43,7 +92,8 @@ export interface Teacher {
     verificationUrl?: string
   }
   
-  export interface Testimonial {
+
+export interface Testimonial {
     id: string
     name: string
     avatar?: string
@@ -63,3 +113,8 @@ export interface Teacher {
     location?: string
   }
   
+  export interface TeacherCardProps {
+    teacher: Teacher
+    userLocation?: Location | null
+    isDarkMode?: boolean
+  }

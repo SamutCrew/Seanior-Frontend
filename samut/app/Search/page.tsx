@@ -7,7 +7,7 @@ import { LocationFilter } from "@/components/Searchpage/LocationFilter"
 import { ResultsSection } from "@/components/Searchpage/ResultsSection"
 import { TeacherFiltersComponent } from "@/components/Searchpage/TeacherFilters"
 import { CourseFiltersComponent } from "@/components/Searchpage/CourseFilters"
-import type { Teacher, Course, TeacherFilters, CourseFilters, Location } from "@/components/Searchpage/types"
+import type { Teacher, Course, TeacherFilters, CourseFilters, Location } from "@/types/teacher"
 import { fetchTeachers, fetchCourses } from "@/api/teacherCourseApi"
 
 // Dynamically import the Map component

@@ -1,7 +1,7 @@
 "use client"
 
 import { FaCrosshairs, FaMapMarkerAlt } from "react-icons/fa";
-import { Location } from "../Searchpage/types";
+import { Location } from "../../types/teacher";
 import OSMMapSelector from "./OSMMAPSelector";
 
 interface LocationItem {
