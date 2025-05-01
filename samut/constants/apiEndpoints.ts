@@ -24,6 +24,15 @@ export const APIEndpoints = Object.freeze({
           },
           DELETE: '/resources/delete/[userId]'
     },
-        
-});
+    TEACHER: {
+        RETRIEVE: {
+          ALL: "/users/retrieve/getAllTeachers",
+        },
+    },
+    COURSE: {
+    RETRIEVE: {
+        ALL: "/courses/retrieve/all",
+        },
+    },
+})    
   
