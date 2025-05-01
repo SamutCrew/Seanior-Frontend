@@ -3,57 +3,32 @@
 import { FaStar, FaMapMarkerAlt } from "react-icons/fa"
 import Image from "next/image"
 import { motion } from "framer-motion"
-
-export interface Location {
-  lat: number
-  lng: number
-  address?: string
-}
-
-export interface Teacher {
-  id: number
-  name: string
-  specialty: string
-  styles: string[]
-  levels: string[]
-  certification: string[]
-  rating: number
-  experience: number
-  image: string
-  bio: string
-  lessonType: string
-  price: number
-  location: Location
-}
-
-interface TeacherCardProps {
-  teacher: Teacher
-  userLocation?: Location | null
-  isDarkMode?: boolean
-}
+import { Location, TeacherDescription, Teacher, TeacherCardProps } from "@/types";
 
 export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: TeacherCardProps) => {
-  // Calculate distance if user location is provided
+  console.log("TeacherCard", teacher, userLocation, isDarkMode)
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371 // Radius of the earth in km
+    const R = 6371
     const dLat = deg2rad(lat2 - lat1)
     const dLon = deg2rad(lon2 - lon1)
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2)
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-    return R * c // Distance in km
+    return R * c
   }
 
   const deg2rad = (deg: number) => deg * (Math.PI / 180)
 
-  const distance = userLocation
-    ? calculateDistance(userLocation.lat, userLocation.lng, teacher.location.lat, teacher.location.lng)
+  const teacherLocation = teacher.description?.location
+  const distance = userLocation && teacherLocation
+    ? calculateDistance(userLocation.lat, userLocation.lng, teacherLocation.lat, teacherLocation.lng)
     : null
 
   return (
     <motion.div
-      whileHover={{ y: typeof window !== "undefined" && window.innerWidth < 640 ? -4 : -8 }}
+      whileHover={{ y: -8 }}
       transition={{ duration: 0.5 }}
       className={`${
         isDarkMode
@@ -62,9 +37,9 @@ export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: Teach
       } rounded-xl shadow-lg overflow-hidden transition-all duration-300 group h-full flex flex-col`}
     >
       {/* Teacher Image */}
-      <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden">
+      <div className="relative h-64 overflow-hidden">
         <Image
-          src={teacher.image || "/placeholder.svg?height=400&width=600&query=swimming instructor"}
+          src={teacher.profile_img || "/placeholder.svg?height=400&width=600&query=swimming instructor"}
           alt={teacher.name}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -77,22 +52,24 @@ export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: Teach
         ></div>
 
         {/* Experience Badge */}
-        <div
-          className={`absolute bottom-3 sm:bottom-4 left-3 sm:left-4 ${
-            isDarkMode ? "bg-cyan-600" : "bg-blue-600"
-          } text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md`}
-        >
-          {teacher.experience}+ years
-        </div>
+        {teacher.description?.experience !== undefined && (
+          <div
+            className={`absolute bottom-4 left-4 ${
+              isDarkMode ? "bg-cyan-600" : "bg-blue-600"
+            } text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md`}
+          >
+            {teacher.description.experience}+ years
+          </div>
+        )}
 
         {/* Certification Badges */}
-        <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex flex-col gap-1 sm:gap-2">
-          {teacher.certification.slice(0, 2).map((cert, index) => (
+        <div className="absolute top-4 right-4 flex flex-col gap-2">
+          {teacher.description?.certification?.slice(0, 2).map((cert, index) => (
             <span
               key={index}
               className={`${
                 isDarkMode ? "bg-slate-800/80 text-cyan-400 border border-slate-700/50" : "bg-white/80 text-blue-800"
-              } backdrop-blur-sm text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md font-medium shadow-sm`}
+              } backdrop-blur-sm text-xs px-2 py-1 rounded-md font-medium shadow-sm`}
             >
               {cert}
             </span>
@@ -100,31 +77,31 @@ export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: Teach
         </div>
       </div>
 
-      <div className={`p-4 sm:p-5 md:p-6 flex flex-col flex-grow ${isDarkMode ? "border-t border-slate-700" : ""}`}>
+      <div className={`p-6 flex flex-col flex-grow ${isDarkMode ? "border-t border-slate-700" : ""}`}>
         <div className="flex items-start mb-4">
           <div className="flex-1">
-            <h3 className={`font-bold text-lg sm:text-xl ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-              {teacher.name}
-            </h3>
+            <h3 className={`font-bold text-xl ${isDarkMode ? "text-white" : "text-gray-800"}`}>{teacher.name}</h3>
             <p className={isDarkMode ? "text-cyan-400 font-medium" : "text-blue-600 font-medium"}>
-              {teacher.specialty}
+              {teacher.description?.specialty || "No specialty provided"}
             </p>
           </div>
-          {/* Rating */}
-          <div
-            className={`flex items-center ${isDarkMode ? "bg-slate-700/50" : "bg-yellow-50"} px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm`}
-          >
-            <FaStar className="text-yellow-400 mr-1" />
-            <span className={`font-semibold ${isDarkMode ? "text-white" : "text-gray-700"}`}>{teacher.rating}</span>
-          </div>
+          {teacher.description?.rating !== undefined && (
+            <div
+              className={`flex items-center ${isDarkMode ? "bg-slate-700/50" : "bg-yellow-50"} px-2 py-1 rounded-full`}
+            >
+              <FaStar className="text-yellow-400 mr-1" />
+              <span className={`font-semibold ${isDarkMode ? "text-white" : "text-gray-700"}`}>
+                {teacher.description.rating}
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Location Information */}
-        <div className="mb-3 sm:mb-4 flex items-center text-xs sm:text-sm">
+        <div className="mb-4 flex items-center text-sm">
           <FaMapMarkerAlt className={isDarkMode ? "text-cyan-500 mr-2" : "text-red-500 mr-2"} />
           <div>
             <p className={`font-medium ${isDarkMode ? "text-slate-300" : "text-gray-600"}`}>
-              {teacher.location.address || "Location not specified"}
+              {teacherLocation?.address || "Location not specified"}
             </p>
             {distance !== null && (
               <p className={isDarkMode ? "text-xs text-slate-400" : "text-xs text-gray-500"}>
@@ -134,15 +111,12 @@ export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: Teach
           </div>
         </div>
 
-        <p
-          className={`mb-4 sm:mb-6 line-clamp-3 flex-grow text-xs sm:text-sm ${isDarkMode ? "text-slate-300" : "text-gray-600"}`}
-        >
-          {teacher.bio}
+        <p className={`mb-6 line-clamp-3 flex-grow ${isDarkMode ? "text-slate-300" : "text-gray-600"}`}>
+          Passionate swimming instructor with a focus on technique and confidence.
         </p>
 
-        {/* Styles Tags */}
-        <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4">
-          {teacher.styles.map((style, index) => (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {teacher.description?.styles?.map((style, index) => (
             <span
               key={index}
               className={`text-xs px-2 py-1 rounded-full ${
@@ -158,7 +132,7 @@ export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: Teach
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.98 }}
-            className={`w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg text-sm sm:text-base ${
+            className={`w-full py-3 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg ${
               isDarkMode
                 ? "bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600 text-white"
                 : "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white"

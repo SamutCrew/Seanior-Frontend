@@ -1,5 +1,5 @@
 import { TeacherCard } from '../PageDashboard/TeacherCard';
-import  CourseCard  from '../Course/CourseCard';
+import CourseCard from '../Course/CourseCard';
 
 interface ResultsSectionProps {
   resultsCount: number;
@@ -28,12 +28,13 @@ export const ResultsSection = ({
     ) : searchType === 'teacher' ? (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTeachers.map((teacher) => (
-          <div key={teacher.id} className="relative">
+          <div key={teacher.user_id} className="relative">
             <TeacherCard teacher={teacher} />
           </div>
         ))}
       </div>
-    ) : (
+    ) : 
+    (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCourses.map((course) => (
           <div key={course.id} className="relative">
