@@ -26,7 +26,7 @@ export const APIEndpoints = Object.freeze({
     },
     TEACHER: {
         RETRIEVE: {
-          ALL: "/retrieve/getAllTeachers",
+          ALL: "/users/retrieve/getAllTeachers",
         },
     },
     COURSE: {

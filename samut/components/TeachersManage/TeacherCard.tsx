@@ -3,38 +3,10 @@
 import { FaStar, FaMapMarkerAlt } from "react-icons/fa"
 import Image from "next/image"
 import { motion } from "framer-motion"
-
-export interface Location {
-  lat: number
-  lng: number
-  address?: string
-}
-
-export interface TeacherDescription {
-  specialty?: string
-  styles?: string[]
-  levels?: string[]
-  certification?: string[]
-  rating?: number
-  experience?: number
-  lessonType?: string
-  location?: Location
-}
-
-export interface Teacher {
-  id: number
-  name: string
-  description?: TeacherDescription
-  profile_img: string
-}
-
-interface TeacherCardProps {
-  teacher: Teacher
-  userLocation?: Location | null
-  isDarkMode?: boolean
-}
+import { Location, TeacherDescription, Teacher, TeacherCardProps } from "@/types";
 
 export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: TeacherCardProps) => {
+  console.log("TeacherCard", teacher, userLocation, isDarkMode)
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371
     const dLat = deg2rad(lat2 - lat1)

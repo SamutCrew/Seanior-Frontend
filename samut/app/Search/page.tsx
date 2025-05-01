@@ -114,26 +114,26 @@ const SearchPage = () => {
   // Filter teachers based on search term and filters
   const filteredTeachers = teachers.filter((teacher) => {
     const term = searchTerm.toLowerCase()
-    const matchesSearch = teacher.name.toLowerCase().includes(term) || teacher.specialty.toLowerCase().includes(term)
+    const matchesSearch = teacher.name.toLowerCase().includes(term) || teacher.description.specialty.toLowerCase().includes(term)
 
-    const matchesStyle = teacherFilters.style === "" || teacher.styles.includes(teacherFilters.style)
-    const matchesLevel = teacherFilters.level === "" || teacher.levels.includes(teacherFilters.level)
-    const matchesLessonType = teacherFilters.lessonType === "" || teacher.lessonType === teacherFilters.lessonType
+    const matchesStyle = teacherFilters.style === "" || teacher.description.styles.includes(teacherFilters.style)
+    const matchesLevel = teacherFilters.level === "" || teacher.description.levels.includes(teacherFilters.level)
+    const matchesLessonType = teacherFilters.lessonType === "" || teacher.description.lessonType === teacherFilters.lessonType
     const matchesCertification =
-      teacherFilters.certification === "" || teacher.certification.includes(teacherFilters.certification)
-    const matchesRating = teacher.rating >= teacherFilters.minRating
+      teacherFilters.certification === "" || teacher.description.certification.includes(teacherFilters.certification)
+    const matchesRating = teacher.description.rating >= teacherFilters.minRating
 
     // Price range filter
     let matchesPrice = true
     if (teacherFilters.priceRange) {
       const [min, max] = teacherFilters.priceRange.split("-").map(Number)
-      matchesPrice = teacher.price >= min && (isNaN(max) || teacher.price <= max)
+      matchesPrice = teacher.description.price >= min && (isNaN(max) || teacher.description.price <= max)
     }
 
     // Distance filter
     let matchesDistance = true
     if (teacherFilters.maxDistance > 0 && userLocation) {
-      const distance = getDistance(userLocation.lat, userLocation.lng, teacher.location.lat, teacher.location.lng)
+      const distance = getDistance(userLocation.lat, userLocation.lng, teacher.description.location.lat, teacher.description.location.lng)
       matchesDistance = distance <= teacherFilters.maxDistance
     }
 
@@ -192,12 +192,13 @@ const SearchPage = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [teacherData, courseData] = await Promise.all([
+        const [teacherData] = await Promise.all([
           fetchTeachers(),
-          fetchCourses(),
+          // fetchCourses(),
         ])
         setTeachers(teacherData)
-        setCourses(courseData)
+        // setCourses(courseData)
+      console.log("Teachers:", teacherData)
       } catch (err) {
         console.error("Error loading teachers or courses:", err)
       }
@@ -258,7 +259,7 @@ const SearchPage = () => {
             teacherLocations={filteredTeachers.map(t => ({
               id: t.id,
               name: t.name,
-              location: t.location,
+              location: t.description.location,
             }))}
             courseLocations={filteredCourses.map(c => ({
               id: c.id,

@@ -4,20 +4,26 @@ export interface Location {
     address?: string;
   }
   
-  export interface Teacher {
-    id: number;
-    name: string;
+  export interface TeacherDescription {
     specialty: string;
     styles: string[];
     levels: string[];
     certification: string[];
     rating: number;
     experience: number;
-    image: string;
-    bio: string;
     lessonType: string;
     price: number;
     location: Location;
+    bio: string;
+    image: string;
+  }
+  
+  export interface Teacher {
+    id: number;
+    name: string;
+    email: string;
+    profile_img: string;
+    description: TeacherDescription;
   }
   
   export interface Course {
