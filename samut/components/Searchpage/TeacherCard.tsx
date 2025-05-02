@@ -1,9 +1,9 @@
 "use client"
 
-import { FaStar, FaMapMarkerAlt } from "react-icons/fa"
+import { FaMapMarkerAlt } from "react-icons/fa"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { Location, TeacherDescription, Teacher, TeacherCardProps } from "@/types";
+import type { TeacherCardProps } from "@/types"
 
 export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: TeacherCardProps) => {
   console.log("TeacherCard", teacher, userLocation, isDarkMode)
@@ -13,8 +13,7 @@ export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: Teach
     const dLon = deg2rad(lon2 - lon1)
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2)
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     return R * c
   }
@@ -22,9 +21,10 @@ export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: Teach
   const deg2rad = (deg: number) => deg * (Math.PI / 180)
 
   const teacherLocation = teacher.description?.location
-  const distance = userLocation && teacherLocation
-    ? calculateDistance(userLocation.lat, userLocation.lng, teacherLocation.lat, teacherLocation.lng)
-    : null
+  const distance =
+    userLocation && teacherLocation
+      ? calculateDistance(userLocation.lat, userLocation.lng, teacherLocation.lat, teacherLocation.lng)
+      : null
 
   return (
     <motion.div
@@ -62,8 +62,8 @@ export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: Teach
           </div>
         )}
 
-        {/* Certification Badges */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2">
+        {/* Certification Badges - Moved to top left */}
+        <div className="absolute top-4 left-4 flex flex-col gap-2">
           {teacher.description?.certification?.slice(0, 2).map((cert, index) => (
             <span
               key={index}
@@ -85,16 +85,6 @@ export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: Teach
               {teacher.description?.specialty || "No specialty provided"}
             </p>
           </div>
-          {teacher.description?.rating !== undefined && (
-            <div
-              className={`flex items-center ${isDarkMode ? "bg-slate-700/50" : "bg-yellow-50"} px-2 py-1 rounded-full`}
-            >
-              <FaStar className="text-yellow-400 mr-1" />
-              <span className={`font-semibold ${isDarkMode ? "text-white" : "text-gray-700"}`}>
-                {teacher.description.rating}
-              </span>
-            </div>
-          )}
         </div>
 
         <div className="mb-4 flex items-center text-sm">
