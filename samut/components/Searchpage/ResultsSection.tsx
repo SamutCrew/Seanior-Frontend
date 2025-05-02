@@ -1,4 +1,4 @@
-import { TeacherCard } from '../PageDashboard/TeacherCard';
+import { TeacherCard } from './TeacherCard';
 import CourseCard from '../Course/CourseCard';
 
 interface ResultsSectionProps {
