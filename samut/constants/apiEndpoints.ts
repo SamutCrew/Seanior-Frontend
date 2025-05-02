@@ -37,5 +37,14 @@ export const APIEndpoints = Object.freeze({
         APPROVE: '/instructor-requests/approve/[requestId]',
         REJECT: '/instructor-requests/reject/[requestId]',
     },
-});
-  
+    TEACHER: {
+        RETRIEVE: {
+          ALL: "/users/retrieve/getAllTeachers",
+        },
+    },
+    COURSE: {
+    RETRIEVE: {
+        ALL: "/courses/retrieve/all",
+        },
+    },
+})    
