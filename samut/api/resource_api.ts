@@ -59,6 +59,60 @@ export const uploadProfileImage = async (
   }
 };
 
+export const uploadIdCard = async (
+  userId: string,
+  file: File,
+): Promise<Resource> => {
+  const formData = new FormData();
+  try {
+    formData.append("file", file);
+
+    const token = await getAuthToken();
+
+    const response = await apiClient.post<Resource>(
+      APIEndpoints.RESOURCE.CREATE.UPLOAD_ID_CARD.replace("[userId]", userId),
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading the ID card:", error);
+    throw error;
+  }
+};
+
+export const uploadSwimmingLicense = async (
+  userId: string,
+  file: File,
+): Promise<Resource> => {
+  const formData = new FormData();
+  try {
+    formData.append("file", file);
+
+    const token = await getAuthToken();
+
+    const response = await apiClient.post<Resource>(
+      APIEndpoints.RESOURCE.CREATE.UPLOAD_SWIMMING_LICENSE.replace("[userId]", userId),
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading the swimming license:", error);
+    throw error;
+  }
+};
+
 export const getAllResources = async () => {
   const url = APIEndpoints.RESOURCE.RETRIEVE.ALL;
   try {

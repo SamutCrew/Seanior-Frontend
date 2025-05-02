@@ -1,8 +1,10 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { uploadResource, getAllResources } from "@/api/resource_api"
+import { uploadProfileImage, getAllResources } from "@/api"
 import { useAuth } from "@/context/AuthContext"
 import { Input } from "@heroui/react"
+import withLayout from "@/hocs/WithLayout"
+import { LayoutType } from "@/types/layout"
 
 // Utility function to parse backend date string
 const parseBackendDate = (dateString: string | null | undefined): Date | null => {
@@ -106,7 +108,7 @@ const Admin = () => {
         }
 
         try {
-            const response = await uploadResource(user.user_id, file)
+            const response = await uploadProfileImage(user.user_id, file)
             if (typeof response === "string") {
                 console.error("Upload failed:", response)
             } else {
@@ -137,9 +139,9 @@ const Admin = () => {
 
     return (
         <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">Admin Page</h1>
-            <p className="mb-2">This is the admin page</p>
-            <p className="mb-4">Use to test the API from the client side to make sure it works</p>
+            <h1 className="text-2xl font-bold mb-4">Admin Resource Page</h1>
+            <p className="mb-4">Use to see all resources uploaded by users.</p>
+            <p className="mb-4">You can upload a new resource using the form below.</p>
 
             {/* File Upload Section */}
             <div className="mb-6">
@@ -265,4 +267,4 @@ const Admin = () => {
     )
 }
 
-export default Admin
+export default withLayout(Admin, LayoutType.Admin)

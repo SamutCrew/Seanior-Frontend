@@ -5,6 +5,7 @@ export const LayoutType = {
   Guest: "guest",
   Auth : "auth",
   App: "app",
+  Admin: "admin",
   None: "none",
 } as const;
 
