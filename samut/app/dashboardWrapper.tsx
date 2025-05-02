@@ -4,6 +4,7 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import Navbar from "../components/layout/navbar"
 import Sidebar from "../components/layout/sidebar"
+import AdminSidebar from "../components/layout/adminsidebar"
 import StoreProvider, { useAppSelector } from "./redux"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
@@ -20,6 +21,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Check if we're on an auth page
   const isAuthPage = pathname.startsWith("/auth/")
+
+  const isAdminPage = pathname.startsWith("/admin")
 
   // Update the userRole determination to use a state variable that can be toggled
   const [userRoleState, setUserRoleState] = useState<"student" | "teacher">(
@@ -113,6 +116,63 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           </AnimatePresence>
         </motion.main>
       </div>
+    )
+  }
+
+  if (isAdminPage) {
+    return (
+      <div className="flex min-h-screen w-full bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-white">
+      {/* Sidebar - with smooth opacity transition */}
+      <div
+        className={`z-40 transition-all duration-500 ease-in-out ${
+          isLandingPage && scrollPosition === 0 ? "opacity-0 pointer-events-none" : "opacity-100 pointer-events-auto"
+        }`}
+        style={{
+          opacity: isLandingPage ? Math.min(scrollPosition / 50, 1) : 1,
+        }}
+      >
+        {/* Pass the state setter to the Sidebar component */}
+        <AdminSidebar isLandingPage={isLandingPage} scrollPosition={scrollPosition}/>
+      </div>
+      {/* Main content with smooth padding transition */}
+      <motion.main
+        initial={false}
+        animate={
+          isMobile
+            ? "collapsed" // Always use collapsed layout on mobile
+            : isSidebarCollapsed
+              ? "collapsed"
+              : "expanded"
+        }
+        variants={mainContentVariants}
+        className="flex w-full flex-col transition-all duration-500 ease-in-out"
+        style={{
+          marginLeft: 0, // Ensure no margin is creating a gap
+        }}
+      >
+        {/* Modify the Navbar component call to pass the scroll position */}
+        <Navbar pathname={pathname} isLandingPage={isLandingPage} scrollPosition={scrollPosition} />
+
+        {/* Content with conditional padding */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className={isLandingPage ? "" : "pt-16"}
+            style={{
+              paddingTop: isLandingPage ? (isAtTop ? "0" : "0") : "4rem",
+              transition: "padding-top 0.3s ease-in-out",
+              width: "100%", // Ensure full width
+            }}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
+      </motion.main>
+    </div>
     )
   }
 
