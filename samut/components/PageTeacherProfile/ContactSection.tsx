@@ -15,7 +15,7 @@ import {
   FaSwimmer,
   FaWarehouse,
 } from "react-icons/fa"
-import type { Teacher } from "@/types/teacher"
+import type { Teacher } from "@/types/instructor"
 import type { Course, CourseType } from "@/types/course"
 import { Button } from "@/components/Common/Button"
 import { useAppSelector } from "@/app/redux"

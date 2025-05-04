@@ -5,14 +5,14 @@ import { motion, useScroll, useTransform } from "framer-motion"
 import { SectionTitle } from "@/components/Common/SectionTitle"
 import HeroSection from "@/components/PageLanding/HeroSection"
 import EventSection from "@/components/PageLanding/EventsSection"
-import { TeachersSection } from "@/components/PageLanding/TeachersSection"
+import { InstructorsSection } from "@/components/PageLanding/TeachersSection"
 import CTASection from "@/components/PageLanding/CTASection"
 import { FunctionCards } from "@/components/PageLanding/FunctionCards"
 
 export default function Home() {
   const featuresRef = useRef<HTMLDivElement>(null)
   const eventsRef = useRef<HTMLDivElement>(null)
-  const teachersRef = useRef<HTMLDivElement>(null)
+  const instructorsRef = useRef<HTMLDivElement>(null)
   const ctaRef = useRef<HTMLDivElement>(null)
 
   // Scroll animations for features section
@@ -31,13 +31,13 @@ export default function Home() {
   const eventsOpacity = useTransform(eventsScrollProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0])
   const eventsY = useTransform(eventsScrollProgress, [0, 0.15, 0.85, 1], [100, 0, 0, -100])
 
-  // Scroll animations for teachers section
-  const { scrollYProgress: teachersScrollProgress } = useScroll({
-    target: teachersRef,
+  // Scroll animations for instructors section
+  const { scrollYProgress: instructorsScrollProgress } = useScroll({
+    target: instructorsRef,
     offset: ["start end", "end start"],
   })
-  const teachersOpacity = useTransform(teachersScrollProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0])
-  const teachersY = useTransform(teachersScrollProgress, [0, 0.15, 0.85, 1], [100, 0, 0, -100])
+  const instructorsOpacity = useTransform(instructorsScrollProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0])
+  const instructorsY = useTransform(instructorsScrollProgress, [0, 0.15, 0.85, 1], [100, 0, 0, -100])
 
   // Scroll animations for CTA section
   const { scrollYProgress: ctaScrollProgress } = useScroll({
@@ -51,7 +51,7 @@ export default function Home() {
     featuresRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  const teachers = [
+  const instructors = [
     {
       id: 1,
       name: "Michael Phelps",
@@ -61,7 +61,7 @@ export default function Home() {
       certification: ["ASCA", "RedCross"],
       rating: 4.9,
       experience: 15,
-      image: "/teacher1.jpg",
+      image: "/instructor1.jpg",
       bio: "Olympic gold medalist specializing in competitive swimming techniques",
       lessonType: "Private",
       price: 80,
@@ -76,7 +76,7 @@ export default function Home() {
       certification: ["USMS", "RedCross"],
       rating: 4.8,
       experience: 12,
-      image: "/teacher2.jpg",
+      image: "/instructor2.jpg",
       bio: "World record holder focusing on freestyle technique and endurance",
       lessonType: "Private",
       price: 75,
@@ -91,7 +91,7 @@ export default function Home() {
       certification: ["ASCA", "RedCross"],
       rating: 4.7,
       experience: 10,
-      image: "/teacher3.jpg",
+      image: "/instructor3.jpg",
       bio: "Olympic gold medalist specializing in backstroke techniques",
       lessonType: "Group",
       price: 70,
@@ -106,7 +106,7 @@ export default function Home() {
       certification: ["ASCA", "RedCross"],
       rating: 4.9,
       experience: 8,
-      image: "/teacher4.jpg",
+      image: "/instructor4.jpg",
       bio: "Olympic gold medalist focusing on sprint techniques and fundamentals",
       lessonType: "Private",
       price: 85,
@@ -149,13 +149,13 @@ export default function Home() {
         <EventSection />
       </motion.section>
 
-      {/* Teachers Section with scroll animations */}
+      {/* Instructors Section with scroll animations */}
       <motion.div
-        ref={teachersRef}
-        style={{ opacity: teachersOpacity, y: teachersY }}
+        ref={instructorsRef}
+        style={{ opacity: instructorsOpacity, y: instructorsY }}
         className="relative z-10 transition-all duration-1000 ease-out"
       >
-        <TeachersSection teachers={teachers} />
+        <InstructorsSection instructors={instructors} />
       </motion.div>
 
       {/* CTA Section with scroll animations */}

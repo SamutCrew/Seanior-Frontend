@@ -1,7 +1,7 @@
 "use client"
 
 import { FaCrosshairs, FaMapMarkerAlt } from "react-icons/fa"
-import type { Location } from "../../types/teacher"
+import type { Location } from "../../types/instructor"
 import OSMMapSelector from "./OSMMAPSelector"
 import { useAppSelector } from "@/app/redux"
 
@@ -22,13 +22,13 @@ interface LocationFilterProps {
   selectedLocation: Location | null
   showMap: boolean
   maxDistance: number
-  searchType: "teacher" | "course"
+  searchType: "instructor" | "course"
   getCurrentLocation: () => void
   toggleMap: () => void
   handleMapClick: (location: { lat: number; lng: number }) => void
   mapCenter: { lat: number; lng: number }
   setMaxDistance: (distance: number) => void
-  teacherLocations?: LocationItem[]
+  instructorLocations?: LocationItem[]
   courseLocations?: LocationItem[]
 }
 
@@ -55,20 +55,20 @@ export const LocationFilter = ({
   handleMapClick,
   mapCenter,
   setMaxDistance,
-  teacherLocations = [],
+  instructorLocations = [],
   courseLocations = [],
 }: LocationFilterProps) => {
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
   const referenceLocation = selectedLocation || userLocation
 
   // ✅ ฟิลเตอร์รายการตามระยะทาง
-  const filteredTeachers = referenceLocation
-    ? teacherLocations.filter(
+  const filteredInstructors = referenceLocation
+    ? instructorLocations.filter(
         (t) =>
           getDistance(referenceLocation.lat, referenceLocation.lng, t.location.lat, t.location.lng) <= maxDistance ||
           maxDistance === 0,
       )
-    : teacherLocations
+    : instructorLocations
 
   const filteredCourses = referenceLocation
     ? courseLocations.filter(
@@ -130,9 +130,9 @@ export const LocationFilter = ({
         >
           <OSMMapSelector
             center={mapCenter}
-            teacherLocations={
-              searchType === "teacher"
-                ? filteredTeachers.map((t) => ({
+            instructorLocations={
+              searchType === "instructor"
+                ? filteredInstructors.map((t) => ({
                     id: t.id,
                     name: t.name,
                     location: t.location,
@@ -165,7 +165,7 @@ export const LocationFilter = ({
         <p className={`mt-1 text-sm ${isDarkMode ? "text-green-400" : "text-green-600"}`}>
           {userLocation === selectedLocation ? "Using your current location" : "Using selected location"}
           {maxDistance > 0
-            ? ` - Showing ${searchType === "teacher" ? "teachers" : "courses"} within ${maxDistance} km`
+            ? ` - Showing ${searchType === "instructor" ? "instructors" : "courses"} within ${maxDistance} km`
             : ""}
         </p>
       )}

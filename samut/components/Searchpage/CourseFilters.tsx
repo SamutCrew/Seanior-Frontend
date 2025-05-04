@@ -1,4 +1,4 @@
-import { CourseFilters } from "../../types/teacher";
+import { CourseFilters } from "../../types/instructor";
 
 interface CourseFiltersProps {
   filters: CourseFilters;

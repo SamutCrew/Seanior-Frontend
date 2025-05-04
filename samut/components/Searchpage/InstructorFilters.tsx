@@ -1,14 +1,14 @@
 "use client"
 
-import type { TeacherFilters } from "../../types/teacher"
+import type { InstructorFilters } from "../../types/instructor"
 import { useAppSelector } from "@/app/redux"
 
-interface TeacherFiltersProps {
-  filters: TeacherFilters
-  setFilters: (filters: TeacherFilters) => void
+interface InstructorFiltersProps {
+  filters: InstructorFilters
+  setFilters: (filters: InstructorFilters) => void
 }
 
-export const TeacherFiltersComponent = ({ filters, setFilters }: TeacherFiltersProps) => {
+export const InstructorFiltersComponent = ({ filters, setFilters }: InstructorFiltersProps) => {
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
   return (

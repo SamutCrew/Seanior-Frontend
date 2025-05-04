@@ -20,7 +20,7 @@ export default function SearchSection() {
           onChange={(e) => setMode(e.target.value)}
         >
           <option value="course">Find Course</option>
-          <option value="teacher">Find Teacher</option>
+          <option value="instructor">Find Instructor</option>
         </select>
       </div>
 
@@ -29,7 +29,7 @@ export default function SearchSection() {
         <input
           type="text"
           className="input input-bordered w-full rounded-r-none bg-white text-gray-900 placeholder:text-gray-500"
-          placeholder={`Search ${mode === "course" ? "Courses" : "Teachers"}`}
+          placeholder={`Search ${mode === "course" ? "Courses" : "Instructors"}`}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />

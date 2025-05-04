@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import Image from "next/image"
 import { FaCheckCircle, FaExternalLinkAlt } from "react-icons/fa"
-import type { Certification } from "@/types/teacher"
+import type { Certification } from "@/types/instructor"
 import { useAppSelector } from "@/app/redux"
 
 interface CertificationsSectionProps {

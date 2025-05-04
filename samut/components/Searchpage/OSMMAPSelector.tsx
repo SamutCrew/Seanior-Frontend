@@ -28,13 +28,13 @@ interface LocationItem {
 
 interface OSMMapSelectorProps {
   center?: { lat: number; lng: number }
-  teacherLocations?: LocationItem[]
+  instructorLocations?: LocationItem[]
   courseLocations?: LocationItem[]
   onLocationSelect: (location: { lat: number; lng: number }) => void
 }
 
 const OSMMapSelector = ({
-  teacherLocations = [],
+  instructorLocations = [],
   courseLocations = [],
   onLocationSelect,
   center,
@@ -97,13 +97,13 @@ const OSMMapSelector = ({
       onLocationSelect(e.latlng)
     })
 
-    // 🔹 Add markers for teachers
-    teacherLocations.forEach((item) => {
+    // 🔹 Add markers for instructors
+    instructorLocations.forEach((item) => {
       L.marker([item.location.lat, item.location.lng], {
         icon: createCustomIcon(),
       })
         .addTo(map)
-        .bindPopup(`<strong>Teacher: ${item.name}</strong><br/>${item.location.address ?? ""}`)
+        .bindPopup(`<strong>Instructor: ${item.name}</strong><br/>${item.location.address ?? ""}`)
     })
 
     // 🔹 Add markers for courses
@@ -114,7 +114,7 @@ const OSMMapSelector = ({
         .addTo(map)
         .bindPopup(`<strong>Course: ${item.name}</strong><br/>${item.location.address ?? ""}`)
     })
-  }, [mapCenter.lat, mapCenter.lng, teacherLocations, courseLocations, isDarkMode, onLocationSelect])
+  }, [mapCenter.lat, mapCenter.lng, instructorLocations, courseLocations, isDarkMode, onLocationSelect])
 
   return (
     <div

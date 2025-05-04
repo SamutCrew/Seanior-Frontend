@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { FaClock, FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa"
-import type { Availability, AvailabilitySlot } from "@/types/teacher"
+import type { Availability, AvailabilitySlot } from "@/types/instructor"
 import { useAppSelector } from "@/app/redux"
 
 interface ScheduleSectionProps {
