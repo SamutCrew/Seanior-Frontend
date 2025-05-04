@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import { FaQuoteLeft, FaQuoteRight } from "react-icons/fa"
-import type { Teacher } from "@/types/teacher"
+import type { Teacher } from "@/types/instructor"
 import { useAppSelector } from "@/app/redux"
 
 interface AboutSectionProps {

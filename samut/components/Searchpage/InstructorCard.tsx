@@ -3,10 +3,10 @@
 import { FaMapMarkerAlt } from "react-icons/fa"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import type { TeacherCardProps } from "@/types"
+import type { InstructorCardProps } from "@/types"
 
-export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: TeacherCardProps) => {
-  console.log("TeacherCard", teacher, userLocation, isDarkMode)
+export const InstructorCard = ({ instructor, userLocation, isDarkMode = false }: InstructorCardProps) => {
+  console.log("InstructorCard", instructor, userLocation, isDarkMode)
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371
     const dLat = deg2rad(lat2 - lat1)
@@ -20,10 +20,10 @@ export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: Teach
 
   const deg2rad = (deg: number) => deg * (Math.PI / 180)
 
-  const teacherLocation = teacher.description?.location
+  const instructorLocation = instructor.description?.location
   const distance =
-    userLocation && teacherLocation
-      ? calculateDistance(userLocation.lat, userLocation.lng, teacherLocation.lat, teacherLocation.lng)
+    userLocation && instructorLocation
+      ? calculateDistance(userLocation.lat, userLocation.lng, instructorLocation.lat, instructorLocation.lng)
       : null
 
   return (
@@ -36,11 +36,11 @@ export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: Teach
           : "bg-white hover:shadow-xl"
       } rounded-xl shadow-lg overflow-hidden transition-all duration-300 group h-full flex flex-col`}
     >
-      {/* Teacher Image */}
+      {/* instructor Image */}
       <div className="relative h-64 overflow-hidden">
         <Image
-          src={teacher.profile_img || "/placeholder.svg?height=400&width=600&query=swimming instructor"}
-          alt={teacher.name}
+          src={instructor.profile_img || "/placeholder.svg?height=400&width=600&query=swimming instructor"}
+          alt={instructor.name}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -52,19 +52,19 @@ export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: Teach
         ></div>
 
         {/* Experience Badge */}
-        {teacher.description?.experience !== undefined && (
+        {instructor.description?.experience !== undefined && (
           <div
             className={`absolute bottom-4 left-4 ${
               isDarkMode ? "bg-cyan-600" : "bg-blue-600"
             } text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md`}
           >
-            {teacher.description.experience}+ years
+            {instructor.description.experience}+ years
           </div>
         )}
 
         {/* Certification Badges - Moved to top left */}
         <div className="absolute top-4 left-4 flex flex-col gap-2">
-          {teacher.description?.certification?.slice(0, 2).map((cert, index) => (
+          {instructor.description?.certification?.slice(0, 2).map((cert, index) => (
             <span
               key={index}
               className={`${
@@ -80,9 +80,9 @@ export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: Teach
       <div className={`p-6 flex flex-col flex-grow ${isDarkMode ? "border-t border-slate-700" : ""}`}>
         <div className="flex items-start mb-4">
           <div className="flex-1">
-            <h3 className={`font-bold text-xl ${isDarkMode ? "text-white" : "text-gray-800"}`}>{teacher.name}</h3>
+            <h3 className={`font-bold text-xl ${isDarkMode ? "text-white" : "text-gray-800"}`}>{instructor.name}</h3>
             <p className={isDarkMode ? "text-cyan-400 font-medium" : "text-blue-600 font-medium"}>
-              {teacher.description?.specialty || "No specialty provided"}
+              {instructor.description?.specialty || "No specialty provided"}
             </p>
           </div>
         </div>
@@ -91,7 +91,7 @@ export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: Teach
           <FaMapMarkerAlt className={isDarkMode ? "text-cyan-500 mr-2" : "text-red-500 mr-2"} />
           <div>
             <p className={`font-medium ${isDarkMode ? "text-slate-300" : "text-gray-600"}`}>
-              {teacherLocation?.address || "Location not specified"}
+              {instructorLocation?.address || "Location not specified"}
             </p>
             {distance !== null && (
               <p className={isDarkMode ? "text-xs text-slate-400" : "text-xs text-gray-500"}>
@@ -106,7 +106,7 @@ export const TeacherCard = ({ teacher, userLocation, isDarkMode = false }: Teach
         </p>
 
         <div className="flex flex-wrap gap-2 mb-4">
-          {teacher.description?.styles?.map((style, index) => (
+          {instructor.description?.styles?.map((style, index) => (
             <span
               key={index}
               className={`text-xs px-2 py-1 rounded-full ${

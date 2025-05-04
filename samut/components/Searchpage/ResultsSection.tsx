@@ -1,11 +1,11 @@
-import { TeacherCard } from './TeacherCard';
+import { InstructorCard } from './InstructorCard';
 import CourseCard from '../Course/CourseCard';
 
 interface ResultsSectionProps {
   resultsCount: number;
   resultsText: string;
-  searchType: 'teacher' | 'course';
-  filteredTeachers: any[];
+  searchType: 'instructor' | 'course';
+  filteredInstructors: any[];
   filteredCourses: any[];
 }
 
@@ -13,7 +13,7 @@ export const ResultsSection = ({
   resultsCount,
   resultsText,
   searchType,
-  filteredTeachers,
+  filteredInstructors,
   filteredCourses
 }: ResultsSectionProps) => (
   <div>
@@ -25,11 +25,11 @@ export const ResultsSection = ({
       <div className="text-center py-12">
         <p className="text-gray-500">No {resultsText.toLowerCase()} match your search criteria</p>
       </div>
-    ) : searchType === 'teacher' ? (
+    ) : searchType === 'instructor' ? (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTeachers.map((teacher) => (
-          <div key={teacher.user_id} className="relative">
-            <TeacherCard teacher={teacher} />
+        {filteredInstructors.map((instructor) => (
+          <div key={instructor.user_id} className="relative">
+            <InstructorCard instructor={instructor} />
           </div>
         ))}
       </div>

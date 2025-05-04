@@ -4,7 +4,7 @@ export interface Location {
   address?: string;
 }
 
-export interface TeacherDescription {
+export interface InstructorDescription {
   id: string
   name: string
   profileImage: string
@@ -29,12 +29,12 @@ export interface TeacherDescription {
   availability: Availability
 }
 
-export interface Teacher {
+export interface Instructor {
   id: number;
   name: string;
   email: string;
   profile_img: string;
-  description: TeacherDescription;
+  description: InstructorDescription;
 }
 
 export interface Course {
@@ -51,7 +51,7 @@ export interface Course {
   location: Location;
 }
 
-export interface TeacherFilters {
+export interface InstructorFilters {
   style: string;
   level: string;
   lessonType: string;
@@ -113,8 +113,8 @@ export interface Testimonial {
     location?: string
   }
   
-  export interface TeacherCardProps {
-    teacher: Teacher
+  export interface InstructorCardProps {
+    instructor: Instructor
     userLocation?: Location | null
     isDarkMode?: boolean
   }

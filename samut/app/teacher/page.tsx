@@ -3,32 +3,32 @@
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Search, MapPin, Filter, X, ChevronDown, Star, Award, TrendingUp, Users } from "lucide-react"
-import { TeacherCard } from "@/components/Searchpage/TeacherCard"
+import { InstructorCard } from "@/components/Searchpage/InstructorCard"
 import { SectionTitle } from "@/components/Common/SectionTitle"
 import { Button } from "@/components/Common/Button"
 import { IconButton } from "@/components/Common/IconButton"
 import { useAppSelector } from "@/app/redux"
 import { LocationFilter } from "@/components/Searchpage/LocationFilter"
-import { TeacherFiltersComponent } from "@/components/Searchpage/TeacherFilters"
-import type { Teacher, TeacherFilters, Location } from "@/types/teacher"
-import { fetchTeachers } from "@/api/teacherCourseApi"
+import { InstructorFiltersComponent } from "@/components/Searchpage/InstructorFilters"
+import type { Instructor, InstructorFilters, Location } from "@/types/instructor"
+import { fetchInstructors } from "@/api/instructorCourseApi"
 import  LoadingPage  from "@/components/Common/LoadingPage"
 import { motion, AnimatePresence } from "framer-motion"
 
-export default function TeachersDirectoryPage() {
+export default function InstructorsDirectoryPage() {
   const router = useRouter()
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   // Search state
   const [searchTerm, setSearchTerm] = useState("")
-  const [searchType] = useState<"teacher" | "course">("teacher")
+  const [searchType] = useState<"instructor" | "course">("instructor")
   const [searchFocused, setSearchFocused] = useState(false)
 
   // Filter state
   const [showFilters, setShowFilters] = useState(false)
   const [activeFilterCount, setActiveFilterCount] = useState(0)
-  const [teacherFilters, setTeacherFilters] = useState<TeacherFilters>({
+  const [instructorFilters, setInstructorFilters] = useState<InstructorFilters>({
     style: "",
     level: "",
     lessonType: "",
@@ -49,51 +49,52 @@ export default function TeachersDirectoryPage() {
   const [showMap, setShowMap] = useState(false)
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({ lat: 34.0522, lng: -118.2437 })
 
-  // Teachers data
-  const [teachers, setTeachers] = useState<Teacher[]>([])
-  const [filteredTeachers, setFilteredTeachers] = useState<Teacher[]>([])
-  const [featuredTeachers, setFeaturedTeachers] = useState<Teacher[]>([])
+  // Instructors data
+  const [instructors, setInstructors] = useState<Instructor[]>([])
+  const [filteredInstructors, setFilteredInstructors] = useState<Instructor[]>([])
+  const [featuredInstructors, setFeaturedInstructors] = useState<Instructor[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sortOption, setSortOption] = useState("relevance")
 
-  // Fetch teachers data
+  // Fetch instructors data
   useEffect(() => {
-    const loadTeachers = async () => {
+    const loadInstructors = async () => {
       try {
         setIsLoading(true)
         setError(null)
-        const teacherData = await fetchTeachers()
-        setTeachers(teacherData)
-        setFilteredTeachers(teacherData)
+        const instructorData = await fetchInstructors()
+        console.log(instructorData)
+        setInstructors(instructorData)
+        setFilteredInstructors(instructorData)
 
-        // Set featured teachers (top 3 by rating)
-        const featured = [...teacherData].sort((a, b) => b.description.rating - a.description.rating).slice(0, 3)
-        setFeaturedTeachers(featured)
+        // Set featured instructors (top 3 by rating)
+        const featured = [...instructorData].sort((a, b) => b.description.rating - a.description.rating).slice(0, 3)
+        setFeaturedInstructors(featured)
 
         setIsLoading(false)
       } catch (err) {
-        console.error("Error loading teachers:", err)
-        setError("Failed to load teachers. Please try again later.")
+        console.error("Error loading instructors:", err)
+        setError("Failed to load instructors. Please try again later.")
         setIsLoading(false)
       }
     }
 
-    loadTeachers()
+    loadInstructors()
   }, [])
 
   // Update active filter count
   useEffect(() => {
     let count = 0
-    if (teacherFilters.style) count++
-    if (teacherFilters.level) count++
-    if (teacherFilters.lessonType) count++
-    if (teacherFilters.certification) count++
-    if (teacherFilters.minRating > 0) count++
-    if (teacherFilters.priceRange) count++
-    if (teacherFilters.maxDistance > 0) count++
+    if (instructorFilters.style) count++
+    if (instructorFilters.level) count++
+    if (instructorFilters.lessonType) count++
+    if (instructorFilters.certification) count++
+    if (instructorFilters.minRating > 0) count++
+    if (instructorFilters.priceRange) count++
+    if (instructorFilters.maxDistance > 0) count++
     setActiveFilterCount(count)
-  }, [teacherFilters])
+  }, [instructorFilters])
 
   // Get user's current location
   const getCurrentLocation = () => {
@@ -162,88 +163,88 @@ export default function TeachersDirectoryPage() {
 
   // Apply filters and search
   useEffect(() => {
-    let results = teachers
+    let results = instructors
 
     // Apply search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
       results = results.filter(
-        (teacher) =>
+        (instructor) =>
           // Add null checks to prevent errors when properties are undefined
-          teacher.name?.toLowerCase().includes(term) ||
+        instructor.name?.toLowerCase().includes(term) ||
           false ||
-          teacher.description?.specialty?.toLowerCase().includes(term) ||
+          instructor.description?.specialty?.toLowerCase().includes(term) ||
           false ||
-          teacher.description?.bio?.toLowerCase().includes(term) ||
+          instructor.description?.bio?.toLowerCase().includes(term) ||
           false,
       )
     }
 
     // Apply style filter
-    if (teacherFilters.style) {
-      results = results.filter((teacher) => teacher.description?.styles?.includes(teacherFilters.style) || false)
+    if (instructorFilters.style) {
+      results = results.filter((instructor) => instructor.description?.styles?.includes(instructorFilters.style) || false)
     }
 
     // Apply level filter
-    if (teacherFilters.level) {
-      results = results.filter((teacher) => teacher.description?.levels?.includes(teacherFilters.level) || false)
+    if (instructorFilters.level) {
+      results = results.filter((instructor) => instructor.description?.levels?.includes(instructorFilters.level) || false)
     }
 
     // Apply lesson type filter
-    if (teacherFilters.lessonType) {
-      results = results.filter((teacher) => teacher.description?.lessonType === teacherFilters.lessonType || false)
+    if (instructorFilters.lessonType) {
+      results = results.filter((instructor) => instructor.description?.lessonType === instructorFilters.lessonType || false)
     }
 
     // Apply certification filter
-    if (teacherFilters.certification) {
+    if (instructorFilters.certification) {
       results = results.filter(
-        (teacher) => teacher.description?.certification?.includes(teacherFilters.certification) || false,
+        (instructor) => instructor.description?.certification?.includes(instructorFilters.certification) || false,
       )
     }
 
     // Apply rating filter
-    if (teacherFilters.minRating > 0) {
-      results = results.filter((teacher) => (teacher.description?.rating || 0) >= teacherFilters.minRating)
+    if (instructorFilters.minRating > 0) {
+      results = results.filter((instructor) => (instructor.description?.rating || 0) >= instructorFilters.minRating)
     }
 
     // Apply price range filter
-    if (teacherFilters.priceRange) {
-      const [min, max] = teacherFilters.priceRange.split("-").map(Number)
-      results = results.filter((teacher) => {
-        const price = teacher.description?.price || 0
+    if (instructorFilters.priceRange) {
+      const [min, max] = instructorFilters.priceRange.split("-").map(Number)
+      results = results.filter((instructor) => {
+        const price = instructor.description?.price || 0
         return price >= min && (isNaN(max) || price <= max)
       })
     }
 
     // Apply distance filter
-    if (teacherFilters.maxDistance > 0 && (userLocation || selectedLocation)) {
+    if (instructorFilters.maxDistance > 0 && (userLocation || selectedLocation)) {
       const referenceLocation = selectedLocation || userLocation
       if (referenceLocation) {
-        results = results.filter((teacher) => {
-          if (!teacher.description?.location?.lat || !teacher.description?.location?.lng) {
+        results = results.filter((instructor) => {
+          if (!instructor.description?.location?.lat || !instructor.description?.location?.lng) {
             return false
           }
 
           const distance = getDistance(
             referenceLocation.lat,
             referenceLocation.lng,
-            teacher.description.location.lat,
-            teacher.description.location.lng,
+            instructor.description.location.lat,
+            instructor.description.location.lng,
           )
-          return distance <= teacherFilters.maxDistance
+          return distance <= instructorFilters.maxDistance
         })
       }
     }
 
     // Apply sorting
-    results = sortTeachers(results, sortOption)
+    results = sortInstructors(results, sortOption)
 
-    setFilteredTeachers(results)
-  }, [searchTerm, teacherFilters, teachers, userLocation, selectedLocation, sortOption])
+    setFilteredInstructors(results)
+  }, [searchTerm, instructorFilters, instructors, userLocation, selectedLocation, sortOption])
 
-  // Sort teachers based on selected option
-  const sortTeachers = (teacherList: Teacher[], option: string) => {
-    const sorted = [...teacherList]
+  // Sort Instructors based on selected option
+  const sortInstructors = (instructorList: Instructor[], option: string) => {
+    const sorted = [...instructorList]
 
     switch (option) {
       case "rating":
@@ -284,8 +285,8 @@ export default function TeachersDirectoryPage() {
     }
   }
 
-  const viewTeacherProfile = (id: number) => {
-    router.push(`/teacher/${id}`)
+  const viewInstructorProfile = (id: number) => {
+    router.push(`/instructor/${id}`)
   }
 
   // Check if any filters are active
@@ -296,7 +297,7 @@ export default function TeachersDirectoryPage() {
   // Reset all filters
   const resetFilters = () => {
     setSearchTerm("")
-    setTeacherFilters({
+    setInstructorFilters({
       style: "",
       level: "",
       lessonType: "",
@@ -316,7 +317,7 @@ export default function TeachersDirectoryPage() {
     }
   }
 
-  const resultsCount = filteredTeachers.length
+  const resultsCount = filteredInstructors.length
 
   if (isLoading) {
     return <LoadingPage />
@@ -483,68 +484,68 @@ export default function TeachersDirectoryPage() {
                     className="mt-4 flex flex-wrap items-center gap-2 justify-center"
                   >
                     <span className="text-white/70 text-sm">Active filters:</span>
-                    {teacherFilters.style && (
+                    {instructorFilters.style && (
                       <motion.span
                         className="px-3 py-1 rounded-full text-xs bg-cyan-600/80 backdrop-blur-sm text-white flex items-center gap-1"
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
                       >
-                        Style: {teacherFilters.style}
+                        Style: {instructorFilters.style}
                         <X
                           className="h-3 w-3 cursor-pointer"
-                          onClick={() => setTeacherFilters({ ...teacherFilters, style: "" })}
+                          onClick={() => setInstructorFilters({ ...instructorFilters, style: "" })}
                         />
                       </motion.span>
                     )}
-                    {teacherFilters.level && (
+                    {instructorFilters.level && (
                       <motion.span
                         className="px-3 py-1 rounded-full text-xs bg-cyan-600/80 backdrop-blur-sm text-white flex items-center gap-1"
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
                       >
-                        Level: {teacherFilters.level}
+                        Level: {instructorFilters.level}
                         <X
                           className="h-3 w-3 cursor-pointer"
-                          onClick={() => setTeacherFilters({ ...teacherFilters, level: "" })}
+                          onClick={() => setInstructorFilters({ ...instructorFilters, level: "" })}
                         />
                       </motion.span>
                     )}
-                    {teacherFilters.lessonType && (
+                    {instructorFilters.lessonType && (
                       <motion.span
                         className="px-3 py-1 rounded-full text-xs bg-cyan-600/80 backdrop-blur-sm text-white flex items-center gap-1"
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
                       >
-                        Type: {teacherFilters.lessonType}
+                        Type: {instructorFilters.lessonType}
                         <X
                           className="h-3 w-3 cursor-pointer"
-                          onClick={() => setTeacherFilters({ ...teacherFilters, lessonType: "" })}
+                          onClick={() => setInstructorFilters({ ...instructorFilters, lessonType: "" })}
                         />
                       </motion.span>
                     )}
-                    {teacherFilters.minRating > 0 && (
+                    {instructorFilters.minRating > 0 && (
                       <motion.span
                         className="px-3 py-1 rounded-full text-xs bg-cyan-600/80 backdrop-blur-sm text-white flex items-center gap-1"
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
                       >
-                        Rating: {teacherFilters.minRating}+
+                        Rating: {instructorFilters.minRating}+
                         <X
                           className="h-3 w-3 cursor-pointer"
-                          onClick={() => setTeacherFilters({ ...teacherFilters, minRating: 0 })}
+                          onClick={() => setInstructorFilters({ ...instructorFilters, minRating: 0 })}
                         />
                       </motion.span>
                     )}
-                    {teacherFilters.maxDistance > 0 && (
+                    {instructorFilters.maxDistance > 0 && (
                       <motion.span
                         className="px-3 py-1 rounded-full text-xs bg-cyan-600/80 backdrop-blur-sm text-white flex items-center gap-1"
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
                       >
-                        Distance: {teacherFilters.maxDistance}km
+                        Distance: {instructorFilters.maxDistance}km
                         <X
                           className="h-3 w-3 cursor-pointer"
-                          onClick={() => setTeacherFilters({ ...teacherFilters, maxDistance: 0 })}
+                          onClick={() => setInstructorFilters({ ...instructorFilters, maxDistance: 0 })}
                         />
                       </motion.span>
                     )}
@@ -572,7 +573,7 @@ export default function TeachersDirectoryPage() {
                 variant="outline"
                 className="rounded-full border-white/20 text-white hover:bg-white/10 backdrop-blur-sm"
                 onClick={() => {
-                  setTeacherFilters({ ...teacherFilters, level: "Beginner" })
+                  setInstructorFilters({ ...instructorFilters, level: "Beginner" })
                   scrollToResults()
                 }}
               >
@@ -582,7 +583,7 @@ export default function TeachersDirectoryPage() {
                 variant="outline"
                 className="rounded-full border-white/20 text-white hover:bg-white/10 backdrop-blur-sm"
                 onClick={() => {
-                  setTeacherFilters({ ...teacherFilters, minRating: 4.5 })
+                  setInstructorFilters({ ...instructorFilters, minRating: 4.5 })
                   scrollToResults()
                 }}
               >
@@ -592,7 +593,7 @@ export default function TeachersDirectoryPage() {
                 variant="outline"
                 className="rounded-full border-white/20 text-white hover:bg-white/10 backdrop-blur-sm"
                 onClick={() => {
-                  setTeacherFilters({ ...teacherFilters, style: "Freestyle" })
+                  setInstructorFilters({ ...instructorFilters, style: "Freestyle" })
                   scrollToResults()
                 }}
               >
@@ -659,59 +660,59 @@ export default function TeachersDirectoryPage() {
                   <div className="flex flex-wrap gap-2">
                     <Button
                       size="sm"
-                      variant={teacherFilters.minRating === 4.5 ? "primary" : "outline"}
+                      variant={instructorFilters.minRating === 4.5 ? "primary" : "outline"}
                       onClick={() =>
-                        setTeacherFilters({ ...teacherFilters, minRating: teacherFilters.minRating === 4.5 ? 0 : 4.5 })
+                        setInstructorFilters({ ...instructorFilters, minRating: instructorFilters.minRating === 4.5 ? 0 : 4.5 })
                       }
-                      className={`rounded-full ${teacherFilters.minRating !== 4.5 && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
+                      className={`rounded-full ${instructorFilters.minRating !== 4.5 && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
                     >
                       <Star className="w-3 h-3 mr-1" /> Top Rated
                     </Button>
                     <Button
                       size="sm"
-                      variant={teacherFilters.level === "Beginner" ? "primary" : "outline"}
+                      variant={instructorFilters.level === "Beginner" ? "primary" : "outline"}
                       onClick={() =>
-                        setTeacherFilters({
-                          ...teacherFilters,
-                          level: teacherFilters.level === "Beginner" ? "" : "Beginner",
+                        setInstructorFilters({
+                          ...instructorFilters,
+                          level: instructorFilters.level === "Beginner" ? "" : "Beginner",
                         })
                       }
-                      className={`rounded-full ${teacherFilters.level !== "Beginner" && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
+                      className={`rounded-full ${instructorFilters.level !== "Beginner" && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
                     >
                       <Users className="w-3 h-3 mr-1" /> Beginner Friendly
                     </Button>
                     <Button
                       size="sm"
-                      variant={teacherFilters.lessonType === "Private" ? "primary" : "outline"}
+                      variant={instructorFilters.lessonType === "Private" ? "primary" : "outline"}
                       onClick={() =>
-                        setTeacherFilters({
-                          ...teacherFilters,
-                          lessonType: teacherFilters.lessonType === "Private" ? "" : "Private",
+                        setInstructorFilters({
+                          ...instructorFilters,
+                          lessonType: instructorFilters.lessonType === "Private" ? "" : "Private",
                         })
                       }
-                      className={`rounded-full ${teacherFilters.lessonType !== "Private" && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
+                      className={`rounded-full ${instructorFilters.lessonType !== "Private" && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
                     >
                       Private Lessons
                     </Button>
                     <Button
                       size="sm"
-                      variant={teacherFilters.maxDistance === 10 ? "primary" : "outline"}
+                      variant={instructorFilters.maxDistance === 10 ? "primary" : "outline"}
                       onClick={() => {
-                        if (teacherFilters.maxDistance === 10) {
-                          setTeacherFilters({ ...teacherFilters, maxDistance: 0 })
+                        if (instructorFilters.maxDistance === 10) {
+                          setInstructorFilters({ ...instructorFilters, maxDistance: 0 })
                         } else {
                           getCurrentLocation()
-                          setTeacherFilters({ ...teacherFilters, maxDistance: 10 })
+                          setInstructorFilters({ ...instructorFilters, maxDistance: 10 })
                         }
                       }}
-                      className={`rounded-full ${teacherFilters.maxDistance !== 10 && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
+                      className={`rounded-full ${instructorFilters.maxDistance !== 10 && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
                     >
                       <MapPin className="w-3 h-3 mr-1" /> Nearby
                     </Button>
                   </div>
                 </div>
 
-                <TeacherFiltersComponent filters={teacherFilters} setFilters={setTeacherFilters} />
+                <InstructorFiltersComponent filters={instructorFilters} setFilters={setInstructorFilters} />
 
                 <div className={`mt-6 pt-6 border-t ${isDarkMode ? "border-slate-700" : "border-gray-200"}`}>
                   <h4 className={`text-base font-medium mb-3 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
@@ -726,16 +727,16 @@ export default function TeachersDirectoryPage() {
                     userLocation={userLocation}
                     selectedLocation={selectedLocation}
                     showMap={showMap}
-                    maxDistance={teacherFilters.maxDistance}
-                    searchType="teacher"
+                    maxDistance={instructorFilters.maxDistance}
+                    searchType="instructor"
                     getCurrentLocation={getCurrentLocation}
                     toggleMap={toggleMap}
                     handleMapClick={handleMapClick}
                     mapCenter={mapCenter}
                     setMaxDistance={(distance) => {
-                      setTeacherFilters({ ...teacherFilters, maxDistance: distance })
+                      setInstructorFilters({ ...instructorFilters, maxDistance: distance })
                     }}
-                    teacherLocations={filteredTeachers.map((t) => ({
+                    instructorLocations={filteredInstructors.map((t) => ({
                       id: t.id,
                       name: t.name,
                       location: t.description?.location,
@@ -882,17 +883,17 @@ export default function TeachersDirectoryPage() {
             </motion.div>
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-              {filteredTeachers.map((teacher, index) => (
+              {filteredInstructors.map((instructor, index) => (
                 <motion.div
-                  key={teacher.id}
+                  key={instructor.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
                   className="relative cursor-pointer transform transition-all duration-300 hover:-translate-y-2"
-                  onClick={() => viewTeacherProfile(teacher.id)}
+                  onClick={() => viewInstructorProfile(instructor.id)}
                 >
-                  <TeacherCard
-                    teacher={teacher}
+                  <InstructorCard
+                    instructor={instructor}
                     isDarkMode={isDarkMode}
                     userLocation={userLocation || selectedLocation}
                   />
@@ -901,23 +902,23 @@ export default function TeachersDirectoryPage() {
             </div>
           ) : (
             <div className="flex flex-col gap-4 mb-12">
-              {filteredTeachers.map((teacher, index) => (
+              {filteredInstructors.map((instructor, index) => (
                 <motion.div
-                  key={teacher.id}
+                  key={instructor.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
                   className={`relative cursor-pointer rounded-xl overflow-hidden shadow-md ${
                     isDarkMode ? "bg-slate-800 hover:bg-slate-750" : "bg-white hover:bg-gray-50"
                   } transition-all duration-300`}
-                  onClick={() => viewTeacherProfile(teacher.id)}
+                  onClick={() => viewInstructorProfile(instructor.id)}
                 >
                   <div className="flex flex-col md:flex-row">
                     <div className="relative md:w-1/4 h-48 md:h-auto">
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-500 opacity-20"></div>
                       <img
-                        src={teacher.profile_img || "/placeholder.svg?height=400&width=600&query=swimming instructor"}
-                        alt={teacher.name}
+                        src={instructor.profile_img || "/placeholder.svg?height=400&width=600&query=swimming instructor"}
+                        alt={instructor.name}
                         className="w-full h-full object-cover"
                       />
                       <div
@@ -925,17 +926,17 @@ export default function TeachersDirectoryPage() {
                           isDarkMode ? "bg-slate-900/80 text-white" : "bg-white/80 text-blue-800"
                         } backdrop-blur-sm`}
                       >
-                        {teacher.description?.experience}+ years
+                        {instructor.description?.experience}+ years
                       </div>
                     </div>
                     <div className="p-5 md:w-3/4 flex flex-col">
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <h3 className={`font-bold text-xl ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                            {teacher.name}
+                            {instructor.name}
                           </h3>
                           <p className={isDarkMode ? "text-cyan-400 font-medium" : "text-blue-600 font-medium"}>
-                            {teacher.description?.specialty}
+                            {instructor.description?.specialty}
                           </p>
                         </div>
                         <div
@@ -943,17 +944,17 @@ export default function TeachersDirectoryPage() {
                             isDarkMode ? "bg-slate-700 text-green-400" : "bg-green-50 text-green-700"
                           }`}
                         >
-                          ${teacher.description?.price}/hr
+                          ${instructor.description?.price}/hr
                         </div>
                       </div>
 
                       <p className={`mb-4 line-clamp-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                        {teacher.description?.bio ||
+                        {instructor.description?.bio ||
                           "Passionate swimming instructor with a focus on technique and confidence."}
                       </p>
 
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {teacher.description?.styles?.map((style, index) => (
+                        {instructor.description?.styles?.map((style, index) => (
                           <span
                             key={index}
                             className={`text-xs px-2 py-1 rounded-full ${
@@ -963,13 +964,13 @@ export default function TeachersDirectoryPage() {
                             {style}
                           </span>
                         ))}
-                        {teacher.description?.lessonType && (
+                        {instructor.description?.lessonType && (
                           <span
                             className={`text-xs px-2 py-1 rounded-full ${
                               isDarkMode ? "bg-slate-700 text-purple-300" : "bg-purple-50 text-purple-700"
                             }`}
                           >
-                            {teacher.description.lessonType} Lessons
+                            {instructor.description.lessonType} Lessons
                           </span>
                         )}
                       </div>
@@ -978,18 +979,18 @@ export default function TeachersDirectoryPage() {
                         <div className="flex items-center text-sm">
                           <MapPin className={isDarkMode ? "text-cyan-500 mr-2 h-4 w-4" : "text-red-500 mr-2 h-4 w-4"} />
                           <span className={isDarkMode ? "text-gray-300" : "text-gray-600"}>
-                            {teacher.description?.location?.address || "Location not specified"}
+                            {instructor.description?.location?.address || "Location not specified"}
                             {userLocation || selectedLocation ? (
                               <span className={isDarkMode ? "text-gray-400 ml-1" : "text-gray-500 ml-1"}>
-                                {teacher.description?.location ? (
+                                {instructor.description?.location ? (
                                   <>
                                     (
                                     {Math.round(
                                       getDistance(
                                         (userLocation || selectedLocation)!.lat,
                                         (userLocation || selectedLocation)!.lng,
-                                        teacher.description.location.lat,
-                                        teacher.description.location.lng,
+                                        instructor.description.location.lat,
+                                        instructor.description.location.lng,
                                       ),
                                     )}{" "}
                                     km away)
@@ -1016,7 +1017,7 @@ export default function TeachersDirectoryPage() {
         </div>
 
         {/* Pagination */}
-        {filteredTeachers.length > 0 && (
+        {filteredInstructors.length > 0 && (
           <div className="flex justify-center mt-8">
             <nav className="inline-flex rounded-md shadow-lg overflow-hidden">
               <Button

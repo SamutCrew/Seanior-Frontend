@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import Image from "next/image"
 import { FaStar, FaMapMarkerAlt, FaSwimmer, FaAward, FaCalendarCheck, FaEdit } from "react-icons/fa"
-import type { Teacher } from "@/types/teacher"
+import type { Teacher } from "@/types/instructor"
 import { Button } from "@/components/Common/Button"
 import { useAppSelector } from "@/app/redux"
 import Link from "next/link"

@@ -1,4 +1,4 @@
-import type { Teacher } from "@/types/teacher"
+import type { Teacher } from "@/types/instructor"
 
 // This would be replaced with an actual API call in a real application
 export const getTeacherById = async (id: string): Promise<Teacher> => {

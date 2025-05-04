@@ -4,7 +4,7 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import Image from "next/image"
 import { FaStar, FaQuoteLeft, FaChevronLeft, FaChevronRight } from "react-icons/fa"
-import type { Testimonial } from "@/types/teacher"
+import type { Testimonial } from "@/types/instructor"
 import { useAppSelector } from "@/app/redux"
 
 interface TestimonialsSectionProps {

@@ -1,8 +1,8 @@
 import { FaSearch } from 'react-icons/fa';
 
 interface SearchHeaderProps {
-  searchType: 'teacher' | 'course';
-  setSearchType: (type: 'teacher' | 'course') => void;
+  searchType: 'instructor' | 'course';
+  setSearchType: (type: 'instructor' | 'course') => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   resultsCount: number;
@@ -21,14 +21,14 @@ export const SearchHeader = ({
     <div className="flex justify-center mb-4">
       <div className="inline-flex rounded-md shadow-sm">
         <button
-          onClick={() => setSearchType('teacher')}
+          onClick={() => setSearchType('instructor')}
           className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
-            searchType === 'teacher' 
+            searchType === 'instructor' 
               ? 'bg-blue-600 text-white' 
               : 'bg-white text-gray-700 hover:bg-gray-50'
           }`}
         >
-          Search Teachers
+          Search Instructors
         </button>
         <button
           onClick={() => setSearchType('course')}
@@ -47,7 +47,7 @@ export const SearchHeader = ({
       <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
       <input
         type="text"
-        placeholder={searchType === 'teacher' ? "Search swimming teachers by name or specialty..." : "Search swimming courses by title or focus..."}
+        placeholder={searchType === 'instructor' ? "Search swimming instructors by name or specialty..." : "Search swimming courses by title or focus..."}
         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-black"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}

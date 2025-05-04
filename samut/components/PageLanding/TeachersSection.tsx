@@ -3,20 +3,21 @@ import { useRef } from "react"
 import { motion, useInView } from "framer-motion"
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
-import { TeacherCard, type Teacher } from "../Searchpage/TeacherCard"
+import { InstructorCard } from "../Searchpage/InstructorCard"
 import { useAppSelector } from "@/app/redux"
+import type { Instructor } from "@/types/instructor"
 
-interface TeachersSectionProps {
-  teachers?: Teacher[]
+interface InstructorsSectionProps {
+  instructors?: Instructor[]
 }
 
-export const TeachersSection = ({ teachers = [] }: TeachersSectionProps) => {
+export const InstructorsSection = ({ instructors = [] }: InstructorsSectionProps) => {
   const sectionRef = useRef(null)
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" })
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
-  // Default teachers if none provided
-  const defaultTeachers = [
+  // Default instructors if none provided
+  const defaultInstructors = [
     {
       id: 1,
       name: "Michael Phelps",
@@ -79,7 +80,7 @@ export const TeachersSection = ({ teachers = [] }: TeachersSectionProps) => {
     },
   ]
 
-  const displayTeachers = teachers.length > 0 ? teachers : defaultTeachers
+  const displayInstructors = instructors.length > 0 ? instructors : defaultInstructors
 
   return (
     <section
@@ -221,16 +222,16 @@ export const TeachersSection = ({ teachers = [] }: TeachersSectionProps) => {
             />
           </motion.div>
 
-          {/* Teacher Cards */}
+          {/* Instructor Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mt-12">
-            {displayTeachers.map((teacher, index) => (
+            {displayInstructors.map((instructor, index) => (
               <motion.div
-                key={teacher.id}
+                key={instructor.id}
                 initial={{ opacity: 0, y: 50 }}
                 animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
                 transition={{ duration: 0.6, delay: index * 0.1 + 0.4 }}
               >
-                <TeacherCard teacher={teacher} isDarkMode={isDarkMode} />
+                <InstructorCard instructor={instructor} isDarkMode={isDarkMode} />
               </motion.div>
             ))}
           </div>
@@ -243,7 +244,7 @@ export const TeachersSection = ({ teachers = [] }: TeachersSectionProps) => {
             className="mt-16"
           >
             <Link
-              href="/teachers"
+              href="/instructors"
               className={`inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white ${
                 isDarkMode
                   ? "bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600"
@@ -260,4 +261,4 @@ export const TeachersSection = ({ teachers = [] }: TeachersSectionProps) => {
   )
 }
 
-export default TeachersSection
+export default InstructorsSection
