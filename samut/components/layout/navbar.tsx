@@ -7,7 +7,6 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import Image from "next/image"
 import { getAuthUser } from "@/context/authToken"
 
 // Add these imports at the top of the file
@@ -48,6 +47,12 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
   const [isDarkModeHovered, setIsDarkModeHovered] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
+  // Initialize state variables to false
+  const [handleScrollInitialized, setHandleScrollInitialized] = useState(false)
+
+  // Initialize scroll position state
+  const [currentScrollPos, setCurrentScrollPos] = useState(0)
+
   // Close user menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false)
@@ -59,12 +64,13 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
 
     if (typeof window !== "undefined") {
       handleScroll = () => {
-        const currentScrollPos = window.scrollY
+        const currentScroll = window.scrollY
+        setCurrentScrollPos(currentScroll) // Update the scroll position state
 
         // Always show navbar, regardless of scroll position
         setVisible(true)
 
-        setPrevScrollPos(currentScrollPos)
+        setPrevScrollPos(currentScroll)
       }
 
       window.addEventListener("scroll", handleScroll)
@@ -94,7 +100,6 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
     { name: "Home", href: "/" },
     { name: "Instructors", href: "/search?type=teacher" },
     { name: "Courses", href: "/search?type=course" },
-    { name: "Events", href: "/events" },
     { name: "About", href: "/about" },
   ]
 
@@ -120,24 +125,24 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
 
   useEffect(() => {
     const handleKeyUp = async (event: KeyboardEvent) => {
-      console.log("Key pressed", event.key);
-  
-      const input = event.key;
+      console.log("Key pressed", event.key)
+
+      const input = event.key
       if (input === "n") {
-        console.log("You have pressed the secret code");
-        const firebase_user = await getAuthUser();
-        console.log(firebase_user);
+        console.log("You have pressed the secret code")
+        const firebase_user = await getAuthUser()
+        console.log(firebase_user)
       }
-    };
-  
+    }
+
     // Add event listener to the window
-    window.addEventListener("keyup", handleKeyUp);
-  
+    window.addEventListener("keyup", handleKeyUp)
+
     // Cleanup event listener on component unmount
     return () => {
-      window.removeEventListener("keyup", handleKeyUp);
-    };
-  }, []);
+      window.removeEventListener("scroll", handleKeyUp)
+    }
+  }, [])
 
   return (
     <motion.nav
@@ -250,6 +255,20 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
 
         {/* Right side items */}
         <div className="flex items-center gap-3" style={{ gap: isLandingPage && isAtTop ? "1.25rem" : "0.75rem" }}>
+          {/* Become a Teacher button - hidden on mobile */}
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="hidden md:block">
+            <Link
+              href="/become-teacher"
+              className={`px-4 py-1.5 rounded-md transition-all duration-200 ${
+                isLandingPage && isAtTop
+                  ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:from-cyan-700 hover:to-blue-700 text-base py-2"
+                  : "bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:from-cyan-700 hover:to-blue-700"
+              }`}
+            >
+              Become a Teacher
+            </Link>
+          </motion.div>
+
           {/* Dark mode toggle with hover effect */}
           <motion.button
             onMouseEnter={() => setIsDarkModeHovered(true)}
@@ -290,25 +309,25 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
                 }`}
               >
                 <div className="relative">
-                {user.profile_img ? (
-                  <img
-                    src={user.profile_img || "/placeholder.svg"}
-                    alt={getDisplayName()}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      isLandingPage && isAtTop
-                        ? "bg-white/20 text-white"
-                        : isDarkMode
-                          ? "bg-cyan-600 text-white"
-                          : "bg-cyan-100 text-cyan-600"
-                    }`}
-                  >
-                    {getDisplayName().charAt(0).toUpperCase()}
-                  </div>
-                )}
+                  {user.profile_img ? (
+                    <img
+                      src={user.profile_img || "/placeholder.svg"}
+                      alt={getDisplayName()}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        isLandingPage && isAtTop
+                          ? "bg-white/20 text-white"
+                          : isDarkMode
+                            ? "bg-cyan-600 text-white"
+                            : "bg-cyan-100 text-cyan-600"
+                      }`}
+                    >
+                      {getDisplayName().charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800"></div>
                 </div>
                 <span
@@ -398,21 +417,6 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
               className="hidden sm:flex items-center gap-3"
               style={{ gap: isLandingPage && isAtTop ? "1rem" : "0.75rem" }}
             >
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Link
-                  href="/auth/Login"
-                  className={`px-4 py-1.5 rounded-md transition-all duration-200 ${
-                    isLandingPage && isAtTop
-                      ? "text-white border border-white/50 hover:bg-white/10 text-base py-2"
-                      : isDarkMode
-                        ? "text-white border border-gray-700 hover:border-cyan-700 hover:bg-gray-800"
-                        : "text-gray-700 border border-gray-200 hover:border-cyan-500 hover:bg-gray-50"
-                  }`}
-                >
-                  Sign In
-                </Link>
-              </motion.div>
-
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Link
                   href="/auth/Register"
@@ -575,6 +579,22 @@ const AnimatedMobileMenu: React.FC<AnimatedMobileMenuProps> = ({
               transition={{ delay: navItems.length * 0.1 }}
             >
               <Link
+                href="/become-teacher"
+                className={`block py-2 px-3 rounded-md text-center ${
+                  isDarkMode
+                    ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white"
+                    : "bg-gradient-to-r from-cyan-600 to-blue-600 text-white"
+                } transition-colors duration-200`}
+              >
+                Become a Teacher
+              </Link>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: navItems.length * 0.1 + 0.1 }}
+            >
+              <Link
                 href={`/profile/${user.user_id}`}
                 className={`flex items-center gap-2 py-2 px-3 rounded-md ${
                   isDarkMode ? "text-gray-200 hover:bg-gray-800" : "text-gray-800 hover:bg-gray-100"
@@ -588,7 +608,7 @@ const AnimatedMobileMenu: React.FC<AnimatedMobileMenuProps> = ({
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: navItems.length * 0.1 + 0.1 }}
+              transition={{ delay: navItems.length * 0.1 + 0.2 }}
             >
               <Link
                 href="/settings"
@@ -604,7 +624,7 @@ const AnimatedMobileMenu: React.FC<AnimatedMobileMenuProps> = ({
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: navItems.length * 0.1 + 0.2 }}
+              transition={{ delay: navItems.length * 0.1 + 0.3 }}
             >
               <button
                 onClick={onLogout}
@@ -626,14 +646,14 @@ const AnimatedMobileMenu: React.FC<AnimatedMobileMenuProps> = ({
               transition={{ delay: navItems.length * 0.1 }}
             >
               <Link
-                href="/auth/Login"
+                href="/become-teacher"
                 className={`block py-2 px-3 rounded-md text-center ${
                   isDarkMode
-                    ? "text-gray-200 border border-gray-700 hover:bg-gray-800"
-                    : "text-gray-800 border border-gray-200 hover:bg-gray-100"
+                    ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white"
+                    : "bg-gradient-to-r from-cyan-600 to-blue-600 text-white"
                 } transition-colors duration-200`}
               >
-                Sign In
+                Become a Teacher
               </Link>
             </motion.div>
 

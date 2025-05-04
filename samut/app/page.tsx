@@ -3,11 +3,11 @@ import { useRef } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
 
 import { SectionTitle } from "@/components/Common/SectionTitle"
-import HeroSection from "@/components/PageLanding/HeroSection"
-import EventSection from "@/components/PageLanding/EventsSection"
-import { InstructorsSection } from "@/components/PageLanding/TeachersSection"
-import CTASection from "@/components/PageLanding/CTASection"
-import { FunctionCards } from "@/components/PageLanding/FunctionCards"
+import HeroSection from "@/components/Partial/PageLanding/HeroSection"
+import EventSection from "@/components/Partial/PageLanding/EventsSection"
+import { InstructorsSection } from "@/components/Partial/PageLanding/TeachersSection"
+import CTASection from "@/components/Partial/PageLanding/CTASection"
+import { FunctionCards } from "@/components/Partial/PageLanding/FunctionCards"
 
 export default function Home() {
   const featuresRef = useRef<HTMLDivElement>(null)
