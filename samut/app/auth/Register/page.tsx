@@ -13,7 +13,7 @@ import { motion } from "framer-motion"
 import { Mail, Lock, User, Eye, EyeOff, UserPlus, Moon, Sun } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/app/redux"
 import { setIsDarkmode } from "@/state"
-import AuthBackground from "@/components/PageAuth/AuthBackground"
+import AuthBackground from "@/components/Partial/PageAuth/AuthBackground"
 
 const Register = () => {
   const { googleSignIn, registerWithEmail, loading } = useAuth()

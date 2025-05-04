@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "../Common/Button"
+import { Button } from "../../Common/Button"
 import { motion } from "framer-motion"
 import { useAppSelector } from "@/app/redux"
 import { Waves } from "lucide-react"

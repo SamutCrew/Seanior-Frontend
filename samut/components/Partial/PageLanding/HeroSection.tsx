@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import { FaFacebook, FaInstagram, FaTwitter, FaChalkboardTeacher, FaSwimmer, FaWater } from "react-icons/fa"
-import { Button } from "../Common/Button"
+import { Button } from "../../Common/Button"
 import { motion, useScroll, useTransform } from "framer-motion"
 import { useEffect, useState, useRef } from "react"
 import ScrollDownButton from "./ScrollDownButton"
