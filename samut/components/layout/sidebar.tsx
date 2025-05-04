@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import {
   ChevronLeft,
@@ -58,34 +58,40 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
     return null
   }
 
+  const handleResize = useRef<() => void>(() => {})
+
+  handleResize.current = () => {
+    setWindowWidth(window.innerWidth)
+    // Auto-collapse sidebar on small screens
+    if (window.innerWidth < 768 && !isSidebarCollapsed) {
+      dispatch(setIsSidebarCollapsed(true))
+    }
+  }
+
   // Track window resize
   useEffect(() => {
     let timeoutId: NodeJS.Timeout
 
-    const handleResize = () => {
+    const debouncedHandleResize = () => {
       clearTimeout(timeoutId)
       timeoutId = setTimeout(() => {
-        setWindowWidth(window.innerWidth)
-        // Auto-collapse sidebar on small screens
-        if (window.innerWidth < 768 && !isSidebarCollapsed) {
-          dispatch(setIsSidebarCollapsed(true))
-        }
+        handleResize.current()
       }, 100) // Debounce the resize event
     }
 
     if (typeof window !== "undefined") {
       setWindowWidth(window.innerWidth) // Set initial width
-      window.addEventListener("resize", handleResize)
-      handleResize() // Check initial size
+      window.addEventListener("resize", debouncedHandleResize)
+      debouncedHandleResize() // Check initial size
 
       return () => {
-        window.removeEventListener("resize", handleResize)
+        window.removeEventListener("resize", debouncedHandleResize)
         clearTimeout(timeoutId)
       }
     }
 
     return () => clearTimeout(timeoutId)
-  }, [dispatch, isSidebarCollapsed])
+  }, [])
 
   const handleLogout = async () => {
     try {
@@ -127,7 +133,7 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
     { icon: BookOpen, label: "My Courses", href: "/student/courses" },
     { icon: Calendar, label: "My Schedule", href: "/student/schedule" },
     { icon: Clock, label: "Booking History", href: "/student/bookings" },
-    { icon: User, label: "Profile", href: "/student/profile" },
+    { icon: User, label: "Profile", href: user?.user_id ? `/profile/${user.user_id}` : "/profile" },
   ]
 
   // Select the appropriate navigation items based on user role
@@ -558,25 +564,25 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
                   <div className="flex items-center mb-2">
                     <div className="relative">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
-                      {user && user.profile_img ? (
-                        <img
-                          src={user.profile_img || "/placeholder.svg"}
-                          alt={getDisplayName()}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            isLandingPage && isAtTop
-                              ? "bg-white/20 text-white"
-                              : isDarkMode
-                                ? "bg-cyan-600 text-white"
-                                : "bg-cyan-100 text-cyan-600"
-                          }`}
-                        >
-                          {getDisplayName().charAt(0).toUpperCase()}
-                        </div>
-                      )} 
+                        {user && user.profile_img ? (
+                          <img
+                            src={user.profile_img || "/placeholder.svg"}
+                            alt={getDisplayName()}
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                              isLandingPage && isAtTop
+                                ? "bg-white/20 text-white"
+                                : isDarkMode
+                                  ? "bg-cyan-600 text-white"
+                                  : "bg-cyan-100 text-cyan-600"
+                            }`}
+                          >
+                            {getDisplayName().charAt(0).toUpperCase()}
+                          </div>
+                        )}
                       </div>
                       <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-900"></div>
                     </div>
@@ -604,25 +610,25 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
                 >
                   <div className="relative mb-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center">
-                    {user && user.profile_img ? (
-                      <img
-                        src={user.profile_img || "/placeholder.svg"}
-                        alt={getDisplayName()}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          isLandingPage && isAtTop
-                            ? "bg-white/20 text-white"
-                            : isDarkMode
-                              ? "bg-cyan-600 text-white"
-                              : "bg-cyan-100 text-cyan-600"
-                        }`}
-                      >
-                        {getDisplayName().charAt(0).toUpperCase()}
-                      </div>
-                    )}
+                      {user && user.profile_img ? (
+                        <img
+                          src={user.profile_img || "/placeholder.svg"}
+                          alt={getDisplayName()}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            isLandingPage && isAtTop
+                              ? "bg-white/20 text-white"
+                              : isDarkMode
+                                ? "bg-cyan-600 text-white"
+                                : "bg-cyan-100 text-cyan-600"
+                          }`}
+                        >
+                          {getDisplayName().charAt(0).toUpperCase()}
+                        </div>
+                      )}
                     </div>
                     <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-900"></div>
                   </div>

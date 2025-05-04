@@ -53,6 +53,9 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
   // Initialize scroll position state
   const [currentScrollPos, setCurrentScrollPos] = useState(0)
 
+  // Initialize state for handleScrollInitialized
+  const [scrollInitialized, setScrollInitialized] = useState(false)
+
   // Close user menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false)
@@ -98,8 +101,8 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
   // Landing page navigation items
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "Instructors", href: "/search?type=teacher" },
-    { name: "Courses", href: "/search?type=course" },
+    { name: "Instructors", href: "/allinstructor" },
+    { name: "Courses", href: "/allcourse" },
     { name: "About", href: "/about" },
   ]
 
@@ -140,7 +143,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
 
     // Cleanup event listener on component unmount
     return () => {
-      window.removeEventListener("scroll", handleKeyUp)
+      window.removeEventListener("keyup", handleKeyUp)
     }
   }, [])
 
@@ -258,7 +261,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
           {/* Become a Teacher button - hidden on mobile */}
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="hidden md:block">
             <Link
-              href="/become-teacher"
+              href="/become-instructor"
               className={`px-4 py-1.5 rounded-md transition-all duration-200 ${
                 isLandingPage && isAtTop
                   ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:from-cyan-700 hover:to-blue-700 text-base py-2"
@@ -412,21 +415,23 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
               )}
             </div>
           ) : (
-            // User is not authenticated - show login/register buttons
+            // User is not authenticated - show login button
             <div
               className="hidden sm:flex items-center gap-3"
               style={{ gap: isLandingPage && isAtTop ? "1rem" : "0.75rem" }}
             >
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Link
-                  href="/auth/Register"
+                  href="/auth/Login"
                   className={`px-4 py-1.5 rounded-md transition-all duration-200 ${
                     isLandingPage && isAtTop
-                      ? "bg-white text-blue-600 hover:bg-white/90 text-base py-2"
-                      : "bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:from-cyan-700 hover:to-blue-700"
+                      ? "text-white border border-white/50 hover:bg-white/10 text-base py-2"
+                      : isDarkMode
+                        ? "text-white border border-gray-700 hover:border-cyan-700 hover:bg-gray-800"
+                        : "text-gray-700 border border-gray-200 hover:border-cyan-500 hover:bg-gray-50"
                   }`}
                 >
-                  Sign Up
+                  Sign In
                 </Link>
               </motion.div>
             </div>
@@ -638,7 +643,7 @@ const AnimatedMobileMenu: React.FC<AnimatedMobileMenuProps> = ({
             </motion.div>
           </div>
         ) : (
-          // User is not authenticated - show login/register buttons
+          // User is not authenticated - show login button
           <div className="pt-2 pb-3 border-t border-gray-200 dark:border-gray-800 mt-2 flex flex-col space-y-2">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -663,14 +668,14 @@ const AnimatedMobileMenu: React.FC<AnimatedMobileMenuProps> = ({
               transition={{ delay: navItems.length * 0.1 + 0.1 }}
             >
               <Link
-                href="/auth/Register"
+                href="/auth/Login"
                 className={`block py-2 px-3 rounded-md text-center ${
                   isDarkMode
-                    ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white"
-                    : "bg-gradient-to-r from-cyan-600 to-blue-600 text-white"
+                    ? "text-gray-200 border border-gray-700 hover:bg-gray-800"
+                    : "text-gray-800 border border-gray-200 hover:bg-gray-100"
                 } transition-colors duration-200`}
               >
-                Sign Up
+                Sign In
               </Link>
             </motion.div>
           </div>
