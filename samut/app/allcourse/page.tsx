@@ -1,0 +1,1237 @@
+"use client"
+
+import { useState, useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
+import { Search, Filter, X, ChevronDown, Clock, MapPin, Award, Users } from 'lucide-react'
+import { SectionTitle } from "@/components/Common/SectionTitle"
+import { Button } from "@/components/Common/Button"
+import { IconButton } from "@/components/Common/IconButton"
+import { useAppSelector } from "@/app/redux"
+import CourseCard from "@/components/Course/CourseCard"
+import { motion, AnimatePresence } from "framer-motion"
+import type { Course } from "@/types/course"
+import LoadingPage from "@/components/Common/LoadingPage"
+
+export default function AllCoursesPage() {
+  const router = useRouter()
+  const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Search state
+  const [searchTerm, setSearchTerm] = useState("")
+  const [searchFocused, setSearchFocused] = useState(false)
+
+  // Filter state
+  const [showFilters, setShowFilters] = useState(false)
+  const [activeFilterCount, setActiveFilterCount] = useState(0)
+  const [courseFilters, setCourseFilters] = useState({
+    level: "",
+    priceRange: "",
+    duration: "",
+    location: "",
+    instructor: "",
+  })
+
+  // View state
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [sortOption, setSortOption] = useState("relevance")
+
+  // Courses data
+  const [courses, setCourses] = useState<Course[]>([])
+  const [filteredCourses, setFilteredCourses] = useState<Course[]>([])
+  const [featuredCourses, setFeaturedCourses] = useState<Course[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Mock data for courses with real images
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        // In a real application, this would be an API call
+        // For now, we'll use mock data with real images
+        const mockCourses: Course[] = [
+          {
+            id: 1,
+            title: "Beginner Swimming Fundamentals",
+            focus: "Learn basic swimming techniques and water safety",
+            level: "Beginner",
+            duration: "8 weeks",
+            schedule: "Mon, Wed 5:00 PM - 6:00 PM",
+            instructor: "Sarah Johnson",
+            instructorId: "1",
+            instructorImage: "/Teacher1.jpg",
+            rating: 4.8,
+            students: 12,
+            price: 199,
+            location: {
+              address: "Aquatic Center, 123 Main St",
+            },
+            courseType: "public-pool",
+            description:
+              "Perfect for first-time swimmers. Build confidence in the water and learn fundamental techniques.",
+            curriculum: ["Water Safety", "Floating Techniques", "Basic Strokes", "Breathing Control"],
+            maxStudents: 15,
+            image: "/water-safety-swimming.png",
+          },
+          {
+            id: 2,
+            title: "Advanced Freestyle Technique",
+            focus: "Perfect your freestyle stroke for competitive swimming",
+            level: "Advanced",
+            duration: "6 weeks",
+            schedule: "Tue, Thu 6:30 PM - 8:00 PM",
+            instructor: "Michael Chen",
+            instructorId: "2",
+            instructorImage: "/images/instructors/instructor-2.jpg",
+            rating: 4.9,
+            students: 8,
+            price: 249,
+            location: {
+              address: "Olympic Pool, 456 Sports Ave",
+            },
+            courseType: "public-pool",
+            description: "Take your freestyle to the next level with advanced techniques and drills.",
+            curriculum: ["Stroke Analysis", "Efficiency Drills", "Race Strategy", "Advanced Turns"],
+            maxStudents: 10,
+            image: "/images/courses/freestyle-technique.jpg",
+          },
+          {
+            id: 3,
+            title: "Toddler Water Confidence",
+            focus: "Introduce young children to water in a fun, safe environment",
+            level: "Beginner",
+            duration: "4 weeks",
+            schedule: "Sat 9:00 AM - 10:00 AM",
+            instructor: "Emma Rodriguez",
+            instructorId: "3",
+            instructorImage: "/images/instructors/instructor-3.jpg",
+            rating: 4.7,
+            students: 6,
+            price: 149,
+            location: {
+              address: "Kids Splash Center, 789 Family Rd",
+            },
+            courseType: "private-location",
+            description: "A gentle introduction to water for toddlers aged 2-4 years with parent participation.",
+            curriculum: ["Water Play", "Basic Floating", "Underwater Exploration", "Safety Skills"],
+            maxStudents: 8,
+            image: "/images/courses/toddler-swimming.jpg",
+          },
+          {
+            id: 4,
+            title: "Intermediate Stroke Development",
+            focus: "Refine all four competitive swimming strokes",
+            level: "Intermediate",
+            duration: "10 weeks",
+            schedule: "Mon, Wed, Fri 4:00 PM - 5:30 PM",
+            instructor: "David Wilson",
+            instructorId: "4",
+            instructorImage: "/images/instructors/instructor-4.jpg",
+            rating: 4.6,
+            students: 10,
+            price: 299,
+            location: {
+              address: "Community Pool, 101 Recreation Blvd",
+            },
+            courseType: "public-pool",
+            description: "Comprehensive program covering all four competitive strokes with technique refinement.",
+            curriculum: ["Butterfly", "Backstroke", "Breaststroke", "Freestyle", "Individual Medley"],
+            maxStudents: 12,
+            image: "/images/courses/stroke-development.jpg",
+          },
+          {
+            id: 5,
+            title: "Adult Learn-to-Swim",
+            focus: "Swimming basics for adults in a supportive environment",
+            level: "Beginner",
+            duration: "8 weeks",
+            schedule: "Tue, Thu 7:00 PM - 8:00 PM",
+            instructor: "Lisa Thompson",
+            instructorId: "5",
+            instructorImage: "/images/instructors/instructor-5.jpg",
+            rating: 4.9,
+            students: 5,
+            price: 219,
+            location: {
+              address: "Wellness Center, 202 Health St",
+            },
+            courseType: "public-pool",
+            description: "Designed specifically for adults who want to learn to swim in a judgment-free environment.",
+            curriculum: ["Water Comfort", "Floating", "Basic Strokes", "Deep Water Confidence"],
+            maxStudents: 6,
+            image: "/images/courses/adult-swimming.jpg",
+          },
+          {
+            id: 6,
+            title: "Competitive Swim Training",
+            focus: "Training program for competitive swimmers",
+            level: "Advanced",
+            duration: "12 weeks",
+            schedule: "Mon-Fri 6:00 AM - 7:30 AM",
+            instructor: "James Peterson",
+            instructorId: "6",
+            instructorImage: "/images/instructors/instructor-6.jpg",
+            rating: 4.8,
+            students: 15,
+            price: 349,
+            location: {
+              address: "Elite Swim Center, 303 Champion Ave",
+            },
+            courseType: "teacher-pool",
+            description: "Intensive training program for competitive swimmers looking to improve race times.",
+            curriculum: ["Race Strategy", "Advanced Technique", "Strength Training", "Mental Preparation"],
+            maxStudents: 20,
+            image: "/images/courses/competitive-swimming.jpg",
+          },
+          {
+            id: 7,
+            title: "Water Safety & Rescue",
+            focus: "Learn essential water safety and rescue techniques",
+            level: "Intermediate",
+            duration: "4 weeks",
+            schedule: "Sat, Sun 1:00 PM - 3:00 PM",
+            instructor: "Robert Garcia",
+            instructorId: "7",
+            instructorImage: "/images/instructors/instructor-7.jpg",
+            rating: 4.7,
+            students: 12,
+            price: 179,
+            location: {
+              address: "Safety First Pool, 404 Lifeguard Ln",
+            },
+            courseType: "public-pool",
+            description:
+              "Essential course for anyone who spends time around water. Learn how to prevent and respond to water emergencies.",
+            curriculum: ["Prevention", "Recognition", "Basic Rescue", "CPR Basics"],
+            maxStudents: 15,
+            image: "/images/courses/water-safety.jpg",
+          },
+          {
+            id: 8,
+            title: "Senior Water Exercise",
+            focus: "Low-impact water exercises for seniors",
+            level: "Beginner",
+            duration: "Ongoing",
+            schedule: "Mon, Wed, Fri 10:00 AM - 11:00 AM",
+            instructor: "Patricia Lee",
+            instructorId: "8",
+            instructorImage: "/images/instructors/instructor-8.jpg",
+            rating: 4.9,
+            students: 18,
+            price: 129,
+            location: {
+              address: "Golden Years Center, 505 Senior Blvd",
+            },
+            courseType: "public-pool",
+            description:
+              "Gentle, effective water exercises designed specifically for seniors to improve mobility and strength.",
+            curriculum: ["Water Walking", "Joint Mobility", "Strength Exercises", "Balance Work"],
+            maxStudents: 20,
+            image: "/images/courses/senior-water-exercise.jpg",
+          },
+          {
+            id: 9,
+            title: "Triathlon Swim Preparation",
+            focus: "Open water swimming techniques for triathletes",
+            level: "Intermediate",
+            duration: "6 weeks",
+            schedule: "Tue, Thu 5:30 PM - 7:00 PM",
+            instructor: "Nathan Brown",
+            instructorId: "9",
+            instructorImage: "/images/instructors/instructor-9.jpg",
+            rating: 4.8,
+            students: 10,
+            price: 279,
+            location: {
+              address: "Triathlon Training Center, 606 Endurance Way",
+            },
+            courseType: "teacher-pool",
+            description: "Specialized training for triathletes focusing on open water techniques and race strategy.",
+            curriculum: ["Sighting", "Drafting", "Mass Start Practice", "Transition Speed"],
+            maxStudents: 12,
+            image: "/images/courses/triathlon-swimming.jpg",
+          },
+          {
+            id: 10,
+            title: "Aquatic Rehabilitation",
+            focus: "Therapeutic swimming for injury recovery",
+            level: "Beginner",
+            duration: "Varies",
+            schedule: "By appointment",
+            instructor: "Dr. Maria Santos",
+            instructorId: "10",
+            instructorImage: "/images/instructors/instructor-10.jpg",
+            rating: 4.9,
+            students: 4,
+            price: 399,
+            location: {
+              address: "Healing Waters Clinic, 707 Recovery Rd",
+            },
+            courseType: "private-location",
+            description: "Personalized aquatic therapy program for injury recovery and rehabilitation.",
+            curriculum: ["Assessment", "Personalized Program", "Progress Tracking", "Home Exercise Plan"],
+            maxStudents: 1,
+            image: "/images/courses/aquatic-rehab.jpg",
+          },
+          {
+            id: 11,
+            title: "Parent & Child Swimming",
+            focus: "Bond with your child while teaching water skills",
+            level: "Beginner",
+            duration: "6 weeks",
+            schedule: "Sat 10:30 AM - 11:30 AM",
+            instructor: "Emma Rodriguez",
+            instructorId: "3",
+            instructorImage: "/images/instructors/instructor-3.jpg",
+            rating: 4.8,
+            students: 8,
+            price: 169,
+            location: {
+              address: "Family Aquatic Center, 808 Bonding Blvd",
+            },
+            courseType: "public-pool",
+            description: "A fun course for parents and children (ages 4-7) to learn water skills together.",
+            curriculum: ["Water Games", "Basic Skills", "Safety Rules", "Confidence Building"],
+            maxStudents: 10,
+            image: "/images/courses/parent-child-swimming.jpg",
+          },
+          {
+            id: 12,
+            title: "Synchronized Swimming Basics",
+            focus: "Introduction to the art of synchronized swimming",
+            level: "Intermediate",
+            duration: "8 weeks",
+            schedule: "Wed, Fri 4:30 PM - 6:00 PM",
+            instructor: "Sophia Martinez",
+            instructorId: "11",
+            instructorImage: "/images/instructors/instructor-11.jpg",
+            rating: 4.7,
+            students: 12,
+            price: 229,
+            location: {
+              address: "Artistic Swim Center, 909 Performance Pl",
+            },
+            courseType: "public-pool",
+            description: "Learn the fundamentals of synchronized swimming, combining swimming, dance, and gymnastics.",
+            curriculum: ["Basic Figures", "Sculling Techniques", "Breath Control", "Simple Routines"],
+            maxStudents: 14,
+            image: "/images/courses/synchronized-swimming.jpg",
+          },
+        ]
+
+        setCourses(mockCourses)
+        setFilteredCourses(mockCourses)
+
+        // Set featured courses (top 3 by rating)
+        const featured = [...mockCourses].sort((a, b) => b.rating - a.rating).slice(0, 3)
+        setFeaturedCourses(featured)
+
+        setIsLoading(false)
+      } catch (err) {
+        console.error("Error loading courses:", err)
+        setError("Failed to load courses. Please try again later.")
+        setIsLoading(false)
+      }
+    }
+
+    loadCourses()
+  }, [])
+
+  // Rest of the component remains the same...
+  // Update active filter count
+  useEffect(() => {
+    let count = 0
+    if (courseFilters.level) count++
+    if (courseFilters.priceRange) count++
+    if (courseFilters.duration) count++
+    if (courseFilters.location) count++
+    if (courseFilters.instructor) count++
+    setActiveFilterCount(count)
+  }, [courseFilters])
+
+  // Apply filters and search
+  useEffect(() => {
+    let results = courses
+
+    // Apply search term
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      results = results.filter(
+        (course) =>
+          course.title.toLowerCase().includes(term) ||
+          course.focus.toLowerCase().includes(term) ||
+          course.instructor.toLowerCase().includes(term) ||
+          course.level.toLowerCase().includes(term),
+      )
+    }
+
+    // Apply level filter
+    if (courseFilters.level) {
+      results = results.filter((course) => course.level === courseFilters.level)
+    }
+
+    // Apply price range filter
+    if (courseFilters.priceRange) {
+      const [min, max] = courseFilters.priceRange.split("-").map(Number)
+      results = results.filter((course) => {
+        return course.price >= min && (isNaN(max) || course.price <= max)
+      })
+    }
+
+    // Apply duration filter
+    if (courseFilters.duration) {
+      results = results.filter((course) => course.duration.includes(courseFilters.duration))
+    }
+
+    // Apply location filter
+    if (courseFilters.location) {
+      results = results.filter((course) => course.location.address.includes(courseFilters.location))
+    }
+
+    // Apply instructor filter
+    if (courseFilters.instructor) {
+      results = results.filter((course) =>
+        course.instructor.toLowerCase().includes(courseFilters.instructor.toLowerCase()),
+      )
+    }
+
+    // Apply sorting
+    results = sortCourses(results, sortOption)
+
+    setFilteredCourses(results)
+  }, [searchTerm, courseFilters, courses, sortOption])
+
+  // Sort Courses based on selected option
+  const sortCourses = (courseList: Course[], option: string) => {
+    const sorted = [...courseList]
+
+    switch (option) {
+      case "rating":
+        return sorted.sort((a, b) => b.rating - a.rating)
+      case "price_low":
+        return sorted.sort((a, b) => a.price - b.price)
+      case "price_high":
+        return sorted.sort((a, b) => b.price - a.price)
+      case "students":
+        return sorted.sort((a, b) => b.students - a.students)
+      case "relevance":
+      default:
+        return sorted
+    }
+  }
+
+  const viewCourseDetails = (id: number) => {
+    router.push(`/course/${id}`)
+  }
+
+  // Reset all filters
+  const resetFilters = () => {
+    setSearchTerm("")
+    setCourseFilters({
+      level: "",
+      priceRange: "",
+      duration: "",
+      location: "",
+      instructor: "",
+    })
+  }
+
+  // Scroll to results
+  const scrollToResults = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: "smooth" })
+    }
+  }
+
+  const resultsCount = filteredCourses.length
+
+  if (isLoading) {
+    return <LoadingPage />
+  }
+
+  if (error) {
+    return (
+      <div className={`min-h-screen ${isDarkMode ? "bg-slate-900" : "bg-gradient-to-b from-blue-50 to-white"} py-12`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <SectionTitle className={`mb-8 ${isDarkMode ? "text-white" : ""}`}>Find Swimming Courses</SectionTitle>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`p-8 rounded-xl shadow-md ${isDarkMode ? "bg-slate-800 text-white" : "bg-white text-red-600"}`}
+          >
+            <p className="text-xl">{error}</p>
+            <Button
+              variant={isDarkMode ? "gradient" : "primary"}
+              className="mt-4"
+              onClick={() => window.location.reload()}
+            >
+              Try Again
+            </Button>
+          </motion.div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`min-h-screen ${isDarkMode ? "bg-slate-900" : "bg-gradient-to-b from-blue-50 to-white"}`}>
+      {/* Hero Section */}
+      <div
+        className={`relative overflow-hidden ${
+          isDarkMode ? "bg-gradient-to-r from-blue-900 to-cyan-900" : "bg-gradient-to-r from-blue-600 to-cyan-500"
+        }`}
+      >
+        {/* Decorative Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/patterns/wave-pattern.svg')] bg-repeat opacity-10"></div>
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-black/20 to-transparent"></div>
+
+          {/* Animated Bubbles */}
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className={`absolute rounded-full bg-white/20 backdrop-blur-sm`}
+              style={{
+                width: `${Math.random() * 60 + 20}px`,
+                height: `${Math.random() * 60 + 20}px`,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              initial={{ y: 100, opacity: 0 }}
+              animate={{
+                y: -100,
+                opacity: [0, 0.5, 0],
+                transition: {
+                  repeat: Number.POSITIVE_INFINITY,
+                  duration: Math.random() * 10 + 10,
+                  delay: Math.random() * 5,
+                },
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center"
+          >
+            <div className="inline-block mb-4">
+              <motion.div
+                className="inline-flex items-center px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm font-medium"
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+              >
+                <Award className="w-4 h-4 mr-2" /> Find the Perfect Swimming Course
+              </motion.div>
+            </div>
+
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
+              Discover Swimming <br className="hidden md:block" />
+              <span className="relative inline-block">
+                <span className="relative z-10">Courses for All Levels</span>
+                <motion.span
+                  className="absolute bottom-2 left-0 w-full h-3 bg-cyan-400/30 rounded-lg -z-0"
+                  initial={{ width: 0 }}
+                  animate={{ width: "100%" }}
+                  transition={{ delay: 0.5, duration: 0.8 }}
+                ></motion.span>
+              </span>
+            </h1>
+
+            <p className="text-lg md:text-xl text-white/80 max-w-3xl mx-auto mb-10 leading-relaxed">
+              From beginner lessons to advanced technique training, find the perfect swimming course to help you achieve
+              your aquatic goals.
+            </p>
+
+            {/* Search Bar */}
+            <div className="max-w-3xl mx-auto relative">
+              <motion.div
+                className={`relative ${searchFocused ? "ring-4 ring-cyan-300/30" : ""} transition-all duration-300 rounded-full shadow-lg`}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type="text"
+                  placeholder="Search by course name, instructor, or level..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setSearchFocused(false)}
+                  className={`w-full pl-14 pr-36 py-5 rounded-full focus:outline-none text-base ${
+                    isDarkMode
+                      ? "bg-slate-800/90 border border-slate-700/50 text-white backdrop-blur-md"
+                      : "bg-white/95 text-gray-800 backdrop-blur-md"
+                  }`}
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                  {searchTerm && (
+                    <IconButton
+                      icon={<X className="h-4 w-4 text-gray-500" />}
+                      onClick={() => setSearchTerm("")}
+                      className={`hover:bg-gray-100 dark:hover:bg-slate-700`}
+                    />
+                  )}
+                  <Button
+                    variant={isDarkMode ? "outline" : "secondary"}
+                    onClick={() => {
+                      setShowFilters(!showFilters)
+                      if (!showFilters) {
+                        setTimeout(() => {
+                          scrollToResults()
+                        }, 100)
+                      }
+                    }}
+                    className="flex items-center gap-2 relative"
+                  >
+                    <Filter className="h-4 w-4" />
+                    <span className="hidden sm:inline">Filters</span>
+                    {activeFilterCount > 0 && (
+                      <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-cyan-500 text-white text-xs flex items-center justify-center">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </Button>
+                </div>
+              </motion.div>
+
+              {/* Active Filters Display */}
+              <AnimatePresence>
+                {activeFilterCount > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mt-4 flex flex-wrap items-center gap-2 justify-center"
+                  >
+                    <span className="text-white/70 text-sm">Active filters:</span>
+                    {courseFilters.level && (
+                      <motion.span
+                        className="px-3 py-1 rounded-full text-xs bg-cyan-600/80 backdrop-blur-sm text-white flex items-center gap-1"
+                        initial={{ scale: 0.8 }}
+                        animate={{ scale: 1 }}
+                      >
+                        Level: {courseFilters.level}
+                        <X
+                          className="h-3 w-3 cursor-pointer"
+                          onClick={() => setCourseFilters({ ...courseFilters, level: "" })}
+                        />
+                      </motion.span>
+                    )}
+                    {courseFilters.priceRange && (
+                      <motion.span
+                        className="px-3 py-1 rounded-full text-xs bg-cyan-600/80 backdrop-blur-sm text-white flex items-center gap-1"
+                        initial={{ scale: 0.8 }}
+                        animate={{ scale: 1 }}
+                      >
+                        Price: {courseFilters.priceRange}
+                        <X
+                          className="h-3 w-3 cursor-pointer"
+                          onClick={() => setCourseFilters({ ...courseFilters, priceRange: "" })}
+                        />
+                      </motion.span>
+                    )}
+                    {courseFilters.duration && (
+                      <motion.span
+                        className="px-3 py-1 rounded-full text-xs bg-cyan-600/80 backdrop-blur-sm text-white flex items-center gap-1"
+                        initial={{ scale: 0.8 }}
+                        animate={{ scale: 1 }}
+                      >
+                        Duration: {courseFilters.duration}
+                        <X
+                          className="h-3 w-3 cursor-pointer"
+                          onClick={() => setCourseFilters({ ...courseFilters, duration: "" })}
+                        />
+                      </motion.span>
+                    )}
+                    {courseFilters.location && (
+                      <motion.span
+                        className="px-3 py-1 rounded-full text-xs bg-cyan-600/80 backdrop-blur-sm text-white flex items-center gap-1"
+                        initial={{ scale: 0.8 }}
+                        animate={{ scale: 1 }}
+                      >
+                        Location: {courseFilters.location}
+                        <X
+                          className="h-3 w-3 cursor-pointer"
+                          onClick={() => setCourseFilters({ ...courseFilters, location: "" })}
+                        />
+                      </motion.span>
+                    )}
+                    {courseFilters.instructor && (
+                      <motion.span
+                        className="px-3 py-1 rounded-full text-xs bg-cyan-600/80 backdrop-blur-sm text-white flex items-center gap-1"
+                        initial={{ scale: 0.8 }}
+                        animate={{ scale: 1 }}
+                      >
+                        Instructor: {courseFilters.instructor}
+                        <X
+                          className="h-3 w-3 cursor-pointer"
+                          onClick={() => setCourseFilters({ ...courseFilters, instructor: "" })}
+                        />
+                      </motion.span>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={resetFilters}
+                      className="text-xs border-white/30 text-white/80 hover:bg-white/10"
+                    >
+                      Clear All
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Quick Filter Buttons */}
+            <motion.div
+              className="flex flex-wrap justify-center gap-3 mt-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
+              <Button
+                variant="outline"
+                className="rounded-full border-white/20 text-white hover:bg-white/10 backdrop-blur-sm"
+                onClick={() => {
+                  setCourseFilters({ ...courseFilters, level: "Beginner" })
+                  scrollToResults()
+                }}
+              >
+                <Users className="w-4 h-4 mr-2" /> Beginner Courses
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-full border-white/20 text-white hover:bg-white/10 backdrop-blur-sm"
+                onClick={() => {
+                  setCourseFilters({ ...courseFilters, priceRange: "0-200" })
+                  scrollToResults()
+                }}
+              >
+                <Award className="w-4 h-4 mr-2" /> Under $200
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-full border-white/20 text-white hover:bg-white/10 backdrop-blur-sm"
+                onClick={() => {
+                  setCourseFilters({ ...courseFilters, duration: "weeks" })
+                  scrollToResults()
+                }}
+              >
+                <Clock className="w-4 h-4 mr-2" /> Multi-Week Programs
+              </Button>
+            </motion.div>
+          </motion.div>
+        </div>
+
+        {/* Wave Divider */}
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
+          <svg
+            className={`relative block w-full h-12 sm:h-16 ${isDarkMode ? "text-slate-900" : "text-blue-50"}`}
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 1200 120"
+            preserveAspectRatio="none"
+          >
+            <path
+              d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"
+              fill="currentColor"
+            ></path>
+          </svg>
+        </div>
+      </div>
+
+      <div ref={scrollRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Filters Panel */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className={`mb-8 overflow-hidden rounded-xl shadow-lg ${
+                isDarkMode ? "bg-slate-800/95 border border-slate-700 backdrop-blur-md" : "bg-white/95 backdrop-blur-md"
+              }`}
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3
+                    className={`text-lg font-semibold flex items-center ${isDarkMode ? "text-white" : "text-gray-800"}`}
+                  >
+                    <Filter className="h-5 w-5 mr-2" />
+                    Filter Courses
+                  </h3>
+                  <IconButton
+                    icon={<X className={`h-5 w-5 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`} />}
+                    onClick={() => setShowFilters(false)}
+                    className={`rounded-full ${isDarkMode ? "hover:bg-slate-700" : "hover:bg-gray-100"}`}
+                  />
+                </div>
+
+                {/* Quick Filter Presets */}
+                <div className={`mb-6 pb-6 border-b ${isDarkMode ? "border-slate-700" : "border-gray-200"}`}>
+                  <h4 className={`text-sm font-medium mb-3 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                    Quick Filters
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant={courseFilters.level === "Beginner" ? "primary" : "outline"}
+                      onClick={() =>
+                        setCourseFilters({
+                          ...courseFilters,
+                          level: courseFilters.level === "Beginner" ? "" : "Beginner",
+                        })
+                      }
+                      className={`rounded-full ${courseFilters.level !== "Beginner" && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
+                    >
+                      <Users className="w-3 h-3 mr-1" /> Beginner
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={courseFilters.level === "Intermediate" ? "primary" : "outline"}
+                      onClick={() =>
+                        setCourseFilters({
+                          ...courseFilters,
+                          level: courseFilters.level === "Intermediate" ? "" : "Intermediate",
+                        })
+                      }
+                      className={`rounded-full ${courseFilters.level !== "Intermediate" && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
+                    >
+                      Intermediate
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={courseFilters.level === "Advanced" ? "primary" : "outline"}
+                      onClick={() =>
+                        setCourseFilters({
+                          ...courseFilters,
+                          level: courseFilters.level === "Advanced" ? "" : "Advanced",
+                        })
+                      }
+                      className={`rounded-full ${courseFilters.level !== "Advanced" && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
+                    >
+                      Advanced
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={courseFilters.priceRange === "0-200" ? "primary" : "outline"}
+                      onClick={() =>
+                        setCourseFilters({
+                          ...courseFilters,
+                          priceRange: courseFilters.priceRange === "0-200" ? "" : "0-200",
+                        })
+                      }
+                      className={`rounded-full ${courseFilters.priceRange !== "0-200" && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
+                    >
+                      Under $200
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Detailed Filters */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Level Filter */}
+                  <div>
+                    <h4 className={`text-sm font-medium mb-2 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                      Course Level
+                    </h4>
+                    <select
+                      value={courseFilters.level}
+                      onChange={(e) => setCourseFilters({ ...courseFilters, level: e.target.value })}
+                      className={`w-full rounded-md border p-2 ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-white"
+                          : "bg-white border-gray-300 text-gray-700"
+                      }`}
+                    >
+                      <option value="">All Levels</option>
+                      <option value="Beginner">Beginner</option>
+                      <option value="Intermediate">Intermediate</option>
+                      <option value="Advanced">Advanced</option>
+                    </select>
+                  </div>
+
+                  {/* Price Range Filter */}
+                  <div>
+                    <h4 className={`text-sm font-medium mb-2 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                      Price Range
+                    </h4>
+                    <select
+                      value={courseFilters.priceRange}
+                      onChange={(e) => setCourseFilters({ ...courseFilters, priceRange: e.target.value })}
+                      className={`w-full rounded-md border p-2 ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-white"
+                          : "bg-white border-gray-300 text-gray-700"
+                      }`}
+                    >
+                      <option value="">Any Price</option>
+                      <option value="0-150">Under $150</option>
+                      <option value="0-200">Under $200</option>
+                      <option value="200-300">$200 - $300</option>
+                      <option value="300-1000">$300+</option>
+                    </select>
+                  </div>
+
+                  {/* Duration Filter */}
+                  <div>
+                    <h4 className={`text-sm font-medium mb-2 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                      Duration
+                    </h4>
+                    <select
+                      value={courseFilters.duration}
+                      onChange={(e) => setCourseFilters({ ...courseFilters, duration: e.target.value })}
+                      className={`w-full rounded-md border p-2 ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-white"
+                          : "bg-white border-gray-300 text-gray-700"
+                      }`}
+                    >
+                      <option value="">Any Duration</option>
+                      <option value="4 weeks">4 Weeks</option>
+                      <option value="6 weeks">6 Weeks</option>
+                      <option value="8 weeks">8 Weeks</option>
+                      <option value="10 weeks">10+ Weeks</option>
+                      <option value="Ongoing">Ongoing</option>
+                    </select>
+                  </div>
+
+                  {/* Location Type Filter */}
+                  <div>
+                    <h4 className={`text-sm font-medium mb-2 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                      Location
+                    </h4>
+                    <input
+                      type="text"
+                      placeholder="Search by location..."
+                      value={courseFilters.location}
+                      onChange={(e) => setCourseFilters({ ...courseFilters, location: e.target.value })}
+                      className={`w-full rounded-md border p-2 ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-white placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-700 placeholder-gray-500"
+                      }`}
+                    />
+                  </div>
+
+                  {/* Instructor Filter */}
+                  <div>
+                    <h4 className={`text-sm font-medium mb-2 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                      Instructor
+                    </h4>
+                    <input
+                      type="text"
+                      placeholder="Search by instructor name..."
+                      value={courseFilters.instructor}
+                      onChange={(e) => setCourseFilters({ ...courseFilters, instructor: e.target.value })}
+                      className={`w-full rounded-md border p-2 ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-white placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-700 placeholder-gray-500"
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end mt-6 pt-6 border-t border-dashed gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={resetFilters}
+                    className={isDarkMode ? "border-slate-700 text-white" : ""}
+                  >
+                    Reset All
+                  </Button>
+                  <Button variant="primary" onClick={() => setShowFilters(false)}>
+                    Apply Filters
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Results Section */}
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8">
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center">
+              <h2 className={`text-2xl font-bold ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                {resultsCount} Courses Found
+              </h2>
+              {searchTerm && (
+                <span
+                  className={`ml-3 px-3 py-1 rounded-full text-sm ${
+                    isDarkMode ? "bg-slate-700 text-cyan-400" : "bg-blue-100 text-blue-800"
+                  }`}
+                >
+                  "{searchTerm}"
+                </span>
+              )}
+            </motion.div>
+
+            <div className="flex items-center gap-3 mt-3 sm:mt-0">
+              <div className="flex items-center">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={`p-2 rounded-l-md border ${isDarkMode ? "border-slate-700" : "border-gray-300"} ${
+                    viewMode === "grid"
+                      ? isDarkMode
+                        ? "bg-slate-700 text-white"
+                        : "bg-blue-50 text-blue-600"
+                      : isDarkMode
+                        ? "bg-slate-800 text-gray-400"
+                        : "bg-white text-gray-500"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                    />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setViewMode("list")}
+                  className={`p-2 rounded-r-md border-t border-r border-b ${
+                    isDarkMode ? "border-slate-700" : "border-gray-300"
+                  } ${
+                    viewMode === "list"
+                      ? isDarkMode
+                        ? "bg-slate-700 text-white"
+                        : "bg-blue-50 text-blue-600"
+                      : isDarkMode
+                        ? "bg-slate-800 text-gray-400"
+                        : "bg-white text-gray-500"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className={`relative ${isDarkMode ? "text-white" : ""}`}>
+                <select
+                  className={`appearance-none rounded-md border pl-3 pr-10 py-2 text-sm ${
+                    isDarkMode ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-gray-300 text-gray-700"
+                  }`}
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value)}
+                >
+                  <option value="relevance">Sort by: Relevance</option>
+                  <option value="rating">Sort by: Rating</option>
+                  <option value="price_low">Sort by: Price (Low to High)</option>
+                  <option value="price_high">Sort by: Price (High to Low)</option>
+                  <option value="students">Sort by: Popularity</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none" />
+              </div>
+            </div>
+          </div>
+
+          {resultsCount === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`text-center py-16 rounded-xl shadow-lg ${
+                isDarkMode ? "bg-slate-800/90 border border-slate-700" : "bg-white"
+              }`}
+            >
+              <div className="max-w-md mx-auto">
+                <div
+                  className={`w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                    isDarkMode ? "bg-slate-700" : "bg-blue-50"
+                  }`}
+                >
+                  <Search className={`h-10 w-10 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                </div>
+                <h3 className={`text-xl font-semibold mb-2 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                  No courses found
+                </h3>
+                <p className={`mb-6 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+                  We couldn't find any courses matching your search criteria. Try adjusting your filters or search term.
+                </p>
+                <Button variant={isDarkMode ? "gradient" : "primary"} onClick={resetFilters}>
+                  Reset All Filters
+                </Button>
+              </div>
+            </motion.div>
+          ) : viewMode === "grid" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              {filteredCourses.map((course, index) => (
+                <motion.div
+                  key={course.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  className="relative cursor-pointer transform transition-all duration-300 hover:-translate-y-2"
+                  onClick={() => viewCourseDetails(course.id)}
+                >
+                  <CourseCard course={course} />
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 mb-12">
+              {filteredCourses.map((course, index) => (
+                <motion.div
+                  key={course.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className={`relative cursor-pointer rounded-xl overflow-hidden shadow-md ${
+                    isDarkMode ? "bg-slate-800 hover:bg-slate-750" : "bg-white hover:bg-gray-50"
+                  } transition-all duration-300`}
+                  onClick={() => viewCourseDetails(course.id)}
+                >
+                  <div className="flex flex-col md:flex-row">
+                    <div className="relative md:w-1/4 h-48 md:h-auto">
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-500 opacity-20"></div>
+                      <img src={course.image || "/placeholder.svg?key=25f2a"} alt={course.title} className="w-full h-full object-cover" />
+                      <div
+                        className={`absolute top-3 left-3 px-2 py-1 rounded-md text-xs font-semibold ${
+                          isDarkMode ? "bg-slate-900/80 text-white" : "bg-white/80 text-blue-800"
+                        } backdrop-blur-sm`}
+                      >
+                        {course.level}
+                      </div>
+                    </div>
+                    <div className="p-5 md:w-3/4 flex flex-col">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h3 className={`font-bold text-xl ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                            {course.title}
+                          </h3>
+                          <p className={isDarkMode ? "text-cyan-400 font-medium" : "text-blue-600 font-medium"}>
+                            {course.focus}
+                          </p>
+                        </div>
+                        <div
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            isDarkMode ? "bg-slate-700 text-green-400" : "bg-green-50 text-green-700"
+                          }`}
+                        >
+                          ${course.price}
+                        </div>
+                      </div>
+
+                      <p className={`mb-4 line-clamp-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                        {course.description || "Learn swimming techniques in a supportive environment."}
+                      </p>
+
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            isDarkMode ? "bg-slate-700 text-cyan-300" : "bg-blue-50 text-blue-700"
+                          }`}
+                        >
+                          {course.duration}
+                        </span>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            isDarkMode ? "bg-slate-700 text-purple-300" : "bg-purple-50 text-purple-700"
+                          }`}
+                        >
+                          {course.courseType === "public-pool"
+                            ? "Public Pool"
+                            : course.courseType === "private-location"
+                              ? "Private Location"
+                              : "Teacher's Pool"}
+                        </span>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            isDarkMode ? "bg-slate-700 text-amber-300" : "bg-amber-50 text-amber-700"
+                          }`}
+                        >
+                          {course.students} Students
+                        </span>
+                      </div>
+
+                      <div className="mt-auto flex items-center justify-between">
+                        <div className="flex items-center text-sm">
+                          <MapPin className={isDarkMode ? "text-cyan-500 mr-2 h-4 w-4" : "text-red-500 mr-2 h-4 w-4"} />
+                          <span className={isDarkMode ? "text-gray-300" : "text-gray-600"}>
+                            {course.location.address}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center">
+                            <span className={`mr-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                              Instructor:
+                            </span>
+                            <span className={`font-medium ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                              {course.instructor}
+                            </span>
+                          </div>
+                          <Button
+                            variant={isDarkMode ? "outline" : "secondary"}
+                            size="sm"
+                            className={isDarkMode ? "border-slate-700" : ""}
+                          >
+                            View Details
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+
+
+        {/* Pagination */}
+        {filteredCourses.length > 0 && (
+          <div className="flex justify-center mt-8">
+            <nav className="inline-flex rounded-md shadow-lg overflow-hidden">
+              <Button
+                variant={isDarkMode ? "outline" : "secondary"}
+                className={`rounded-none border-r-0 ${isDarkMode ? "border-slate-700 text-white" : "border-gray-300"}`}
+              >
+                Previous
+              </Button>
+              <Button variant="primary" className="rounded-none border-r-0">
+                1
+              </Button>
+              <Button
+                variant={isDarkMode ? "outline" : "secondary"}
+                className={`rounded-none border-r-0 ${isDarkMode ? "border-slate-700 text-white" : "border-gray-300"}`}
+              >
+                2
+              </Button>
+              <Button
+                variant={isDarkMode ? "outline" : "secondary"}
+                className={`rounded-none ${isDarkMode ? "border-slate-700 text-white" : "border-gray-300"}`}
+              >
+                Next
+              </Button>
+            </nav>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
