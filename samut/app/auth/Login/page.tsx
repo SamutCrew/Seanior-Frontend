@@ -53,22 +53,44 @@ const Login = () => {
   }
 
   const onGoogleSignIn = async () => {
-    setLoading(true)
-    await googleSignIn()
-      .then(() => {
-        setAlertType(AlertType.SUCCESS)
-        setAlertMessage("Google login successful")
-        // Redirect to homepage after successful Google login
-        router.push("/")
-      })
-      .catch((error: any) => {
-        console.error("Error logging in with Google:", error)
-        setAlertType(AlertType.ERROR)
-        setAlertMessage(error.message || "Failed to sign in with Google")
-      })
-      .finally(() => setLoading(false))
-  }
-
+    setLoading(true);
+    try {
+      await googleSignIn();
+      setAlertType(AlertType.SUCCESS);
+      setAlertMessage("Google login successful");
+      router.push("/");
+    } catch (error: any) {
+      console.error("Error logging in with Google:", {
+        message: error.message,
+        response: error.response
+          ? {
+              status: error.response.status,
+              data: error.response.data,
+            }
+          : null,
+      });
+      // Handle case where user was created but got 500 due to race condition
+      if (error.response?.status === 500 && error.response?.data?.details?.includes('Unique constraint failed')) {
+        setAlertType(AlertType.INFO);
+        setAlertMessage("User created, please try logging in again");
+        // Optionally, retry login
+        try {
+          await googleSignIn();
+          setAlertType(AlertType.SUCCESS);
+          setAlertMessage("Google login successful");
+          router.push("/");
+        } catch (retryError : any ) {
+          setAlertType(AlertType.ERROR);
+          setAlertMessage(retryError.message || "Failed to sign in with Google");
+        }
+      } else {
+        setAlertType(AlertType.ERROR);
+        setAlertMessage(error.message || "Failed to sign in with Google");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
   // Toggle dark mode
   const toggleDarkMode = () => {
     dispatch(setIsDarkmode(!isDarkMode))

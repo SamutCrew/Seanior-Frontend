@@ -43,7 +43,7 @@ apiClient.interceptors.response.use(
       data: error.response?.data,
     });
 
-    if (retryCount <= 2) {
+    if (retryCount <= 0) {
       const errorMsg = "Request failed. Retrying...";
 
       await new Promise((resolve) => setTimeout(resolve, 1000));

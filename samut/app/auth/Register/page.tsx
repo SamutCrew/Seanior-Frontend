@@ -1,3 +1,4 @@
+// /register/page.tsx
 "use client"
 
 import type React from "react"
@@ -50,6 +51,7 @@ const Register = () => {
     setPasswordMismatch(false)
 
     try {
+      console.log("Registering with email:", email, password, name)
       await registerWithEmail(email, password, name)
       setAlertType(AlertType.SUCCESS)
       setAlertMessage("Registration successful")

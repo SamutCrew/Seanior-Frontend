@@ -10,7 +10,6 @@ import {
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { GoogleProvider } from '@/provider/GoogleProvider';
-
 import { checkAlreadyHaveUserInDb, createUser, verifyUserToken } from '../api';
 
 const AuthContext = createContext();
@@ -18,14 +17,20 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [pendingName, setPendingName] = useState(null);
 
   const handleNewRegister = async (firebaseUser, name) => {
+    console.log('handleNewRegister called with firebase_uid:', firebaseUser?.uid, 'name:', name);
     if (firebaseUser) {
       try {
         let dbUser = await checkAlreadyHaveUserInDb(firebaseUser.uid);
         console.log('dbUser after check:', dbUser);
-  
+
         if (dbUser === null) {
+          console.log('Creating new user in DB');
+          console.log('name:', name);
+          console.log('firebaseUser.displayName:', firebaseUser.displayName);
           const newUser = {
             firebase_uid: firebaseUser.uid,
             name: name || firebaseUser.displayName || 'Anonymous',
@@ -33,15 +38,15 @@ export function AuthProvider({ children }) {
             profile_img: firebaseUser.photoURL || '',
             user_type: 'user',
           };
-  
+
           dbUser = await createUser(newUser);
           console.log('New user created:', dbUser);
         } else {
           console.log('User already exists in DB:', dbUser);
         }
-  
+
         setUser(dbUser);
-  
+
         const isTokenValid = await verifyUserToken();
         console.log('isTokenValid:', isTokenValid);
         if (!isTokenValid) {
@@ -71,7 +76,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Add refreshUser method to fetch the latest user data
   const refreshUser = async () => {
     if (!user || !user.firebase_uid) {
       console.log('No user or firebase_uid available to refresh');
@@ -102,29 +106,54 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
+    let isProcessing = false;
+    let timeoutId = null;
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (isProcessing || isRegistering) {
+        console.log('Skipping onAuthStateChanged: isProcessing=', isProcessing, 'isRegistering=', isRegistering);
+        return;
+      }
+      isProcessing = true;
       setLoading(true);
-      console.log('onAuthStateChanged: loading = true');
+      console.log('onAuthStateChanged triggered for firebase_uid:', firebaseUser?.uid);
+
       try {
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Auth timeout")), 10000)
-        );
         if (firebaseUser) {
-          await Promise.race([handleNewRegister(firebaseUser), timeoutPromise]);
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
+          timeoutId = setTimeout(async () => {
+            const timeoutPromise = new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("Auth timeout")), 10000)
+            );
+            // Use pendingName if available, otherwise fallback to firebaseUser.displayName
+            await Promise.race([handleNewRegister(firebaseUser, pendingName), timeoutPromise]);
+            setPendingName(null); // Clear pendingName after use
+          }, 200); // Increased debounce to 200ms
         } else {
+          console.log('No authenticated user, setting user to null');
           setUser(null);
         }
       } catch (error) {
-        console.error("Error in onAuthStateChanged:", error);
+        console.error('Error in onAuthStateChanged:', {
+          message: error.message,
+          stack: error.stack,
+        });
         setUser(null);
       } finally {
         setLoading(false);
-        console.log('onAuthStateChanged: loading = false');
+        isProcessing = false;
       }
     });
 
-    return () => unsubscribe();
-  }, []);
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      unsubscribe();
+    };
+  }, [isRegistering, pendingName]);
 
   const signIn = async (email, password) => {
     setLoading(true);
@@ -140,13 +169,19 @@ export function AuthProvider({ children }) {
 
   const registerWithEmail = async (email, password, name) => {
     setLoading(true);
+    setIsRegistering(true);
     try {
       const result = await RegisterWithEmail(email, password, name);
+      console.log('RegisterWithEmail result:', result.user, 'name:', name);
+      setPendingName(name); // Store name for onAuthStateChanged
       await handleNewRegister(result.user, name);
     } catch (error) {
+      console.error('Error in registerWithEmail:', error);
       throw error;
     } finally {
       setLoading(false);
+      setIsRegistering(false);
+      setPendingName(null);
     }
   };
 

@@ -1,13 +1,3 @@
-
-/**
- * @file EmailProvider.ts
- * @description This file provides the EmailProvider for the application. It handles the email sign-in process.
- * @author Awirut Phuseansaart <awirut2629@gmail.com>
- * @date 2024-06-29
- * @version 1.0
- */
-
-
 // EmailProvider.tsx
 
 import {
@@ -38,19 +28,15 @@ const EmailProvider = async (email: string, password: string) => {
 };
 
 
-const RegisterWithEmail = async (email: string, password: string, name: string) => {
+const RegisterWithEmail = async (email: string, password: string, name?: string) => {
   try {
-    const result = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(result.user, { displayName: name });
-
-    return result;
-    // const user = result.user;
-    // return user;
-  } catch (error: any) {
-
-    const errorMessage = error.message;
-    Toast.error(errorMessage);
-
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    // Update the user's displayName immediately
+    await updateProfile(userCredential.user, { displayName: name || 'Anonymous' });
+    console.log('Updated Firebase user profile with displayName:', name);
+    return userCredential;
+  } catch (error) {
+    console.error('Error in RegisterWithEmail:', error);
     throw error;
   }
 };
