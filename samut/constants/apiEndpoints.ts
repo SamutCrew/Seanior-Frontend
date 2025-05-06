@@ -1,3 +1,4 @@
+export const API_BASE_URL = 'http://localhost:8000';
 export const APIEndpoints = Object.freeze({
     AUTH: {
         VERIFY_TOKEN: "/auth/verifyToken",
@@ -47,4 +48,7 @@ export const APIEndpoints = Object.freeze({
         ALL: "/courses/retrieve/all",
         },
     },
+    PAYMENT: {
+        CREATE_PROMPTPAY_SESSION: `${API_BASE_URL}/payment/create-checkout-session`,
+      },
 })    
