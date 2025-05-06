@@ -4,7 +4,7 @@ export const APIEndpoints = Object.freeze({
     },
     USER: {
         RETRIEVE: {
-            ALL: "/users/retrieve/all",
+            ALL: "/users/retrieve/getAllUsers",
             CHECK_ISEXIST: "/users/retrieve/checkUser",
             DATA_BY_USERID: "/users/retrieve/[userId]",
         },
