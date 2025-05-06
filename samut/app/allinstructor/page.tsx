@@ -289,21 +289,26 @@ export default function InstructorsDirectoryPage() {
           const referenceLocation = selectedLocation || userLocation
           if (referenceLocation) {
             return sorted.sort((a, b) => {
-              if (!a.description?.location || !b.description?.location) {
+              if (
+                !a.description?.location?.lat ||
+                !a.description?.location?.lng ||
+                !b.description?.location?.lat ||
+                !b.description?.location?.lng
+              ) {
                 return 0
               }
 
               const distanceA = getDistance(
                 referenceLocation.lat,
                 referenceLocation.lng,
-                a.description.location.lat || 0,
-                a.description.location.lng || 0,
+                a.description.location.lat,
+                a.description.location.lng,
               )
               const distanceB = getDistance(
                 referenceLocation.lat,
                 referenceLocation.lng,
-                b.description.location.lat || 0,
-                b.description.location.lng || 0,
+                b.description.location.lat,
+                b.description.location.lng,
               )
               return distanceA - distanceB
             })
@@ -319,7 +324,7 @@ export default function InstructorsDirectoryPage() {
   }
 
   const viewInstructorProfile = (id: number) => {
-    router.push(`/instructor/${id}`)
+    router.push(`/allinstructor/1`)
   }
 
   // Check if any filters are active
@@ -1097,7 +1102,7 @@ export default function InstructorsDirectoryPage() {
                             {instructor.description?.location?.address || "Location not specified"}
                             {userLocation || selectedLocation ? (
                               <span className={isDarkMode ? "text-gray-400 ml-1" : "text-gray-500 ml-1"}>
-                                {instructor.description?.location ? (
+                                {instructor.description?.location?.lat && instructor.description?.location?.lng ? (
                                   <>
                                     (
                                     {Math.round(

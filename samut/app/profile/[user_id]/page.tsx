@@ -124,6 +124,41 @@ const Profile = () => {
     setSuccessMessage(null)
   }
 
+  // Function to safely render profile image with fallback
+  const renderProfileImage = (imageUrl: string | null | undefined) => {
+    if (!imageUrl) {
+      return (
+        <div className="w-full h-full flex items-center justify-center">
+          <FaUser className={`${isDarkMode ? "text-gray-400" : "text-gray-500"} text-3xl`} />
+        </div>
+      )
+    }
+
+    // Handle the image with error catching
+    return (
+      <Image
+        src={imageUrl || "/placeholder.svg"}
+        alt="Profile"
+        width={96}
+        height={96}
+        className="w-full h-full object-cover"
+        onError={(e) => {
+          // If image fails to load, replace with user icon
+          e.currentTarget.style.display = "none"
+          const parent = e.currentTarget.parentElement
+          if (parent) {
+            const fallback = document.createElement("div")
+            fallback.className = "w-full h-full flex items-center justify-center"
+            const icon = document.createElement("i")
+            icon.className = `${isDarkMode ? "text-gray-400" : "text-gray-500"} text-3xl fa fa-user`
+            fallback.appendChild(icon)
+            parent.appendChild(fallback)
+          }
+        }}
+      />
+    )
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -161,19 +196,7 @@ const Profile = () => {
                     isDarkMode ? "bg-[#2a3a5a] border border-[#3a4a6a]" : "bg-gray-100 border border-gray-200"
                   }`}
                 >
-                  {imagePreview ? (
-                    <Image
-                      src={imagePreview || "/placeholder.svg"}
-                      alt="Profile Preview"
-                      width={96}
-                      height={96}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <FaUser className={`${isDarkMode ? "text-gray-400" : "text-gray-500"} text-3xl`} />
-                    </div>
-                  )}
+                  {renderProfileImage(imagePreview)}
                 </div>
                 <div className="flex-1">
                   <label
@@ -379,13 +402,7 @@ const Profile = () => {
               className="relative"
             >
               <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden border-4 border-white shadow-xl">
-                <Image
-                  src={imagePreview || "/placeholder.svg?height=200&width=200&query=user profile"}
-                  alt={userData.name || "User Profile"}
-                  width={200}
-                  height={200}
-                  className="object-cover w-full h-full"
-                />
+                {renderProfileImage(userData.profile_img)}
               </div>
             </motion.div>
 

@@ -34,6 +34,9 @@ interface LocationFilterProps {
 
 // 🌍 ฟังก์ชันคำนวณระยะทางระหว่าง 2 พิกัด
 const getDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+  if (lat1 === undefined || lng1 === undefined || lat2 === undefined || lng2 === undefined) {
+    return Number.POSITIVE_INFINITY // Return a large value if coordinates are undefined
+  }
   const toRad = (x: number) => (x * Math.PI) / 180
   const R = 6371 // Earth radius in km
   const dLat = toRad(lat2 - lat1)
@@ -63,19 +66,27 @@ export const LocationFilter = ({
 
   // ✅ ฟิลเตอร์รายการตามระยะทาง
   const filteredInstructors = referenceLocation
-    ? instructorLocations.filter(
-        (t) =>
+    ? instructorLocations.filter((t) => {
+        if (!t.location || t.location.lat === undefined || t.location.lng === undefined) {
+          return false
+        }
+        return (
           getDistance(referenceLocation.lat, referenceLocation.lng, t.location.lat, t.location.lng) <= maxDistance ||
-          maxDistance === 0,
-      )
+          maxDistance === 0
+        )
+      })
     : instructorLocations
 
   const filteredCourses = referenceLocation
-    ? courseLocations.filter(
-        (c) =>
+    ? courseLocations.filter((c) => {
+        if (!c.location || c.location.lat === undefined || c.location.lng === undefined) {
+          return false
+        }
+        return (
           getDistance(referenceLocation.lat, referenceLocation.lng, c.location.lat, c.location.lng) <= maxDistance ||
-          maxDistance === 0,
-      )
+          maxDistance === 0
+        )
+      })
     : courseLocations
 
   return (

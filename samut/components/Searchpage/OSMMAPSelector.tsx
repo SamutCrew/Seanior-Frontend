@@ -99,20 +99,24 @@ const OSMMapSelector = ({
 
     // 🔹 Add markers for instructors
     instructorLocations.forEach((item) => {
-      L.marker([item.location.lat, item.location.lng], {
-        icon: createCustomIcon(),
-      })
-        .addTo(map)
-        .bindPopup(`<strong>Instructor: ${item.name}</strong><br/>${item.location.address ?? ""}`)
+      if (item.location && item.location.lat !== undefined && item.location.lng !== undefined) {
+        L.marker([item.location.lat, item.location.lng], {
+          icon: createCustomIcon(),
+        })
+          .addTo(map)
+          .bindPopup(`<strong>Instructor: ${item.name}</strong><br/>${item.location.address ?? ""}`)
+      }
     })
 
     // 🔹 Add markers for courses
     courseLocations.forEach((item) => {
-      L.marker([item.location.lat, item.location.lng], {
-        icon: createCustomIcon(),
-      })
-        .addTo(map)
-        .bindPopup(`<strong>Course: ${item.name}</strong><br/>${item.location.address ?? ""}`)
+      if (item.location && item.location.lat !== undefined && item.location.lng !== undefined) {
+        L.marker([item.location.lat, item.location.lng], {
+          icon: createCustomIcon(),
+        })
+          .addTo(map)
+          .bindPopup(`<strong>Course: ${item.name}</strong><br/>${item.location.address ?? ""}`)
+      }
     })
   }, [mapCenter.lat, mapCenter.lng, instructorLocations, courseLocations, isDarkMode, onLocationSelect])
 
