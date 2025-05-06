@@ -2,7 +2,20 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { Search, MapPin, Filter, X, ChevronDown, Star, Award, TrendingUp, Users } from "lucide-react"
+import {
+  Search,
+  MapPin,
+  Filter,
+  X,
+  ChevronDown,
+  Star,
+  Award,
+  TrendingUp,
+  Users,
+  Briefcase,
+  GraduationCap,
+  Heart,
+} from "lucide-react"
 import { InstructorCard } from "@/components/Searchpage/InstructorCard"
 import { SectionTitle } from "@/components/Common/SectionTitle"
 import { Button } from "@/components/Common/Button"
@@ -12,7 +25,7 @@ import { LocationFilter } from "@/components/Searchpage/LocationFilter"
 import { InstructorFiltersComponent } from "@/components/Searchpage/InstructorFilters"
 import type { Instructor, InstructorFilters, Location } from "@/types/instructor"
 import { fetchInstructors } from "@/api/instructorCourseApi"
-import  LoadingPage  from "@/components/Common/LoadingPage"
+import LoadingPage from "@/components/Common/LoadingPage"
 import { motion, AnimatePresence } from "framer-motion"
 
 export default function InstructorsDirectoryPage() {
@@ -40,6 +53,7 @@ export default function InstructorsDirectoryPage() {
 
   // View state
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+  const [activeCategory, setActiveCategory] = useState("all")
 
   // Location state
   const [userLocation, setUserLocation] = useState<Location | null>(null)
@@ -171,7 +185,7 @@ export default function InstructorsDirectoryPage() {
       results = results.filter(
         (instructor) =>
           // Add null checks to prevent errors when properties are undefined
-        instructor.name?.toLowerCase().includes(term) ||
+          instructor.name?.toLowerCase().includes(term) ||
           false ||
           instructor.description?.specialty?.toLowerCase().includes(term) ||
           false ||
@@ -180,19 +194,36 @@ export default function InstructorsDirectoryPage() {
       )
     }
 
+    // Apply category filter
+    if (activeCategory !== "all") {
+      if (activeCategory === "beginner") {
+        results = results.filter((instructor) => instructor.description?.levels?.includes("Beginner") || false)
+      } else if (activeCategory === "intermediate") {
+        results = results.filter((instructor) => instructor.description?.levels?.includes("Intermediate") || false)
+      } else if (activeCategory === "advanced") {
+        results = results.filter((instructor) => instructor.description?.levels?.includes("Advanced") || false)
+      }
+    }
+
     // Apply style filter
     if (instructorFilters.style) {
-      results = results.filter((instructor) => instructor.description?.styles?.includes(instructorFilters.style) || false)
+      results = results.filter(
+        (instructor) => instructor.description?.styles?.includes(instructorFilters.style) || false,
+      )
     }
 
     // Apply level filter
     if (instructorFilters.level) {
-      results = results.filter((instructor) => instructor.description?.levels?.includes(instructorFilters.level) || false)
+      results = results.filter(
+        (instructor) => instructor.description?.levels?.includes(instructorFilters.level) || false,
+      )
     }
 
     // Apply lesson type filter
     if (instructorFilters.lessonType) {
-      results = results.filter((instructor) => instructor.description?.lessonType === instructorFilters.lessonType || false)
+      results = results.filter(
+        (instructor) => instructor.description?.lessonType === instructorFilters.lessonType || false,
+      )
     }
 
     // Apply certification filter
@@ -240,7 +271,7 @@ export default function InstructorsDirectoryPage() {
     results = sortInstructors(results, sortOption)
 
     setFilteredInstructors(results)
-  }, [searchTerm, instructorFilters, instructors, userLocation, selectedLocation, sortOption])
+  }, [searchTerm, instructorFilters, instructors, userLocation, selectedLocation, sortOption, activeCategory])
 
   // Sort Instructors based on selected option
   const sortInstructors = (instructorList: Instructor[], option: string) => {
@@ -279,6 +310,8 @@ export default function InstructorsDirectoryPage() {
           }
         }
         return sorted
+      case "experience":
+        return sorted.sort((a, b) => (b.description?.experience || 0) - (a.description?.experience || 0))
       case "relevance":
       default:
         return sorted
@@ -308,6 +341,7 @@ export default function InstructorsDirectoryPage() {
     })
     setSelectedLocation(null)
     setShowMap(false)
+    setActiveCategory("all")
   }
 
   // Scroll to results
@@ -352,7 +386,7 @@ export default function InstructorsDirectoryPage() {
       {/* Hero Section */}
       <div
         className={`relative overflow-hidden ${
-          isDarkMode ? "bg-gradient-to-r from-blue-900 to-cyan-900" : "bg-gradient-to-r from-blue-600 to-cyan-500"
+          isDarkMode ? "bg-gradient-to-r from-cyan-900 to-blue-900" : "bg-gradient-to-r from-cyan-600 to-blue-600"
         }`}
       >
         {/* Decorative Elements */}
@@ -360,10 +394,43 @@ export default function InstructorsDirectoryPage() {
           <div className="absolute inset-0 bg-[url('/patterns/wave-pattern.svg')] bg-repeat opacity-10"></div>
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-black/20 to-transparent"></div>
 
+          {/* Floating Icons */}
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              initial={{ y: 20, opacity: 0, rotate: Math.random() * 20 - 10 }}
+              animate={{
+                y: [0, -15, 0],
+                opacity: [0.7, 1, 0.7],
+                rotate: [Math.random() * 10 - 5, Math.random() * 10 - 5, Math.random() * 10 - 5],
+                transition: {
+                  repeat: Number.POSITIVE_INFINITY,
+                  duration: 5 + Math.random() * 5,
+                  delay: Math.random() * 2,
+                },
+              }}
+            >
+              {i % 4 === 0 ? (
+                <GraduationCap className="text-white/20 w-8 h-8 md:w-12 md:h-12" />
+              ) : i % 4 === 1 ? (
+                <Briefcase className="text-white/20 w-6 h-6 md:w-10 md:h-10" />
+              ) : i % 4 === 2 ? (
+                <Award className="text-white/20 w-8 h-8 md:w-14 md:h-14" />
+              ) : (
+                <Heart className="text-white/20 w-7 h-7 md:w-12 md:h-12" />
+              )}
+            </motion.div>
+          ))}
+
           {/* Animated Bubbles */}
           {[...Array(15)].map((_, i) => (
             <motion.div
-              key={i}
+              key={i + 100}
               className={`absolute rounded-full bg-white/20 backdrop-blur-sm`}
               style={{
                 width: `${Math.random() * 60 + 20}px`,
@@ -619,9 +686,39 @@ export default function InstructorsDirectoryPage() {
         </div>
       </div>
 
-      
-      <div ref={scrollRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Category Navigation */}
+        <div className="mb-8 overflow-x-auto pb-2">
+          <div className="flex space-x-2 min-w-max">
+            <div
+              className={`rounded-full ${activeCategory === "all" ? "bg-cyan-600 text-white" : "bg-white text-gray-800 border border-gray-300"} px-4 py-2 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200`}
+              onClick={() => setActiveCategory("all")}
+            >
+              <Users className="w-4 h-4 mr-2" /> All Instructors
+            </div>
+            <div
+              className={`rounded-full ${activeCategory === "beginner" ? "bg-cyan-600 text-white" : "bg-white text-gray-800 border border-gray-300"} px-4 py-2 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200`}
+              onClick={() => setActiveCategory("beginner")}
+            >
+              <Users className="mr-2" /> Beginner
+            </div>
+            <div
+              className={`rounded-full ${activeCategory === "intermediate" ? "bg-cyan-600 text-white" : "bg-white text-gray-800 border border-gray-300"} px-4 py-2 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200`}
+              onClick={() => setActiveCategory("intermediate")}
+            >
+              <Users className="mr-2" /> Intermediate
+            </div>
+            <div
+              className={`rounded-full ${activeCategory === "advanced" ? "bg-cyan-600 text-white" : "bg-white text-gray-800 border border-gray-300"} px-4 py-2 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200`}
+              onClick={() => setActiveCategory("advanced")}
+            >
+              <Users className="mr-2" /> Advanced
+            </div>
+          </div>
+        </div>
+
         {/* Filters Panel */}
+        <div ref={scrollRef}></div>
         <AnimatePresence>
           {showFilters && (
             <motion.div
@@ -648,55 +745,71 @@ export default function InstructorsDirectoryPage() {
                   />
                 </div>
 
-                {/* Quick Filter  : "hover:bg-gray-100"}`}
-                  />
-                </div>
-
                 {/* Quick Filter Presets */}
                 <div className={`mb-6 pb-6 border-b ${isDarkMode ? "border-slate-700" : "border-gray-200"}`}>
                   <h4 className={`text-sm font-medium mb-3 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
                     Quick Filters
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant={instructorFilters.minRating === 4.5 ? "primary" : "outline"}
+                    <div
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200 ${
+                        instructorFilters.minRating === 4.5
+                          ? "bg-cyan-600 text-white"
+                          : isDarkMode
+                            ? "bg-slate-700 text-gray-300 border border-slate-600"
+                            : "bg-white text-gray-700 border border-gray-300"
+                      }`}
                       onClick={() =>
-                        setInstructorFilters({ ...instructorFilters, minRating: instructorFilters.minRating === 4.5 ? 0 : 4.5 })
+                        setInstructorFilters({
+                          ...instructorFilters,
+                          minRating: instructorFilters.minRating === 4.5 ? 0 : 4.5,
+                        })
                       }
-                      className={`rounded-full ${instructorFilters.minRating !== 4.5 && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
                     >
                       <Star className="w-3 h-3 mr-1" /> Top Rated
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={instructorFilters.level === "Beginner" ? "primary" : "outline"}
+                    </div>
+                    <div
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200 ${
+                        instructorFilters.level === "Beginner"
+                          ? "bg-cyan-600 text-white"
+                          : isDarkMode
+                            ? "bg-slate-700 text-gray-300 border border-slate-600"
+                            : "bg-white text-gray-700 border border-gray-300"
+                      }`}
                       onClick={() =>
                         setInstructorFilters({
                           ...instructorFilters,
                           level: instructorFilters.level === "Beginner" ? "" : "Beginner",
                         })
                       }
-                      className={`rounded-full ${instructorFilters.level !== "Beginner" && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
                     >
                       <Users className="w-3 h-3 mr-1" /> Beginner Friendly
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={instructorFilters.lessonType === "Private" ? "primary" : "outline"}
+                    </div>
+                    <div
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200 ${
+                        instructorFilters.lessonType === "Private"
+                          ? "bg-cyan-600 text-white"
+                          : isDarkMode
+                            ? "bg-slate-700 text-gray-300 border border-slate-600"
+                            : "bg-white text-gray-700 border border-gray-300"
+                      }`}
                       onClick={() =>
                         setInstructorFilters({
                           ...instructorFilters,
                           lessonType: instructorFilters.lessonType === "Private" ? "" : "Private",
                         })
                       }
-                      className={`rounded-full ${instructorFilters.lessonType !== "Private" && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
                     >
                       Private Lessons
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={instructorFilters.maxDistance === 10 ? "primary" : "outline"}
+                    </div>
+                    <div
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200 ${
+                        instructorFilters.maxDistance === 10
+                          ? "bg-cyan-600 text-white"
+                          : isDarkMode
+                            ? "bg-slate-700 text-gray-300 border border-slate-600"
+                            : "bg-white text-gray-700 border border-gray-300"
+                      }`}
                       onClick={() => {
                         if (instructorFilters.maxDistance === 10) {
                           setInstructorFilters({ ...instructorFilters, maxDistance: 0 })
@@ -705,10 +818,9 @@ export default function InstructorsDirectoryPage() {
                           setInstructorFilters({ ...instructorFilters, maxDistance: 10 })
                         }
                       }}
-                      className={`rounded-full ${instructorFilters.maxDistance !== 10 && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
                     >
                       <MapPin className="w-3 h-3 mr-1" /> Nearby
-                    </Button>
+                    </div>
                   </div>
                 </div>
 
@@ -786,7 +898,7 @@ export default function InstructorsDirectoryPage() {
                   className={`p-2 rounded-l-md border ${isDarkMode ? "border-slate-700" : "border-gray-300"} ${
                     viewMode === "grid"
                       ? isDarkMode
-                        ? "bg-slate-700 text-white"
+                        ? "bg-cyan-900 text-white"
                         : "bg-blue-50 text-blue-600"
                       : isDarkMode
                         ? "bg-slate-800 text-gray-400"
@@ -815,7 +927,7 @@ export default function InstructorsDirectoryPage() {
                   } ${
                     viewMode === "list"
                       ? isDarkMode
-                        ? "bg-slate-700 text-white"
+                        ? "bg-cyan-900 text-white"
                         : "bg-blue-50 text-blue-600"
                       : isDarkMode
                         ? "bg-slate-800 text-gray-400"
@@ -846,6 +958,7 @@ export default function InstructorsDirectoryPage() {
                   <option value="rating">Sort by: Rating</option>
                   <option value="price_low">Sort by: Price (Low to High)</option>
                   <option value="price_high">Sort by: Price (High to Low)</option>
+                  <option value="experience">Sort by: Experience</option>
                   {(userLocation || selectedLocation) && <option value="distance">Sort by: Distance</option>}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none" />
@@ -917,7 +1030,9 @@ export default function InstructorsDirectoryPage() {
                     <div className="relative md:w-1/4 h-48 md:h-auto">
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-500 opacity-20"></div>
                       <img
-                        src={instructor.profile_img || "/placeholder.svg?height=400&width=600&query=swimming instructor"}
+                        src={
+                          instructor.profile_img || "/placeholder.svg?height=400&width=600&query=swimming instructor"
+                        }
                         alt={instructor.name}
                         className="w-full h-full object-cover"
                       />
@@ -1034,12 +1149,6 @@ export default function InstructorsDirectoryPage() {
                 className={`rounded-none border-r-0 ${isDarkMode ? "border-slate-700 text-white" : "border-gray-300"}`}
               >
                 2
-              </Button>
-              <Button
-                variant={isDarkMode ? "outline" : "secondary"}
-                className={`rounded-none border-r-0 ${isDarkMode ? "border-slate-700 text-white" : "border-gray-300"}`}
-              >
-                3
               </Button>
               <Button
                 variant={isDarkMode ? "outline" : "secondary"}

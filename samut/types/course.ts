@@ -1,4 +1,5 @@
 export type CourseType = "private-location" | "public-pool" | "teacher-pool"
+export type CourseStatus = "open" | "in-progress" | "completed"
 
 export interface Course {
   id: number
@@ -9,6 +10,7 @@ export interface Course {
   schedule: string
   instructor: string
   instructorId?: string
+  instructorImage?: string
   rating: number
   students: number
   price: number
@@ -16,6 +18,7 @@ export interface Course {
     address: string
   }
   courseType: CourseType
+  status?: CourseStatus
   description?: string
   curriculum?: string[]
   requirements?: string[]
