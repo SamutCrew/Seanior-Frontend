@@ -148,7 +148,11 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  <Button variant="primary" size="lg" className="bg-white text-blue-600 hover:bg-blue-50">
+                <Button
+                    variant={isDarkMode ? "gradient" : "primary"}
+                    size="lg"
+                    className={`${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
+                  >
                     Enroll Now
                   </Button>
                   <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10">
@@ -159,7 +163,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
               <div className="hidden md:block relative mt-8 md:mt-0">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-cyan-500/20 rounded-xl"></div>
                 <img
-                  src="/placeholder.svg?key=2qior"
+                  src="/breaststroke-swimming.png"
                   alt={course.title}
                   className="rounded-xl shadow-lg w-[400px] h-[300px] object-cover"
                 />
@@ -240,7 +244,10 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 </>
               )}
 
-              <Button variant={isDarkMode ? "gradient" : "primary"} className="w-full">
+              <Button
+                variant={isDarkMode ? "gradient" : "primary"}
+                className={`w-full ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
+              >
                 Enroll in This Course
               </Button>
             </motion.div>
@@ -256,7 +263,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
               </h2>
               <div className="flex items-center mb-6">
                 <img
-                  src="/placeholder.svg?key=d6yym"
+                  src="/Teacher2.jpg"
                   alt={course.instructor}
                   className="w-16 h-16 rounded-full object-cover mr-4"
                 />
@@ -364,7 +371,10 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 </div>
               </div>
 
-              <Button variant={isDarkMode ? "gradient" : "primary"} className="w-full mb-3">
+              <Button
+                variant={isDarkMode ? "gradient" : "primary"}
+                className={`w-full mb-3 ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
+              >
                 Enroll Now
               </Button>
 
@@ -398,7 +408,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 >
                   <div className="relative">
                     <img
-                      src={`/placeholder.svg?key=4t658&height=200&width=400&query=swimming course ${i}`}
+                      src="/Teacher2.jpg"
                       alt="Related Course"
                       className="w-full h-48 object-cover"
                     />

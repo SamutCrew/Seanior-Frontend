@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { Search, Filter, X, ChevronDown, Clock, MapPin, Award, Users } from 'lucide-react'
+import { Search, Filter, X, ChevronDown, BookOpen, Bookmark, Layers } from "lucide-react"
 import { SectionTitle } from "@/components/Common/SectionTitle"
 import { Button } from "@/components/Common/Button"
 import { IconButton } from "@/components/Common/IconButton"
@@ -11,6 +11,8 @@ import CourseCard from "@/components/Course/CourseCard"
 import { motion, AnimatePresence } from "framer-motion"
 import type { Course } from "@/types/course"
 import LoadingPage from "@/components/Common/LoadingPage"
+import { HiAcademicCap, HiOutlineAcademicCap } from "react-icons/hi"
+import { FaSwimmer } from "react-icons/fa"
 
 export default function AllCoursesPage() {
   const router = useRouter()
@@ -35,6 +37,7 @@ export default function AllCoursesPage() {
   // View state
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [sortOption, setSortOption] = useState("relevance")
+  const [activeCategory, setActiveCategory] = useState("all")
 
   // Courses data
   const [courses, setCourses] = useState<Course[]>([])
@@ -62,7 +65,7 @@ export default function AllCoursesPage() {
             schedule: "Mon, Wed 5:00 PM - 6:00 PM",
             instructor: "Sarah Johnson",
             instructorId: "1",
-            instructorImage: "/Teacher1.jpg",
+            instructorImage: "/confident-swim-coach.png",
             rating: 4.8,
             students: 12,
             price: 199,
@@ -74,7 +77,7 @@ export default function AllCoursesPage() {
               "Perfect for first-time swimmers. Build confidence in the water and learn fundamental techniques.",
             curriculum: ["Water Safety", "Floating Techniques", "Basic Strokes", "Breathing Control"],
             maxStudents: 15,
-            image: "/water-safety-swimming.png",
+            image: "/butterfly-undulation-drill.png",
           },
           {
             id: 2,
@@ -85,7 +88,7 @@ export default function AllCoursesPage() {
             schedule: "Tue, Thu 6:30 PM - 8:00 PM",
             instructor: "Michael Chen",
             instructorId: "2",
-            instructorImage: "/images/instructors/instructor-2.jpg",
+            instructorImage: "/diverse-female-student.png",
             rating: 4.9,
             students: 8,
             price: 249,
@@ -96,7 +99,7 @@ export default function AllCoursesPage() {
             description: "Take your freestyle to the next level with advanced techniques and drills.",
             curriculum: ["Stroke Analysis", "Efficiency Drills", "Race Strategy", "Advanced Turns"],
             maxStudents: 10,
-            image: "/images/courses/freestyle-technique.jpg",
+            image: "/butterfly-swimming-technique.png",
           },
           {
             id: 3,
@@ -107,7 +110,7 @@ export default function AllCoursesPage() {
             schedule: "Sat 9:00 AM - 10:00 AM",
             instructor: "Emma Rodriguez",
             instructorId: "3",
-            instructorImage: "/images/instructors/instructor-3.jpg",
+            instructorImage: "/butterfly-undulation-drill.png",
             rating: 4.7,
             students: 6,
             price: 149,
@@ -118,7 +121,7 @@ export default function AllCoursesPage() {
             description: "A gentle introduction to water for toddlers aged 2-4 years with parent participation.",
             curriculum: ["Water Play", "Basic Floating", "Underwater Exploration", "Safety Skills"],
             maxStudents: 8,
-            image: "/images/courses/toddler-swimming.jpg",
+            image: "/Teacher3.jpg",
           },
           {
             id: 4,
@@ -129,7 +132,7 @@ export default function AllCoursesPage() {
             schedule: "Mon, Wed, Fri 4:00 PM - 5:30 PM",
             instructor: "David Wilson",
             instructorId: "4",
-            instructorImage: "/images/instructors/instructor-4.jpg",
+            instructorImage: "/SwimmimgLanding.jpg",
             rating: 4.6,
             students: 10,
             price: 299,
@@ -140,7 +143,7 @@ export default function AllCoursesPage() {
             description: "Comprehensive program covering all four competitive strokes with technique refinement.",
             curriculum: ["Butterfly", "Backstroke", "Breaststroke", "Freestyle", "Individual Medley"],
             maxStudents: 12,
-            image: "/images/courses/stroke-development.jpg",
+            image: "/Teacher3.jpg",
           },
           {
             id: 5,
@@ -151,7 +154,7 @@ export default function AllCoursesPage() {
             schedule: "Tue, Thu 7:00 PM - 8:00 PM",
             instructor: "Lisa Thompson",
             instructorId: "5",
-            instructorImage: "/images/instructors/instructor-5.jpg",
+            instructorImage: "/Teacher2.jpg",
             rating: 4.9,
             students: 5,
             price: 219,
@@ -162,7 +165,7 @@ export default function AllCoursesPage() {
             description: "Designed specifically for adults who want to learn to swim in a judgment-free environment.",
             curriculum: ["Water Comfort", "Floating", "Basic Strokes", "Deep Water Confidence"],
             maxStudents: 6,
-            image: "/images/courses/adult-swimming.jpg",
+            image: "/SwimmimgLanding.jpg",
           },
           {
             id: 6,
@@ -173,7 +176,7 @@ export default function AllCoursesPage() {
             schedule: "Mon-Fri 6:00 AM - 7:30 AM",
             instructor: "James Peterson",
             instructorId: "6",
-            instructorImage: "/images/instructors/instructor-6.jpg",
+            instructorImage: "/Teacher1.jpg",
             rating: 4.8,
             students: 15,
             price: 349,
@@ -184,7 +187,7 @@ export default function AllCoursesPage() {
             description: "Intensive training program for competitive swimmers looking to improve race times.",
             curriculum: ["Race Strategy", "Advanced Technique", "Strength Training", "Mental Preparation"],
             maxStudents: 20,
-            image: "/images/courses/competitive-swimming.jpg",
+            image: "/SwimmimgLanding.jpg",
           },
           {
             id: 7,
@@ -195,7 +198,7 @@ export default function AllCoursesPage() {
             schedule: "Sat, Sun 1:00 PM - 3:00 PM",
             instructor: "Robert Garcia",
             instructorId: "7",
-            instructorImage: "/images/instructors/instructor-7.jpg",
+            instructorImage: "/Teacher4.jpg",
             rating: 4.7,
             students: 12,
             price: 179,
@@ -207,7 +210,7 @@ export default function AllCoursesPage() {
               "Essential course for anyone who spends time around water. Learn how to prevent and respond to water emergencies.",
             curriculum: ["Prevention", "Recognition", "Basic Rescue", "CPR Basics"],
             maxStudents: 15,
-            image: "/images/courses/water-safety.jpg",
+            image: "/focused-freestyle.png",
           },
           {
             id: 8,
@@ -218,7 +221,7 @@ export default function AllCoursesPage() {
             schedule: "Mon, Wed, Fri 10:00 AM - 11:00 AM",
             instructor: "Patricia Lee",
             instructorId: "8",
-            instructorImage: "/images/instructors/instructor-8.jpg",
+            instructorImage: "/images/instructors/instructor-8.png",
             rating: 4.9,
             students: 18,
             price: 129,
@@ -230,7 +233,7 @@ export default function AllCoursesPage() {
               "Gentle, effective water exercises designed specifically for seniors to improve mobility and strength.",
             curriculum: ["Water Walking", "Joint Mobility", "Strength Exercises", "Balance Work"],
             maxStudents: 20,
-            image: "/images/courses/senior-water-exercise.jpg",
+            image: "/images/courses/senior-water-exercise.png",
           },
           {
             id: 9,
@@ -241,7 +244,7 @@ export default function AllCoursesPage() {
             schedule: "Tue, Thu 5:30 PM - 7:00 PM",
             instructor: "Nathan Brown",
             instructorId: "9",
-            instructorImage: "/images/instructors/instructor-9.jpg",
+            instructorImage: "/images/instructors/instructor-9.png",
             rating: 4.8,
             students: 10,
             price: 279,
@@ -252,7 +255,7 @@ export default function AllCoursesPage() {
             description: "Specialized training for triathletes focusing on open water techniques and race strategy.",
             curriculum: ["Sighting", "Drafting", "Mass Start Practice", "Transition Speed"],
             maxStudents: 12,
-            image: "/images/courses/triathlon-swimming.jpg",
+            image: "/images/courses/triathlon-swimming.png",
           },
           {
             id: 10,
@@ -263,7 +266,7 @@ export default function AllCoursesPage() {
             schedule: "By appointment",
             instructor: "Dr. Maria Santos",
             instructorId: "10",
-            instructorImage: "/images/instructors/instructor-10.jpg",
+            instructorImage: "/images/instructors/instructor-10.png",
             rating: 4.9,
             students: 4,
             price: 399,
@@ -274,7 +277,7 @@ export default function AllCoursesPage() {
             description: "Personalized aquatic therapy program for injury recovery and rehabilitation.",
             curriculum: ["Assessment", "Personalized Program", "Progress Tracking", "Home Exercise Plan"],
             maxStudents: 1,
-            image: "/images/courses/aquatic-rehab.jpg",
+            image: "/images/courses/aquatic-rehab.png",
           },
           {
             id: 11,
@@ -285,7 +288,7 @@ export default function AllCoursesPage() {
             schedule: "Sat 10:30 AM - 11:30 AM",
             instructor: "Emma Rodriguez",
             instructorId: "3",
-            instructorImage: "/images/instructors/instructor-3.jpg",
+            instructorImage: "/images/instructors/instructor-3.png",
             rating: 4.8,
             students: 8,
             price: 169,
@@ -296,7 +299,7 @@ export default function AllCoursesPage() {
             description: "A fun course for parents and children (ages 4-7) to learn water skills together.",
             curriculum: ["Water Games", "Basic Skills", "Safety Rules", "Confidence Building"],
             maxStudents: 10,
-            image: "/images/courses/parent-child-swimming.jpg",
+            image: "/images/courses/parent-child-swimming.png",
           },
           {
             id: 12,
@@ -307,7 +310,7 @@ export default function AllCoursesPage() {
             schedule: "Wed, Fri 4:30 PM - 6:00 PM",
             instructor: "Sophia Martinez",
             instructorId: "11",
-            instructorImage: "/images/instructors/instructor-11.jpg",
+            instructorImage: "/images/instructors/instructor-11.png",
             rating: 4.7,
             students: 12,
             price: 229,
@@ -318,7 +321,7 @@ export default function AllCoursesPage() {
             description: "Learn the fundamentals of synchronized swimming, combining swimming, dance, and gymnastics.",
             curriculum: ["Basic Figures", "Sculling Techniques", "Breath Control", "Simple Routines"],
             maxStudents: 14,
-            image: "/images/courses/synchronized-swimming.jpg",
+            image: "/images/courses/synchronized-swimming.png",
           },
         ]
 
@@ -340,7 +343,6 @@ export default function AllCoursesPage() {
     loadCourses()
   }, [])
 
-  // Rest of the component remains the same...
   // Update active filter count
   useEffect(() => {
     let count = 0
@@ -366,6 +368,17 @@ export default function AllCoursesPage() {
           course.instructor.toLowerCase().includes(term) ||
           course.level.toLowerCase().includes(term),
       )
+    }
+
+    // Apply category filter
+    if (activeCategory !== "all") {
+      if (activeCategory === "beginner") {
+        results = results.filter((course) => course.level === "Beginner")
+      } else if (activeCategory === "intermediate") {
+        results = results.filter((course) => course.level === "Intermediate")
+      } else if (activeCategory === "advanced") {
+        results = results.filter((course) => course.level === "Advanced")
+      }
     }
 
     // Apply level filter
@@ -402,7 +415,7 @@ export default function AllCoursesPage() {
     results = sortCourses(results, sortOption)
 
     setFilteredCourses(results)
-  }, [searchTerm, courseFilters, courses, sortOption])
+  }, [searchTerm, courseFilters, courses, sortOption, activeCategory])
 
   // Sort Courses based on selected option
   const sortCourses = (courseList: Course[], option: string) => {
@@ -424,7 +437,7 @@ export default function AllCoursesPage() {
   }
 
   const viewCourseDetails = (id: number) => {
-    router.push(`/course/${id}`)
+    router.push(`/allcourse/${id}`)
   }
 
   // Reset all filters
@@ -437,6 +450,7 @@ export default function AllCoursesPage() {
       location: "",
       instructor: "",
     })
+    setActiveCategory("all")
   }
 
   // Scroll to results
@@ -454,9 +468,9 @@ export default function AllCoursesPage() {
 
   if (error) {
     return (
-      <div className={`min-h-screen ${isDarkMode ? "bg-slate-900" : "bg-gradient-to-b from-blue-50 to-white"} py-12`}>
+      <div className={`min-h-screen ${isDarkMode ? "bg-slate-900" : "bg-gradient-to-b from-indigo-50 to-white"} py-12`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <SectionTitle className={`mb-8 ${isDarkMode ? "text-white" : ""}`}>Find Swimming Courses</SectionTitle>
+          <SectionTitle className={`mb-8 ${isDarkMode ? "text-white" : ""}`}>Swimming Course Catalog</SectionTitle>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -477,11 +491,13 @@ export default function AllCoursesPage() {
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? "bg-slate-900" : "bg-gradient-to-b from-blue-50 to-white"}`}>
+    <div className={`min-h-screen ${isDarkMode ? "bg-slate-900" : "bg-gradient-to-b from-indigo-50 to-white"}`}>
       {/* Hero Section */}
       <div
         className={`relative overflow-hidden ${
-          isDarkMode ? "bg-gradient-to-r from-blue-900 to-cyan-900" : "bg-gradient-to-r from-blue-600 to-cyan-500"
+          isDarkMode
+            ? "bg-gradient-to-r from-indigo-900 to-violet-900"
+            : "bg-gradient-to-r from-indigo-600 to-violet-500"
         }`}
       >
         {/* Decorative Elements */}
@@ -489,28 +505,35 @@ export default function AllCoursesPage() {
           <div className="absolute inset-0 bg-[url('/patterns/wave-pattern.svg')] bg-repeat opacity-10"></div>
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-black/20 to-transparent"></div>
 
-          {/* Animated Bubbles */}
-          {[...Array(15)].map((_, i) => (
+          {/* Floating Book Icons */}
+          {[...Array(8)].map((_, i) => (
             <motion.div
               key={i}
-              className={`absolute rounded-full bg-white/20 backdrop-blur-sm`}
+              className="absolute"
               style={{
-                width: `${Math.random() * 60 + 20}px`,
-                height: `${Math.random() * 60 + 20}px`,
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
               }}
-              initial={{ y: 100, opacity: 0 }}
+              initial={{ y: 20, opacity: 0, rotate: Math.random() * 20 - 10 }}
               animate={{
-                y: -100,
-                opacity: [0, 0.5, 0],
+                y: [0, -15, 0],
+                opacity: [0.7, 1, 0.7],
+                rotate: [Math.random() * 10 - 5, Math.random() * 10 - 5, Math.random() * 10 - 5],
                 transition: {
                   repeat: Number.POSITIVE_INFINITY,
-                  duration: Math.random() * 10 + 10,
-                  delay: Math.random() * 5,
+                  duration: 5 + Math.random() * 5,
+                  delay: Math.random() * 2,
                 },
               }}
-            />
+            >
+              {i % 3 === 0 ? (
+                <BookOpen className="text-white/20 w-8 h-8 md:w-12 md:h-12" />
+              ) : i % 3 === 1 ? (
+                <Bookmark className="text-white/20 w-6 h-6 md:w-10 md:h-10" />
+              ) : (
+                <HiOutlineAcademicCap className="text-white/20 w-8 h-8 md:w-14 md:h-14" />
+              )}
+            </motion.div>
           ))}
         </div>
 
@@ -528,16 +551,16 @@ export default function AllCoursesPage() {
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
-                <Award className="w-4 h-4 mr-2" /> Find the Perfect Swimming Course
+                <HiAcademicCap className="w-4 h-4 mr-2" /> Course Catalog
               </motion.div>
             </div>
 
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
-              Discover Swimming <br className="hidden md:block" />
+              Discover Your Perfect <br className="hidden md:block" />
               <span className="relative inline-block">
-                <span className="relative z-10">Courses for All Levels</span>
+                <span className="relative z-10">Swimming Course</span>
                 <motion.span
-                  className="absolute bottom-2 left-0 w-full h-3 bg-cyan-400/30 rounded-lg -z-0"
+                  className="absolute bottom-2 left-0 w-full h-3 bg-indigo-400/30 rounded-lg -z-0"
                   initial={{ width: 0 }}
                   animate={{ width: "100%" }}
                   transition={{ delay: 0.5, duration: 0.8 }}
@@ -546,14 +569,14 @@ export default function AllCoursesPage() {
             </h1>
 
             <p className="text-lg md:text-xl text-white/80 max-w-3xl mx-auto mb-10 leading-relaxed">
-              From beginner lessons to advanced technique training, find the perfect swimming course to help you achieve
-              your aquatic goals.
+              Browse our comprehensive catalog of swimming courses designed for all ages and skill levels. Find the
+              perfect class to help you achieve your aquatic goals.
             </p>
 
             {/* Search Bar */}
             <div className="max-w-3xl mx-auto relative">
               <motion.div
-                className={`relative ${searchFocused ? "ring-4 ring-cyan-300/30" : ""} transition-all duration-300 rounded-full shadow-lg`}
+                className={`relative ${searchFocused ? "ring-4 ring-indigo-300/30" : ""} transition-all duration-300 rounded-full shadow-lg`}
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
@@ -561,7 +584,7 @@ export default function AllCoursesPage() {
                 <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <input
                   type="text"
-                  placeholder="Search by course name, instructor, or level..."
+                  placeholder="Search for courses by name, level, or instructor..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onFocus={() => setSearchFocused(true)}
@@ -595,7 +618,7 @@ export default function AllCoursesPage() {
                     <Filter className="h-4 w-4" />
                     <span className="hidden sm:inline">Filters</span>
                     {activeFilterCount > 0 && (
-                      <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-cyan-500 text-white text-xs flex items-center justify-center">
+                      <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-indigo-500 text-white text-xs flex items-center justify-center">
                         {activeFilterCount}
                       </span>
                     )}
@@ -615,7 +638,7 @@ export default function AllCoursesPage() {
                     <span className="text-white/70 text-sm">Active filters:</span>
                     {courseFilters.level && (
                       <motion.span
-                        className="px-3 py-1 rounded-full text-xs bg-cyan-600/80 backdrop-blur-sm text-white flex items-center gap-1"
+                        className="px-3 py-1 rounded-full text-xs bg-indigo-600/80 backdrop-blur-sm text-white flex items-center gap-1"
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
                       >
@@ -628,7 +651,7 @@ export default function AllCoursesPage() {
                     )}
                     {courseFilters.priceRange && (
                       <motion.span
-                        className="px-3 py-1 rounded-full text-xs bg-cyan-600/80 backdrop-blur-sm text-white flex items-center gap-1"
+                        className="px-3 py-1 rounded-full text-xs bg-indigo-600/80 backdrop-blur-sm text-white flex items-center gap-1"
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
                       >
@@ -641,7 +664,7 @@ export default function AllCoursesPage() {
                     )}
                     {courseFilters.duration && (
                       <motion.span
-                        className="px-3 py-1 rounded-full text-xs bg-cyan-600/80 backdrop-blur-sm text-white flex items-center gap-1"
+                        className="px-3 py-1 rounded-full text-xs bg-indigo-600/80 backdrop-blur-sm text-white flex items-center gap-1"
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
                       >
@@ -654,7 +677,7 @@ export default function AllCoursesPage() {
                     )}
                     {courseFilters.location && (
                       <motion.span
-                        className="px-3 py-1 rounded-full text-xs bg-cyan-600/80 backdrop-blur-sm text-white flex items-center gap-1"
+                        className="px-3 py-1 rounded-full text-xs bg-indigo-600/80 backdrop-blur-sm text-white flex items-center gap-1"
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
                       >
@@ -667,7 +690,7 @@ export default function AllCoursesPage() {
                     )}
                     {courseFilters.instructor && (
                       <motion.span
-                        className="px-3 py-1 rounded-full text-xs bg-cyan-600/80 backdrop-blur-sm text-white flex items-center gap-1"
+                        className="px-3 py-1 rounded-full text-xs bg-indigo-600/80 backdrop-blur-sm text-white flex items-center gap-1"
                         initial={{ scale: 0.8 }}
                         animate={{ scale: 1 }}
                       >
@@ -690,52 +713,13 @@ export default function AllCoursesPage() {
                 )}
               </AnimatePresence>
             </div>
-
-            {/* Quick Filter Buttons */}
-            <motion.div
-              className="flex flex-wrap justify-center gap-3 mt-8"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
-            >
-              <Button
-                variant="outline"
-                className="rounded-full border-white/20 text-white hover:bg-white/10 backdrop-blur-sm"
-                onClick={() => {
-                  setCourseFilters({ ...courseFilters, level: "Beginner" })
-                  scrollToResults()
-                }}
-              >
-                <Users className="w-4 h-4 mr-2" /> Beginner Courses
-              </Button>
-              <Button
-                variant="outline"
-                className="rounded-full border-white/20 text-white hover:bg-white/10 backdrop-blur-sm"
-                onClick={() => {
-                  setCourseFilters({ ...courseFilters, priceRange: "0-200" })
-                  scrollToResults()
-                }}
-              >
-                <Award className="w-4 h-4 mr-2" /> Under $200
-              </Button>
-              <Button
-                variant="outline"
-                className="rounded-full border-white/20 text-white hover:bg-white/10 backdrop-blur-sm"
-                onClick={() => {
-                  setCourseFilters({ ...courseFilters, duration: "weeks" })
-                  scrollToResults()
-                }}
-              >
-                <Clock className="w-4 h-4 mr-2" /> Multi-Week Programs
-              </Button>
-            </motion.div>
           </motion.div>
         </div>
 
         {/* Wave Divider */}
         <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
           <svg
-            className={`relative block w-full h-12 sm:h-16 ${isDarkMode ? "text-slate-900" : "text-blue-50"}`}
+            className={`relative block w-full h-12 sm:h-16 ${isDarkMode ? "text-slate-900" : "text-indigo-50"}`}
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 1200 120"
             preserveAspectRatio="none"
@@ -748,8 +732,39 @@ export default function AllCoursesPage() {
         </div>
       </div>
 
-      <div ref={scrollRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Category Navigation */}
+        <div className="mb-8 overflow-x-auto pb-2">
+          <div className="flex space-x-2 min-w-max">
+            <div
+              className={`rounded-full ${activeCategory === "all" ? "bg-indigo-600 text-white" : "bg-white text-gray-800 border border-gray-300"} px-4 py-2 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200`}
+              onClick={() => setActiveCategory("all")}
+            >
+              <Layers className="w-4 h-4 mr-2" /> All Courses
+            </div>
+            <div
+              className={`rounded-full ${activeCategory === "beginner" ? "bg-indigo-600 text-white" : "bg-white text-gray-800 border border-gray-300"} px-4 py-2 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200`}
+              onClick={() => setActiveCategory("beginner")}
+            >
+              <FaSwimmer className="mr-2" /> Beginner
+            </div>
+            <div
+              className={`rounded-full ${activeCategory === "intermediate" ? "bg-indigo-600 text-white" : "bg-white text-gray-800 border border-gray-300"} px-4 py-2 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200`}
+              onClick={() => setActiveCategory("intermediate")}
+            >
+              <FaSwimmer className="mr-2" /> Intermediate
+            </div>
+            <div
+              className={`rounded-full ${activeCategory === "advanced" ? "bg-indigo-600 text-white" : "bg-white text-gray-800 border border-gray-300"} px-4 py-2 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200`}
+              onClick={() => setActiveCategory("advanced")}
+            >
+              <FaSwimmer className="mr-2" /> Advanced
+            </div>
+          </div>
+        </div>
+
         {/* Filters Panel */}
+        <div ref={scrollRef}></div>
         <AnimatePresence>
           {showFilters && (
             <motion.div
@@ -767,7 +782,7 @@ export default function AllCoursesPage() {
                     className={`text-lg font-semibold flex items-center ${isDarkMode ? "text-white" : "text-gray-800"}`}
                   >
                     <Filter className="h-5 w-5 mr-2" />
-                    Filter Courses
+                    Refine Course Search
                   </h3>
                   <IconButton
                     icon={<X className={`h-5 w-5 ${isDarkMode ? "text-gray-400" : "text-gray-600"}`} />}
@@ -782,58 +797,74 @@ export default function AllCoursesPage() {
                     Quick Filters
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant={courseFilters.level === "Beginner" ? "primary" : "outline"}
+                    <div
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200 ${
+                        courseFilters.level === "Beginner"
+                          ? "bg-indigo-600 text-white"
+                          : isDarkMode
+                            ? "bg-slate-700 text-gray-300 border border-slate-600"
+                            : "bg-white text-gray-700 border border-gray-300"
+                      }`}
                       onClick={() =>
                         setCourseFilters({
                           ...courseFilters,
                           level: courseFilters.level === "Beginner" ? "" : "Beginner",
                         })
                       }
-                      className={`rounded-full ${courseFilters.level !== "Beginner" && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
                     >
-                      <Users className="w-3 h-3 mr-1" /> Beginner
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={courseFilters.level === "Intermediate" ? "primary" : "outline"}
+                      <HiOutlineAcademicCap className="w-3 h-3 mr-1" /> Beginner
+                    </div>
+                    <div
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200 ${
+                        courseFilters.level === "Intermediate"
+                          ? "bg-indigo-600 text-white"
+                          : isDarkMode
+                            ? "bg-slate-700 text-gray-300 border border-slate-600"
+                            : "bg-white text-gray-700 border border-gray-300"
+                      }`}
                       onClick={() =>
                         setCourseFilters({
                           ...courseFilters,
                           level: courseFilters.level === "Intermediate" ? "" : "Intermediate",
                         })
                       }
-                      className={`rounded-full ${courseFilters.level !== "Intermediate" && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
                     >
                       Intermediate
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={courseFilters.level === "Advanced" ? "primary" : "outline"}
+                    </div>
+                    <div
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200 ${
+                        courseFilters.level === "Advanced"
+                          ? "bg-indigo-600 text-white"
+                          : isDarkMode
+                            ? "bg-slate-700 text-gray-300 border border-slate-600"
+                            : "bg-white text-gray-700 border border-gray-300"
+                      }`}
                       onClick={() =>
                         setCourseFilters({
                           ...courseFilters,
                           level: courseFilters.level === "Advanced" ? "" : "Advanced",
                         })
                       }
-                      className={`rounded-full ${courseFilters.level !== "Advanced" && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
                     >
                       Advanced
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={courseFilters.priceRange === "0-200" ? "primary" : "outline"}
+                    </div>
+                    <div
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200 ${
+                        courseFilters.priceRange === "0-200"
+                          ? "bg-indigo-600 text-white"
+                          : isDarkMode
+                            ? "bg-slate-700 text-gray-300 border border-slate-600"
+                            : "bg-white text-gray-700 border border-gray-300"
+                      }`}
                       onClick={() =>
                         setCourseFilters({
                           ...courseFilters,
                           priceRange: courseFilters.priceRange === "0-200" ? "" : "0-200",
                         })
                       }
-                      className={`rounded-full ${courseFilters.priceRange !== "0-200" && isDarkMode ? "border-slate-700 text-gray-300" : ""}`}
                     >
                       Under $200
-                    </Button>
+                    </div>
                   </div>
                 </div>
 
@@ -969,7 +1000,7 @@ export default function AllCoursesPage() {
               {searchTerm && (
                 <span
                   className={`ml-3 px-3 py-1 rounded-full text-sm ${
-                    isDarkMode ? "bg-slate-700 text-cyan-400" : "bg-blue-100 text-blue-800"
+                    isDarkMode ? "bg-slate-700 text-indigo-400" : "bg-indigo-100 text-indigo-800"
                   }`}
                 >
                   "{searchTerm}"
@@ -984,8 +1015,8 @@ export default function AllCoursesPage() {
                   className={`p-2 rounded-l-md border ${isDarkMode ? "border-slate-700" : "border-gray-300"} ${
                     viewMode === "grid"
                       ? isDarkMode
-                        ? "bg-slate-700 text-white"
-                        : "bg-blue-50 text-blue-600"
+                        ? "bg-indigo-900 text-white"
+                        : "bg-indigo-50 text-indigo-600"
                       : isDarkMode
                         ? "bg-slate-800 text-gray-400"
                         : "bg-white text-gray-500"
@@ -1013,8 +1044,8 @@ export default function AllCoursesPage() {
                   } ${
                     viewMode === "list"
                       ? isDarkMode
-                        ? "bg-slate-700 text-white"
-                        : "bg-blue-50 text-blue-600"
+                        ? "bg-indigo-900 text-white"
+                        : "bg-indigo-50 text-indigo-600"
                       : isDarkMode
                         ? "bg-slate-800 text-gray-400"
                         : "bg-white text-gray-500"
@@ -1062,10 +1093,10 @@ export default function AllCoursesPage() {
               <div className="max-w-md mx-auto">
                 <div
                   className={`w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                    isDarkMode ? "bg-slate-700" : "bg-blue-50"
+                    isDarkMode ? "bg-slate-700" : "bg-indigo-50"
                   }`}
                 >
-                  <Search className={`h-10 w-10 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                  <Search className={`h-10 w-10 ${isDarkMode ? "text-indigo-400" : "text-indigo-500"}`} />
                 </div>
                 <h3 className={`text-xl font-semibold mb-2 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
                   No courses found
@@ -1108,11 +1139,15 @@ export default function AllCoursesPage() {
                 >
                   <div className="flex flex-col md:flex-row">
                     <div className="relative md:w-1/4 h-48 md:h-auto">
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-500 opacity-20"></div>
-                      <img src={course.image || "/placeholder.svg?key=25f2a"} alt={course.title} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-500 opacity-20"></div>
+                      <img
+                        src={course.image || "/placeholder.svg?key=25f2a"}
+                        alt={course.title}
+                        className="w-full h-full object-cover"
+                      />
                       <div
                         className={`absolute top-3 left-3 px-2 py-1 rounded-md text-xs font-semibold ${
-                          isDarkMode ? "bg-slate-900/80 text-white" : "bg-white/80 text-blue-800"
+                          isDarkMode ? "bg-slate-900/80 text-white" : "bg-indigo-800/90 text-white"
                         } backdrop-blur-sm`}
                       >
                         {course.level}
@@ -1124,7 +1159,7 @@ export default function AllCoursesPage() {
                           <h3 className={`font-bold text-xl ${isDarkMode ? "text-white" : "text-gray-800"}`}>
                             {course.title}
                           </h3>
-                          <p className={isDarkMode ? "text-cyan-400 font-medium" : "text-blue-600 font-medium"}>
+                          <p className={isDarkMode ? "text-indigo-400 font-medium" : "text-indigo-600 font-medium"}>
                             {course.focus}
                           </p>
                         </div>
@@ -1144,7 +1179,7 @@ export default function AllCoursesPage() {
                       <div className="flex flex-wrap gap-2 mb-4">
                         <span
                           className={`text-xs px-2 py-1 rounded-full ${
-                            isDarkMode ? "bg-slate-700 text-cyan-300" : "bg-blue-50 text-blue-700"
+                            isDarkMode ? "bg-slate-700 text-indigo-300" : "bg-indigo-50 text-indigo-700"
                           }`}
                         >
                           {course.duration}
@@ -1171,28 +1206,24 @@ export default function AllCoursesPage() {
 
                       <div className="mt-auto flex items-center justify-between">
                         <div className="flex items-center text-sm">
-                          <MapPin className={isDarkMode ? "text-cyan-500 mr-2 h-4 w-4" : "text-red-500 mr-2 h-4 w-4"} />
-                          <span className={isDarkMode ? "text-gray-300" : "text-gray-600"}>
-                            {course.location.address}
+                          <div className="relative h-8 w-8 rounded-full overflow-hidden mr-2">
+                            <img
+                              src={course.instructorImage || "/placeholder.svg"}
+                              alt={`Instructor ${course.instructor}`}
+                              className="object-cover w-full h-full"
+                            />
+                          </div>
+                          <span className={`font-medium ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                            {course.instructor}
                           </span>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center">
-                            <span className={`mr-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                              Instructor:
-                            </span>
-                            <span className={`font-medium ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                              {course.instructor}
-                            </span>
-                          </div>
-                          <Button
-                            variant={isDarkMode ? "outline" : "secondary"}
-                            size="sm"
-                            className={isDarkMode ? "border-slate-700" : ""}
-                          >
-                            View Details
-                          </Button>
-                        </div>
+                        <Button
+                          variant={isDarkMode ? "outline" : "secondary"}
+                          size="sm"
+                          className={isDarkMode ? "border-slate-700" : ""}
+                        >
+                          <HiAcademicCap className="mr-1" /> Enroll Now
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -1201,7 +1232,6 @@ export default function AllCoursesPage() {
             </div>
           )}
         </div>
-
 
         {/* Pagination */}
         {filteredCourses.length > 0 && (
