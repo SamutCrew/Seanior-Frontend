@@ -24,7 +24,6 @@ export async function fetchInstructorsAdmin(): Promise<InstructorAdmin[]> {
     firebase_uid: instructor.firebase_uid,
     email: instructor.email,
     name: instructor.name,
-    password: instructor.password, // Note: Handle sensitive data carefully
     gender: instructor.gender,
     address: instructor.address,
     phone_number: instructor.phone_number,
