@@ -37,6 +37,21 @@ export interface Instructor {
   description: InstructorDescription;
 }
 
+export interface InstructorAdmin {
+  id: string;
+  firebase_uid: string;
+  email: string;
+  name: string;
+  gender: string;
+  address: string;
+  phone_number: string;
+  profile_img: string;
+  user_type: string;
+  description: InstructorDescription;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Course {
   id: number;
   title: string;

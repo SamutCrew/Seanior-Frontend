@@ -8,12 +8,18 @@ export const checkAlreadyHaveUserInDb = async (firebase_uid: string) => {
   const url = APIEndpoints.USER.RETRIEVE.CHECK_ISEXIST;
   try {
     const response = await apiClient.post(url, { firebase_uid });
-    return response.data;
-  } catch (error: any) {
-    if (error.response && error.response.status === 404) {
+    const data = response.data;
+    console.log('Raw checkUser response:', { status: response.status, data });
+    if (data === null || data === undefined) {
       console.log('User not found in DB, returning null');
-      return null; // Treat 404 as "user not found"
+      return null;
     }
+    if (!data.firebase_uid) {
+      console.warn('Unexpected response from checkUser API:', data);
+      return null;
+    }
+    return data;
+  } catch (error: any) {
     console.error('Error checking user existence:', {
       message: error.message,
       response: error.response
@@ -23,6 +29,10 @@ export const checkAlreadyHaveUserInDb = async (firebase_uid: string) => {
           }
         : null,
     });
+    if (error.response && error.response.status === 404) {
+      console.log('User not found in DB, returning null');
+      return null; // Handle 404 as "not found"
+    }
     throw error;
   }
 };

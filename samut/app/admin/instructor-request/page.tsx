@@ -46,7 +46,6 @@ const InstructorRequest = () => {
       try {
         setLoading(true);
         const response = await getAllInstructorRequests();
-        console.log('API Response:', response); // Debug log
         // Handle different response structures
         if (Array.isArray(response)) {
           setRequests(response);
@@ -70,7 +69,6 @@ const InstructorRequest = () => {
   const handleViewDetails = async (requestId: string) => {
     try {
       const response = await getInstructorRequestById(requestId);
-      console.log('Request Details Response:', response); // Debug log
       setSelectedRequest(response.request || response);
       setIsModalOpen(true);
     } catch (err) {
@@ -124,7 +122,7 @@ const InstructorRequest = () => {
   }
 
   return (
-    <div className="p-4">
+    <div className="p-4 dark:text-white">
       <h1 className="text-2xl font-bold mb-4">Instructor Requests</h1>
       {successMessage && <p className="text-green-500 mb-4">{successMessage}</p>}
       {error && <p className="text-red-500 mb-4">{error}</p>}
@@ -187,7 +185,7 @@ const InstructorRequest = () => {
           <ModalHeader>Request Details</ModalHeader>
           <ModalBody>
             {selectedRequest && (
-                <div className="space-y-4">
+                <div className="space-y-4 dark:text-white">
                 <p><strong>Full Name:</strong> {selectedRequest.full_name}</p>
                 <p><strong>Phone Number:</strong> {selectedRequest.phone_number || 'N/A'}</p>
                 <p><strong>Address:</strong> {selectedRequest.address}</p>
