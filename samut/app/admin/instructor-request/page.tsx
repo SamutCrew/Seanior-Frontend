@@ -214,7 +214,7 @@ const InstructorRequest = () => {
                         <li>
                         <span className="font-medium">Facebook:</span>{' '}
                         <a
-                            href={`https://www.facebook.com/${selectedRequest.contact_channels.facebook}`}
+                            href={`${selectedRequest.contact_channels.facebook}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-500 hover:underline"
@@ -227,7 +227,7 @@ const InstructorRequest = () => {
                         <li>
                         <span className="font-medium">Instagram:</span>{' '}
                         <a
-                            href={`https://www.instagram.com/${selectedRequest.contact_channels.instagram}`}
+                            href={`${selectedRequest.contact_channels.instagram}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-500 hover:underline"
