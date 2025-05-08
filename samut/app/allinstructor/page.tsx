@@ -78,12 +78,42 @@ export default function InstructorsDirectoryPage() {
         setIsLoading(true)
         setError(null)
         const instructorData = await fetchInstructors()
-        console.log(instructorData)
+        console.log("FETCHED INSTRUCTORS DATA:", instructorData)
+        console.log("INSTRUCTOR COUNT:", instructorData.length)
+
+        // Log the first instructor to check its structure
+        if (instructorData.length > 0) {
+          console.log("FIRST INSTRUCTOR STRUCTURE:", JSON.stringify(instructorData[0], null, 2))
+        }
+
+        // Check for required fields
+        const validInstructors = instructorData.filter(
+          (inst) => inst && typeof inst.id !== "undefined" && typeof inst.name === "string",
+        )
+
+        console.log("VALID INSTRUCTORS COUNT:", validInstructors.length)
+
+        if (validInstructors.length === 0) {
+          console.error("NO VALID INSTRUCTORS FOUND IN DATA")
+          setError("No valid instructor data found. Please try again later.")
+          setIsLoading(false)
+          return
+        }
+
+        // Check for location data specifically
+        const instructorsWithLocation = instructorData.filter(
+          (inst) => inst.description?.location?.lat && inst.description?.location?.lng,
+        )
+        console.log("INSTRUCTORS WITH VALID LOCATION:", instructorsWithLocation.length)
+
         setInstructors(instructorData)
         setFilteredInstructors(instructorData)
 
         // Set featured instructors (top 3 by rating)
-        const featured = [...instructorData].sort((a, b) => b.description.rating - a.description.rating).slice(0, 3)
+        const featured = [...instructorData]
+          .filter((inst) => inst.description?.rating)
+          .sort((a, b) => (b.description?.rating || 0) - (a.description?.rating || 0))
+          .slice(0, 3)
         setFeaturedInstructors(featured)
 
         setIsLoading(false)
@@ -112,10 +142,12 @@ export default function InstructorsDirectoryPage() {
 
   // Get user's current location
   const getCurrentLocation = () => {
+    console.log("GETTING CURRENT LOCATION")
     setIsLoadingLocation(true)
     setLocationError(null)
 
     if (!navigator.geolocation) {
+      console.log("GEOLOCATION NOT SUPPORTED")
       setLocationError("Geolocation is not supported by your browser")
       setIsLoadingLocation(false)
       return
@@ -128,12 +160,14 @@ export default function InstructorsDirectoryPage() {
           lng: position.coords.longitude,
           address: "Your current location",
         }
+        console.log("CURRENT LOCATION OBTAINED:", location)
         setUserLocation(location)
         setSelectedLocation(location)
         setMapCenter({ lat: location.lat, lng: location.lng })
         setIsLoadingLocation(false)
       },
       (error) => {
+        console.log("GEOLOCATION ERROR:", error)
         setLocationError("Unable to retrieve your location")
         setIsLoadingLocation(false)
       },
@@ -142,6 +176,7 @@ export default function InstructorsDirectoryPage() {
 
   // Handle map click to select a new location
   const handleMapClick = (location: { lat: number; lng: number }) => {
+    console.log("MAP CLICKED:", location)
     const newLocation = {
       lat: location.lat,
       lng: location.lng,
@@ -161,6 +196,12 @@ export default function InstructorsDirectoryPage() {
 
   // Helper function to calculate distance between two coordinates (in km)
   function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+    // For debugging specific problematic coordinates
+    if (!lat1 || !lon1 || !lat2 || !lon2) {
+      console.warn("INVALID COORDINATES IN getDistance:", { lat1, lon1, lat2, lon2 })
+      return Number.POSITIVE_INFINITY // Return a large value to exclude this result
+    }
+
     const R = 6371 // Radius of the earth in km
     const dLat = deg2rad(lat2 - lat1)
     const dLon = deg2rad(lon2 - lon1)
@@ -168,7 +209,18 @@ export default function InstructorsDirectoryPage() {
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-    return R * c // Distance in km
+    const distance = R * c // Distance in km
+
+    // Log only occasionally to avoid console spam
+    if (Math.random() < 0.05) {
+      console.log("DISTANCE CALCULATION:", {
+        from: { lat: lat1, lng: lon1 },
+        to: { lat: lat2, lng: lon2 },
+        distance: distance,
+      })
+    }
+
+    return distance
   }
 
   function deg2rad(deg: number) {
@@ -177,7 +229,16 @@ export default function InstructorsDirectoryPage() {
 
   // Apply filters and search
   useEffect(() => {
+    console.log("APPLYING FILTERS - Current state:", {
+      searchTerm,
+      activeCategory,
+      instructorFilters,
+      userLocation,
+      selectedLocation,
+    })
+
     let results = instructors
+    console.log("INITIAL RESULTS COUNT:", results.length)
 
     // Apply search term
     if (searchTerm) {
@@ -192,6 +253,7 @@ export default function InstructorsDirectoryPage() {
           instructor.description?.bio?.toLowerCase().includes(term) ||
           false,
       )
+      console.log("AFTER SEARCH TERM FILTER:", results.length)
     }
 
     // Apply category filter
@@ -203,6 +265,7 @@ export default function InstructorsDirectoryPage() {
       } else if (activeCategory === "advanced") {
         results = results.filter((instructor) => instructor.description?.levels?.includes("Advanced") || false)
       }
+      console.log("AFTER CATEGORY FILTER:", results.length)
     }
 
     // Apply style filter
@@ -251,6 +314,12 @@ export default function InstructorsDirectoryPage() {
     if (instructorFilters.maxDistance > 0 && (userLocation || selectedLocation)) {
       const referenceLocation = selectedLocation || userLocation
       if (referenceLocation) {
+        console.log("APPLYING DISTANCE FILTER:", {
+          maxDistance: instructorFilters.maxDistance,
+          referenceLocation,
+        })
+
+        const beforeCount = results.length
         results = results.filter((instructor) => {
           if (!instructor.description?.location?.lat || !instructor.description?.location?.lng) {
             return false
@@ -264,17 +333,33 @@ export default function InstructorsDirectoryPage() {
           )
           return distance <= instructorFilters.maxDistance
         })
+        console.log("AFTER DISTANCE FILTER:", {
+          before: beforeCount,
+          after: results.length,
+          filtered: beforeCount - results.length,
+        })
       }
     }
 
     // Apply sorting
+    console.log("APPLYING SORT:", sortOption)
     results = sortInstructors(results, sortOption)
+
+    console.log("FINAL FILTERED RESULTS:", results.length)
+    if (results.length > 0) {
+      console.log("SAMPLE RESULT:", results[0])
+    }
 
     setFilteredInstructors(results)
   }, [searchTerm, instructorFilters, instructors, userLocation, selectedLocation, sortOption, activeCategory])
 
   // Sort Instructors based on selected option
   const sortInstructors = (instructorList: Instructor[], option: string) => {
+    console.log("SORTING INSTRUCTORS:", {
+      count: instructorList.length,
+      option,
+    })
+
     const sorted = [...instructorList]
 
     switch (option) {
@@ -288,6 +373,7 @@ export default function InstructorsDirectoryPage() {
         if (userLocation || selectedLocation) {
           const referenceLocation = selectedLocation || userLocation
           if (referenceLocation) {
+            console.log("SORTING BY DISTANCE:", referenceLocation)
             return sorted.sort((a, b) => {
               if (
                 !a.description?.location?.lat ||
@@ -324,7 +410,8 @@ export default function InstructorsDirectoryPage() {
   }
 
   const viewInstructorProfile = (id: number) => {
-    router.push(`/allinstructor/1`)
+    console.log("NAVIGATING TO INSTRUCTOR PROFILE:", id)
+    router.push(`/allinstructor/${id}`)
   }
 
   // Check if any filters are active
@@ -385,6 +472,12 @@ export default function InstructorsDirectoryPage() {
       </div>
     )
   }
+
+  console.log("RENDERING INSTRUCTOR PAGE WITH:", {
+    filteredInstructorsCount: filteredInstructors.length,
+    viewMode,
+    isDarkMode,
+  })
 
   return (
     <div className={`min-h-screen ${isDarkMode ? "bg-slate-900" : "bg-gradient-to-b from-blue-50 to-white"}`}>
@@ -722,6 +815,24 @@ export default function InstructorsDirectoryPage() {
           </div>
         </div>
 
+        {/* Debug Info */}
+        <div className="mb-4 p-4 bg-yellow-100 border border-yellow-300 rounded-md">
+          <h3 className="font-bold text-yellow-800 mb-2">Debug Information</h3>
+          <p className="text-yellow-800">Instructors found: {filteredInstructors.length}</p>
+          <p className="text-yellow-800">View mode: {viewMode}</p>
+          <p className="text-yellow-800">Active category: {activeCategory}</p>
+          <p className="text-yellow-800">Active filters: {activeFilterCount}</p>
+          <div className="mt-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => console.log("FILTERED INSTRUCTORS:", filteredInstructors)}
+            >
+              Log Instructors to Console
+            </Button>
+          </div>
+        </div>
+
         {/* Filters Panel */}
         <div ref={scrollRef}></div>
         <AnimatePresence>
@@ -1003,7 +1114,7 @@ export default function InstructorsDirectoryPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {filteredInstructors.map((instructor, index) => (
                 <motion.div
-                  key={instructor.id}
+                  key={instructor.id || index}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
@@ -1022,7 +1133,7 @@ export default function InstructorsDirectoryPage() {
             <div className="flex flex-col gap-4 mb-12">
               {filteredInstructors.map((instructor, index) => (
                 <motion.div
-                  key={instructor.id}
+                  key={instructor.id || index}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -1077,7 +1188,10 @@ export default function InstructorsDirectoryPage() {
                         {instructor.description?.styles?.map((style, index) => (
                           <span
                             key={index}
-                            className={`text-xs px-2 py-1 rounded-full ${
+                            className={`text-xs px-2  => (
+                          <span
+                            key={index}
+                            className={\`text-xs px-2 py-1 rounded-full ${
                               isDarkMode ? "bg-slate-700 text-cyan-300" : "bg-blue-50 text-blue-700"
                             }`}
                           >

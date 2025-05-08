@@ -1,12 +1,18 @@
 "use client"
 
 import { FaMapMarkerAlt } from "react-icons/fa"
-import Image from "next/image"
 import { motion } from "framer-motion"
 import type { InstructorCardProps } from "@/types"
 
 export const InstructorCard = ({ instructor, userLocation, isDarkMode = false }: InstructorCardProps) => {
-  console.log("InstructorCard", instructor, userLocation, isDarkMode)
+  console.log("RENDERING INSTRUCTOR CARD:", {
+    id: instructor.id,
+    name: instructor.name,
+    hasProfileImg: !!instructor.profile_img,
+    hasDescription: !!instructor.description,
+    hasLocation: instructor.description?.location ? true : false,
+  })
+
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371
     const dLat = deg2rad(lat2 - lat1)
@@ -38,12 +44,11 @@ export const InstructorCard = ({ instructor, userLocation, isDarkMode = false }:
     >
       {/* instructor Image */}
       <div className="relative h-64 overflow-hidden">
-        <Image
+        {/* Use regular img tag instead of Image component to avoid potential issues */}
+        <img
           src={instructor.profile_img || "/placeholder.svg?height=400&width=600&query=swimming instructor"}
           alt={instructor.name}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <div
           className={`absolute inset-0 bg-gradient-to-t ${
@@ -102,7 +107,7 @@ export const InstructorCard = ({ instructor, userLocation, isDarkMode = false }:
         </div>
 
         <p className={`mb-6 line-clamp-3 flex-grow ${isDarkMode ? "text-slate-300" : "text-gray-600"}`}>
-          Passionate swimming instructor with a focus on technique and confidence.
+          {instructor.description?.bio || "Passionate swimming instructor with a focus on technique and confidence."}
         </p>
 
         <div className="flex flex-wrap gap-2 mb-4">
