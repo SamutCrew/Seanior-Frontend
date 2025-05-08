@@ -51,4 +51,12 @@ export const APIEndpoints = Object.freeze({
     PAYMENT: {
         CREATE_PROMPTPAY_SESSION: `${API_BASE_URL}/payment/create-checkout-session`,
       },
+    NOTIFICATION: {
+        RETRIEVE: {
+            BY_USER_ID: "/notifications/user/[userId]",
+        },
+        UPDATE: {
+            READ: "/notifications/read/[notificationId]",
+        },
+    }
 })    

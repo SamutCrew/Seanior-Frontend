@@ -8,6 +8,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { getAuthUser } from "@/context/authToken"
+import NotificationPanel from '@/components/Partial/Notification/NotificationPanel'
 
 // Add these imports at the top of the file
 import { useAuth } from "@/context/AuthContext"
@@ -298,7 +299,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
           {/* Conditional rendering based on authentication status */}
           {user ? (
             // User is authenticated - show user profile section
-            <div className="relative">
+            <div className="relative flex flex-row">
               <motion.button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 whileHover={{ scale: 1.05 }}
@@ -346,20 +347,20 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
                   }`}
                 />
               </motion.button>
-
+                    
               {/* User dropdown menu */}
               {isUserMenuOpen && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2 }}
-                  className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 z-50 ${
+                  className={`absolute right-10 mt-12 w-48 rounded-md shadow-lg py-1 z-50 ${
                     isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white border border-gray-200"
                   }`}
                 >
                   {user.user_type === "admin" || user.user_type === "user" ? (
                     <Link
-                      href="/become-teacher"
+                      href="/become-instructor"
                       className={`flex items-center gap-2 px-4 py-2 text-sm ${
                         isDarkMode ? "text-gray-200 hover:bg-slate-700" : "text-gray-700 hover:bg-gray-100"
                       }`}
@@ -413,6 +414,9 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
                   </button>
                 </motion.div>
               )}
+              <div>
+                <NotificationPanel />
+              </div>
             </div>
           ) : (
             // User is not authenticated - show login button
