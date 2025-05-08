@@ -5,3 +5,4 @@ export * from './admin_api';
 export * from './instructor_request_api';
 export * from './instructorCourseApi';
 export * from './notification_api';
+export * from './course_api';
