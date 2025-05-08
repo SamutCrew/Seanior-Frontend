@@ -44,13 +44,17 @@ export const APIEndpoints = Object.freeze({
         },
     },
     COURSE: {
-    RETRIEVE: {
-        ALL: "/courses/retrieve/all",
+        RETRIEVE: {
+          ALL: "/courses/retrieve/getAllCourses",
+          BY_ID: "/courses/retrieve/[courseId]",
         },
-    },
+        CREATE: "/courses/create",
+        UPDATE: "/courses/update/[courseId]",
+        DELETE: "/courses/delete/[courseId]",
+      },
     PAYMENT: {
         CREATE_PROMPTPAY_SESSION: `${API_BASE_URL}/payment/create-checkout-session`,
-      },
+    },
     NOTIFICATION: {
         RETRIEVE: {
             BY_USER_ID: "/notifications/user/[userId]",
@@ -58,5 +62,5 @@ export const APIEndpoints = Object.freeze({
         UPDATE: {
             READ: "/notifications/read/[notificationId]",
         },
-    }
+    },
 })    
