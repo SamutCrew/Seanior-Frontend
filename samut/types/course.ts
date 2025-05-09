@@ -2,29 +2,40 @@ export type CourseType = "private-location" | "public-pool" | "teacher-pool"
 export type CourseStatus = "open" | "in-progress" | "completed"
 
 export interface Course {
-  id: number
-  title: string
-  focus: string
-  level: string
-  duration: string
-  schedule: string
-  instructor: string
-  instructorId?: string
-  instructorImage?: string
-  rating: number
-  students: number
-  price: number
-  location: {
-    address: string
-  }
-  courseType: CourseType
-  status?: CourseStatus
-  description?: string
-  curriculum?: string[]
-  requirements?: string[]
-  maxStudents?: number
-  image?: string
-  progress?: CourseProgress
+  course_id: string;
+  course_name: string;
+  instructor_id: string;
+  price: number;
+  pool_type: string;
+  location: string;
+  description: string;
+  course_duration: number;
+  study_frequency: number;
+  days_study: number;
+  number_of_total_sessions: number;
+  level: string;
+  schedule: string;
+  rating: number;
+  students: number;
+  max_students: number;
+  image: string;
+  created_at: string;
+  updated_at: string;
+  instructor: {
+    user_id: string;
+    firebase_uid: string;
+    email: string;
+    name: string;
+    password: string | null;
+    gender: string | null;
+    address: string | null;
+    phone_number: string | null;
+    profile_img: string | null;
+    user_type: string | null;
+    description: string | null;
+    created_at: string;
+    updated_at: string;
+  };
 }
 
 export interface CourseProgress {
