@@ -4,6 +4,32 @@ import apiClient from "@/api/api_client"
 import { APIEndpoints } from "@/constants/apiEndpoints"
 import type { Course } from "@/types/course"
 
+const BASE_URL = "/swimming-course"
+
+// Interface for course data
+export interface CourseDbData {
+  course_name: string
+  pool_type: string
+  location: string
+  description: string
+  course_duration: number
+  study_frequency: number
+  days_study: number
+  number_of_total_sessions: number
+  image: string
+  level: string
+  max_students: number
+  price: number
+  rating: number
+  schedule: string
+  students: number
+  instructor: {
+    connect: {
+      user_id: string
+    }
+  }
+}
+
 export const getAllCourses = async () => {
   const url = APIEndpoints.COURSE.RETRIEVE.ALL
   try {
@@ -108,3 +134,4 @@ export const deleteCourse = async (courseId: string) => {
     throw error
   }
 }
+
