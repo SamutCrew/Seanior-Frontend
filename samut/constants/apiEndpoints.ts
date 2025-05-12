@@ -20,6 +20,8 @@ export const APIEndpoints = Object.freeze({
           UPLOAD_PROFILE_IMAGE: '/resources/upload-profile-image/[userId]',
           UPLOAD_ID_CARD: '/resources/upload-id-card/[userId]',
           UPLOAD_SWIMMING_LICENSE: '/resources/upload-swimming-license/[userId]',
+          UPLOAD_COURSE_IMAGE: '/resources/upload-course-image/[courseId]',
+          UPLOAD_POOL_IMAGE: '/resources/upload-pool-image/[courseId]',
         },
         RETRIEVE: {
           ALL: '/resources/retrieve/all',

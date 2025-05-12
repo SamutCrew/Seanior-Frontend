@@ -18,7 +18,8 @@ export interface Course {
   rating: number;
   students: number;
   max_students: number;
-  image: string;
+  course_image?: string;
+  pool_image?: string;
   created_at: string;
   updated_at: string;
   instructor: {
@@ -89,4 +90,10 @@ export interface StudentProgress {
   totalLessons: number
   lastAttendance: string
   notes: string
+}
+
+export interface ImageUploadResponse {
+  message: string;
+  resource_url: string;
+  resource_id: string;
 }
