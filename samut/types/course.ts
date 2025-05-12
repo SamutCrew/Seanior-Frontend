@@ -25,6 +25,14 @@ export interface Course {
   maxStudents?: number
   image?: string
   progress?: CourseProgress
+
+  // Add missing properties used in the API
+  study_frequency?: string
+  days_study?: number
+  number_of_total_sessions?: number
+  course_image?: string
+  created_at?: string
+  updated_at?: string
 }
 
 export interface CourseProgress {

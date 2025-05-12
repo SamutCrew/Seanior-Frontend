@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type { Course } from "@/types/course"
 import Modal from "@/components/UI/Modal"
 import { useAppSelector } from "@/app/redux"
@@ -10,22 +10,27 @@ import { createCourse } from "@/api/course_api"
 import { AlertType } from "@/types/AlertTypes"
 import AlertResponse from "@/components/Responseback/AlertResponse"
 import { motion, AnimatePresence } from "framer-motion"
+import OSMMapSelector from "@/components/Searchpage/OSMMAPSelector"
 import {
   FaInfoCircle,
   FaCalendarAlt,
-  FaClock,
   FaMapMarkerAlt,
-  FaUserFriends,
   FaBook,
   FaSwimmingPool,
   FaMoneyBillWave,
-  FaStar,
   FaImage,
   FaChevronDown,
   FaChevronUp,
   FaUser,
+  FaMapMarkedAlt,
+  FaPlus,
+  FaTimes,
+  FaWater,
+  FaUpload,
+  FaTrash,
 } from "react-icons/fa"
 import { Button } from "@/components/Common/Button"
+import { useAuth } from "@/context/AuthContext"
 
 interface CreateCourseModalProps {
   isOpen: boolean
@@ -46,55 +51,74 @@ interface CourseDbData {
   location: string
   description: string
   course_duration: number
-  study_frequency: number
+  study_frequency: string // Changed to string to match Prisma schema
   days_study: number
   number_of_total_sessions: number
-  image: string
+  course_image: string // Changed from image to course_image
+  // pool_image field removed from database submission
   level: string
   max_students: number
   price: number
   rating: number
-  schedule: string
+  schedule: string // JSON string
   students: number
   created_at: string
   updated_at: string
   instructor: {
     connect: {
-      user_id: string // Changed from id to user_id
+      user_id: string
     }
   }
 }
 
+// Define a type for schedule items
+interface ScheduleItem {
+  day: string
+  startTime: string
+  endTime: string
+}
+
+// Default images for courses
+const DEFAULT_COURSE_IMAGES = ["swimming-course-1.jpg", "swimming-course-2.jpg", "swimming-course-3.jpg", "default.jpg"]
+
 export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: CreateCourseModalProps) {
+  // Get user from Auth context - same as profile page
+  const { user, refreshUser } = useAuth()
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [apiDebugInfo, setApiDebugInfo] = useState<any>(null)
 
-  // Mock user data - replace with actual user context in production
-  const currentUser = {
-    user_id: "cmagf1kfm0000ta6gwb80i9xv", // Using user_id instead of id
-    name: "John Doe",
-    role: "instructor",
+  // Replace the getRandomImage function with:
+  const getRandomImage = () => {
+    const randomImage = DEFAULT_COURSE_IMAGES[Math.floor(Math.random() * DEFAULT_COURSE_IMAGES.length)]
+    // Set the preview when getting a random image
+    setTimeout(() => setImagePreview(randomImage), 0)
+    return randomImage
   }
 
   // Form state
   const [courseName, setCourseName] = useState("")
   const [poolType, setPoolType] = useState("")
   const [location, setLocation] = useState("")
+  const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null)
   const [description, setDescription] = useState("")
   const [courseDuration, setCourseDuration] = useState("")
   const [studyFrequency, setStudyFrequency] = useState("")
-  const [daysStudy, setDaysStudy] = useState("")
   const [numberOfTotalSessions, setNumberOfTotalSessions] = useState("")
-  const [image, setImage] = useState("default.jpg")
+  const [image, setImage] = useState(getRandomImage())
+  const [poolImage, setPoolImage] = useState("") // Keep for UI but don't send to database
   const [level, setLevel] = useState("")
-  const [maxStudents, setMaxStudents] = useState("")
   const [price, setPrice] = useState("")
-  const [rating, setRating] = useState("4.0")
-  const [schedule, setSchedule] = useState("")
-  const [students, setStudents] = useState("0")
+
+  // Default values for removed fields
+  const maxStudents = "10" // Default max students
+  const students = "0" // Default current students
+  const rating = "4.0" // Default rating
+
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([{ day: "", startTime: "", endTime: "" }])
 
   // Form section expansion state
   const [expandedSections, setExpandedSections] = useState({
@@ -105,12 +129,30 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
     debug: false,
   })
 
+  // New state variables for image upload
+  const [imagePreview, setImagePreview] = useState<string>("")
+  const [poolImagePreview, setPoolImagePreview] = useState<string>("")
+
+  // Initialize the image preview when the component mounts
+  useEffect(() => {
+    if (image && !imagePreview) {
+      setImagePreview(image)
+    }
+  }, [image, imagePreview])
+
   // Toggle section expansion
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections((prev) => ({
       ...prev,
       [section]: !prev[section],
     }))
+  }
+
+  // Handle location selection from map
+  const handleLocationSelect = (coords: { lat: number; lng: number }) => {
+    setLocationCoords(coords)
+    // You could also reverse geocode here to get the address
+    setLocation(`Latitude: ${coords.lat.toFixed(6)}, Longitude: ${coords.lng.toFixed(6)}`)
   }
 
   // Form validation
@@ -121,25 +163,19 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
 
     if (!courseName.trim()) newErrors.courseName = "Course name is required"
     if (!poolType) newErrors.poolType = "Pool type is required"
-    if (!location.trim()) newErrors.location = "Location is required"
+
+    // Only validate location if not students pool
+    if (poolType !== "students_pool" && !location.trim()) {
+      newErrors.location = "Location is required"
+    }
+
     if (!description.trim()) newErrors.description = "Description is required"
 
+    // Rest of validation remains the same
     if (!courseDuration) {
       newErrors.courseDuration = "Course duration is required"
     } else if (isNaN(Number(courseDuration)) || Number(courseDuration) <= 0) {
       newErrors.courseDuration = "Must be a positive number"
-    }
-
-    if (!studyFrequency) {
-      newErrors.studyFrequency = "Study frequency is required"
-    } else if (isNaN(Number(studyFrequency)) || Number(studyFrequency) <= 0) {
-      newErrors.studyFrequency = "Must be a positive number"
-    }
-
-    if (!daysStudy) {
-      newErrors.daysStudy = "Days of study is required"
-    } else if (isNaN(Number(daysStudy)) || Number(daysStudy) <= 0) {
-      newErrors.daysStudy = "Must be a positive number"
     }
 
     if (!numberOfTotalSessions) {
@@ -149,18 +185,21 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
     }
 
     if (!level) newErrors.level = "Level is required"
-    if (!schedule.trim()) newErrors.schedule = "Schedule is required"
-
-    if (!maxStudents) {
-      newErrors.maxStudents = "Maximum students is required"
-    } else if (isNaN(Number(maxStudents)) || Number(maxStudents) <= 0) {
-      newErrors.maxStudents = "Must be a positive number"
-    }
 
     if (!price) {
       newErrors.price = "Price is required"
     } else if (isNaN(Number(price)) || Number(price) < 0) {
       newErrors.price = "Must be a non-negative number"
+    }
+
+    // Validate schedule items
+    const hasValidSchedule = scheduleItems.some((item) => item.day && item.startTime && item.endTime)
+    if (!hasValidSchedule) {
+      newErrors.schedule = "At least one complete schedule is required"
+    }
+
+    if (!studyFrequency) {
+      newErrors.studyFrequency = "Study frequency is required"
     }
 
     setErrors(newErrors)
@@ -173,18 +212,16 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
     setCourseName("")
     setPoolType("")
     setLocation("")
+    setLocationCoords(null)
     setDescription("")
     setCourseDuration("")
     setStudyFrequency("")
-    setDaysStudy("")
     setNumberOfTotalSessions("")
-    setImage("default.jpg")
+    setImage(getRandomImage())
+    setPoolImage("")
     setLevel("")
-    setMaxStudents("")
     setPrice("")
-    setRating("4.0")
-    setSchedule("")
-    setStudents("0")
+    setScheduleItems([{ day: "", startTime: "", endTime: "" }])
 
     // Reset other state
     setErrors({})
@@ -193,38 +230,69 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
     setIsSubmitting(false)
     setApiDebugInfo(null)
 
+    // Reset image upload state
+    setImagePreview("")
+    setPoolImagePreview("")
+
     // Close modal
     onClose()
   }
 
   // Helper function to convert database-style object to Course type
   const mapDbDataToCourse = (dbData: CourseDbData): Partial<Course> => {
+    // Parse the schedule JSON string back to an array for display
+    let scheduleArray: string[] = []
+    try {
+      scheduleArray = JSON.parse(dbData.schedule)
+    } catch (e) {
+      console.error("Error parsing schedule JSON:", e)
+      // Fallback to empty array if parsing fails
+      scheduleArray = []
+    }
+
     return {
       id: 0, // This will be assigned by the database
       title: dbData.course_name,
       focus: dbData.description.substring(0, 50) + (dbData.description.length > 50 ? "..." : ""),
       level: dbData.level,
       duration: dbData.course_duration.toString(),
-      schedule: dbData.schedule,
-      instructor: currentUser?.name || "Current Instructor",
-      instructorId: currentUser.user_id, // Using user_id instead of id
+      schedule: scheduleArray.join(", "), // Join array for display
+      instructor: user?.name || "Current Instructor",
+      instructorId: user?.user_id, // Using user_id from Auth context
       rating: dbData.rating,
       students: dbData.students,
       price: dbData.price,
       location: {
-        address: dbData.location,
+        address: dbData.pool_type === "students_pool" ? "Student's Pool" : dbData.location,
       },
       courseType:
-        dbData.pool_type === "Online"
+        dbData.pool_type === "students_pool"
           ? "private-location"
-          : dbData.pool_type === "Offline"
-            ? "public-pool"
-            : "teacher-pool",
+          : dbData.pool_type === "instructor_pool"
+            ? "teacher-pool"
+            : "public-pool",
       status: "open",
       description: dbData.description,
       maxStudents: dbData.max_students,
-      image: dbData.image,
+      image: dbData.course_image, // Changed from image to course_image
     }
+  }
+
+  // Schedule item handlers
+  const addScheduleItem = () => {
+    setScheduleItems([...scheduleItems, { day: "", startTime: "", endTime: "" }])
+  }
+
+  const removeScheduleItem = (index: number) => {
+    if (scheduleItems.length > 1) {
+      setScheduleItems(scheduleItems.filter((_, i) => i !== index))
+    }
+  }
+
+  const handleScheduleChange = (index: number, field: keyof ScheduleItem, value: string) => {
+    const newItems = [...scheduleItems]
+    newItems[index][field] = value
+    setScheduleItems(newItems)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -234,15 +302,9 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
       // Find the first section with an error and expand it
       if (errors.courseName || errors.poolType || errors.location || errors.description) {
         setExpandedSections((prev) => ({ ...prev, basicInfo: true }))
-      } else if (
-        errors.courseDuration ||
-        errors.studyFrequency ||
-        errors.daysStudy ||
-        errors.numberOfTotalSessions ||
-        errors.schedule
-      ) {
+      } else if (errors.courseDuration || errors.studyFrequency || errors.numberOfTotalSessions || errors.schedule) {
         setExpandedSections((prev) => ({ ...prev, scheduleDetails: true }))
-      } else if (errors.maxStudents || errors.price || errors.level) {
+      } else if (errors.price) {
         setExpandedSections((prev) => ({ ...prev, enrollment: true }))
       }
       return
@@ -254,30 +316,48 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
     setApiDebugInfo(null)
 
     try {
+      // Get user ID directly from Auth context - same as profile page
+      if (!user || !user.user_id) {
+        throw new Error("User ID not found. Please login again.")
+      }
+
+      console.log("Creating course with user ID:", user.user_id)
+
+      // Format schedule from schedule items as an array
+      const formattedSchedule = scheduleItems
+        .filter((item) => item.day && item.startTime && item.endTime)
+        .map((item) => `${item.day} ${item.startTime}-${item.endTime}`)
+
       // Create the database-style object with instructor connection
       const dbData: CourseDbData = {
         course_name: courseName,
-        pool_type: poolType,
-        location,
+        pool_type: poolType === "teacher-pool" ? "instructor_pool" : poolType, // Fix pool type if needed
+        location: poolType === "students_pool" ? "Student's Pool" : location,
         description,
         course_duration: Number(courseDuration),
-        study_frequency: Number(studyFrequency),
-        days_study: Number(daysStudy),
+        study_frequency: studyFrequency, // Keep as string, don't convert to number
+        days_study: 0,
         number_of_total_sessions: Number(numberOfTotalSessions),
-        image,
+        course_image: image, // Make sure this is course_image, not image
         level,
         max_students: Number(maxStudents),
         price: Number(price),
         rating: Number(rating),
-        schedule,
+        schedule: JSON.stringify(formattedSchedule), // Convert array to JSON string
         students: Number(students),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         instructor: {
           connect: {
-            user_id: currentUser.user_id, // Using user_id instead of id
+            user_id: user.user_id,
           },
         },
+      }
+
+      // Add location coordinates if available
+      if (locationCoords && poolType !== "students_pool") {
+        // Store coordinates in the location field
+        dbData.location = `${location} (Lat: ${locationCoords.lat.toFixed(6)}, Lng: ${locationCoords.lng.toFixed(6)})`
       }
 
       console.log("Submitting course data:", dbData)
@@ -305,6 +385,7 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
         handleClose()
       }, 1500)
     } catch (err: any) {
+      // Error handling code remains the same
       console.error("Error creating course:", err)
 
       // Store debug info
@@ -321,6 +402,7 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
               }
             : null,
         },
+        user,
       })
 
       // Set user-friendly error message
@@ -341,6 +423,8 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
         }
       } else if (err.request) {
         errorMessage = "Network error. Please check your connection."
+      } else if (err.message) {
+        errorMessage = err.message
       }
 
       setError(errorMessage)
@@ -353,33 +437,33 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
   }
 
   // Styling
-  const sectionClasses = `mb-4 rounded-xl overflow-hidden ${
+  const sectionClasses = `mb-6 rounded-xl overflow-hidden ${
     isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white border border-gray-100 shadow-sm"
   }`
 
-  const sectionHeaderClasses = `flex items-center justify-between p-3 cursor-pointer ${
+  const sectionHeaderClasses = `flex items-center justify-between p-4 cursor-pointer ${
     isDarkMode ? "bg-slate-700" : "bg-gray-50"
   }`
 
-  const inputClasses = `w-full rounded-lg p-2.5 focus:ring-2 ${
+  const inputClasses = `w-full rounded-lg p-3 focus:ring-2 text-base ${
     isDarkMode
       ? "bg-slate-700 border-slate-600 text-white focus:ring-cyan-500 focus:border-cyan-500"
       : "border border-gray-300 focus:ring-sky-500 focus:border-sky-500"
   }`
 
-  const labelClasses = `block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`
+  const labelClasses = `block text-base font-medium mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`
 
   const errorClasses = "text-xs text-red-500 mt-1"
 
   if (!isOpen) return null
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Create New Course">
-      <div className="p-4 md:p-6 max-h-[80vh] overflow-y-auto">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Create New Course" className="max-w-5xl">
+      <div className="p-6 max-h-[80vh] overflow-y-auto w-full">
         {/* Stats in Create Modal */}
         <div className={`${isDarkMode ? "bg-slate-700" : "bg-sky-50"} rounded-xl p-4 mb-5 transition-all duration-200`}>
           <h3 className={`font-medium ${isDarkMode ? "text-cyan-400" : "text-sky-700"} mb-2`}>Your Current Stats</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-4 gap-4">
             <div
               className={`${isDarkMode ? "bg-slate-800" : "bg-white"} p-3 rounded-lg hover:shadow-sm transition-all duration-200`}
             >
@@ -445,6 +529,25 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
           </div>
         )}
 
+        {/* User Info */}
+        {user ? (
+          <div
+            className={`mb-4 p-3 rounded-lg ${isDarkMode ? "bg-green-800/20" : "bg-green-50"} border ${isDarkMode ? "border-green-800" : "border-green-200"}`}
+          >
+            <p className={`text-sm ${isDarkMode ? "text-green-400" : "text-green-700"}`}>
+              Creating course as: <strong>{user.name}</strong> (ID: {user.user_id})
+            </p>
+          </div>
+        ) : (
+          <div
+            className={`mb-4 p-3 rounded-lg ${isDarkMode ? "bg-amber-800/20" : "bg-amber-50"} border ${isDarkMode ? "border-amber-800" : "border-amber-200"}`}
+          >
+            <p className={`text-sm ${isDarkMode ? "text-amber-400" : "text-amber-700"}`}>
+              <strong>Warning:</strong> User information not found. Please refresh the page or log in again.
+            </p>
+          </div>
+        )}
+
         {/* Course Creation Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Basic Information Section */}
@@ -470,7 +573,7 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
                   className="overflow-hidden"
                 >
                   <div className="p-4 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-6">
                       {/* Course Name */}
                       <div>
                         <label htmlFor="courseName" className={labelClasses}>
@@ -501,31 +604,12 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
                             onChange={(e) => setPoolType(e.target.value)}
                           >
                             <option value="">Select Pool Type</option>
-                            <option value="Online">Online</option>
-                            <option value="Offline">Offline</option>
-                            <option value="Hybrid">Hybrid</option>
+                            <option value="students_pool">Students Pool</option>
+                            <option value="instructor_pool">Instructor Pool</option>
+                            <option value="สระสาธารณะ">สระสาธารณะ (Public Pool)</option>
                           </select>
                         </div>
                         {errors.poolType && <p className={errorClasses}>{errors.poolType}</p>}
-                      </div>
-
-                      {/* Location */}
-                      <div>
-                        <label htmlFor="location" className={labelClasses}>
-                          Location <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <FaMapMarkerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                          <input
-                            type="text"
-                            id="location"
-                            className={`${inputClasses} pl-10`}
-                            value={location}
-                            onChange={(e) => setLocation(e.target.value)}
-                            placeholder="e.g., Aquatic Center, Bangkok"
-                          />
-                        </div>
-                        {errors.location && <p className={errorClasses}>{errors.location}</p>}
                       </div>
 
                       {/* Level */}
@@ -558,16 +642,53 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
                             type="text"
                             id="instructorId"
                             className={`${inputClasses} pl-10`}
-                            value={currentUser.user_id}
+                            value={user?.user_id || "Loading..."}
                             placeholder="Instructor ID"
                             readOnly={true}
                           />
                         </div>
                         <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-                          Course will be created by: {currentUser.name}
+                          Course will be created by: {user?.name || "Loading..."}
                         </p>
                       </div>
                     </div>
+
+                    {/* Location - only show if not students pool */}
+                    {poolType !== "students_pool" && (
+                      <div className="mt-4">
+                        <label htmlFor="location" className={labelClasses}>
+                          <FaMapMarkedAlt className="inline mr-2 text-cyan-500" /> Location{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative mb-2">
+                          <FaMapMarkerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="text"
+                            id="location"
+                            className={`${inputClasses} pl-10`}
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            placeholder="e.g., Aquatic Center, Bangkok"
+                          />
+                        </div>
+                        {errors.location && <p className={errorClasses}>{errors.location}</p>}
+
+                        <div className="mt-2 mb-4">
+                          <p className={`text-sm mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                            Select location on the map:
+                          </p>
+                          <div className="rounded-lg overflow-hidden border border-gray-300">
+                            <OSMMapSelector
+                              onLocationSelect={handleLocationSelect}
+                              center={locationCoords || { lat: 13.7563, lng: 100.5018 }} // Default: Bangkok
+                            />
+                          </div>
+                          <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                            Click on the map to set the location or drag the marker to adjust.
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Description */}
                     <div>
@@ -576,7 +697,7 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
                       </label>
                       <textarea
                         id="description"
-                        rows={3}
+                        rows={4}
                         className={inputClasses}
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
@@ -616,11 +737,11 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
                   className="overflow-hidden"
                 >
                   <div className="p-4 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-6">
                       {/* Course Duration */}
                       <div>
                         <label htmlFor="courseDuration" className={labelClasses}>
-                          Course Duration (days) <span className="text-red-500">*</span>
+                          Course Duration (months) <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
                           <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -630,7 +751,7 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
                             className={`${inputClasses} pl-10`}
                             value={courseDuration}
                             onChange={(e) => setCourseDuration(e.target.value)}
-                            placeholder="e.g., 30"
+                            placeholder="e.g., 3"
                             min="1"
                           />
                         </div>
@@ -640,35 +761,23 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
                       {/* Study Frequency */}
                       <div>
                         <label htmlFor="studyFrequency" className={labelClasses}>
-                          Study Frequency (per week) <span className="text-red-500">*</span>
+                          Study Frequency <span className="text-red-500">*</span>
                         </label>
-                        <input
-                          type="number"
+                        <select
                           id="studyFrequency"
                           className={inputClasses}
                           value={studyFrequency}
                           onChange={(e) => setStudyFrequency(e.target.value)}
-                          placeholder="e.g., 3"
-                          min="1"
-                        />
+                        >
+                          <option value="">Select Frequency</option>
+                          <option value="1 time per week">1 time per week</option>
+                          <option value="1-2 times per week">1-2 times per week</option>
+                          <option value="2-3 times per week">2-3 times per week</option>
+                          <option value="3-4 times per week">3-4 times per week</option>
+                          <option value="4-5 times per week">4-5 times per week</option>
+                          <option value="5+ times per week">5+ times per week</option>
+                        </select>
                         {errors.studyFrequency && <p className={errorClasses}>{errors.studyFrequency}</p>}
-                      </div>
-
-                      {/* Days Study */}
-                      <div>
-                        <label htmlFor="daysStudy" className={labelClasses}>
-                          Days of Study <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="number"
-                          id="daysStudy"
-                          className={inputClasses}
-                          value={daysStudy}
-                          onChange={(e) => setDaysStudy(e.target.value)}
-                          placeholder="e.g., 10"
-                          min="1"
-                        />
-                        {errors.daysStudy && <p className={errorClasses}>{errors.daysStudy}</p>}
                       </div>
 
                       {/* Number of Total Sessions */}
@@ -684,7 +793,7 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
                             className={`${inputClasses} pl-10`}
                             value={numberOfTotalSessions}
                             onChange={(e) => setNumberOfTotalSessions(e.target.value)}
-                            placeholder="e.g., 100"
+                            placeholder="e.g., 24"
                             min="1"
                           />
                         </div>
@@ -692,25 +801,74 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
                       </div>
 
                       {/* Schedule */}
-                      <div>
+                      <div className="col-span-2">
                         <label htmlFor="schedule" className={labelClasses}>
                           Schedule <span className="text-red-500">*</span>
                         </label>
-                        <div className="relative">
-                          <FaClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                          <input
-                            type="text"
-                            id="schedule"
-                            className={`${inputClasses} pl-10`}
-                            value={schedule}
-                            onChange={(e) => setSchedule(e.target.value)}
-                            placeholder="e.g., MWF 10:00-11:30 AM"
-                          />
+                        <div className="space-y-2">
+                          {scheduleItems.map((item, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <div className="flex-1">
+                                <select
+                                  className={`${inputClasses} mb-1`}
+                                  value={item.day}
+                                  onChange={(e) => handleScheduleChange(index, "day", e.target.value)}
+                                >
+                                  <option value="">Select Day</option>
+                                  <option value="Monday">Monday</option>
+                                  <option value="Tuesday">Tuesday</option>
+                                  <option value="Wednesday">Wednesday</option>
+                                  <option value="Thursday">Thursday</option>
+                                  <option value="Friday">Friday</option>
+                                  <option value="Saturday">Saturday</option>
+                                  <option value="Sunday">Sunday</option>
+                                </select>
+                              </div>
+                              <div className="flex-1">
+                                <input
+                                  type="time"
+                                  className={inputClasses}
+                                  value={item.startTime}
+                                  onChange={(e) => handleScheduleChange(index, "startTime", e.target.value)}
+                                />
+                              </div>
+                              <div className="flex items-center justify-center">
+                                <span className={isDarkMode ? "text-white" : "text-gray-700"}>to</span>
+                              </div>
+                              <div className="flex-1">
+                                <input
+                                  type="time"
+                                  className={inputClasses}
+                                  value={item.endTime}
+                                  onChange={(e) => handleScheduleChange(index, "endTime", e.target.value)}
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeScheduleItem(index)}
+                                className={`p-2 rounded-full ${
+                                  isDarkMode
+                                    ? "bg-red-900 text-red-300 hover:bg-red-800"
+                                    : "bg-red-100 text-red-500 hover:bg-red-200"
+                                }}`}
+                              >
+                                <FaTimes />
+                              </button>
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={addScheduleItem}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                              isDarkMode
+                                ? "bg-slate-700 text-cyan-400 hover:bg-slate-600"
+                                : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                            }`}
+                          >
+                            <FaPlus size={12} /> Add Schedule
+                          </button>
                         </div>
                         {errors.schedule && <p className={errorClasses}>{errors.schedule}</p>}
-                        <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-                          Specify days and times (e.g., MWF 10:00-11:30 AM)
-                        </p>
                       </div>
                     </div>
                   </div>
@@ -719,11 +877,11 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
             </AnimatePresence>
           </div>
 
-          {/* Enrollment & Pricing Section */}
+          {/* Pricing Section (renamed from Enrollment & Pricing) */}
           <div className={sectionClasses}>
             <div className={sectionHeaderClasses} onClick={() => toggleSection("enrollment")}>
               <h3 className={`text-base font-semibold ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                <FaUserFriends className="inline mr-2 text-cyan-500" /> Enrollment & Pricing
+                <FaMoneyBillWave className="inline mr-2 text-cyan-500" /> Pricing
               </h3>
               {expandedSections.enrollment ? (
                 <FaChevronUp className={isDarkMode ? "text-gray-400" : "text-gray-500"} />
@@ -742,44 +900,7 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
                   className="overflow-hidden"
                 >
                   <div className="p-4 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Max Students */}
-                      <div>
-                        <label htmlFor="maxStudents" className={labelClasses}>
-                          Maximum Students <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <FaUserFriends className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                          <input
-                            type="number"
-                            id="maxStudents"
-                            className={`${inputClasses} pl-10`}
-                            value={maxStudents}
-                            onChange={(e) => setMaxStudents(e.target.value)}
-                            min="1"
-                          />
-                        </div>
-                        {errors.maxStudents && <p className={errorClasses}>{errors.maxStudents}</p>}
-                      </div>
-
-                      {/* Current Students */}
-                      <div>
-                        <label htmlFor="students" className={labelClasses}>
-                          Current Students
-                        </label>
-                        <input
-                          type="number"
-                          id="students"
-                          className={inputClasses}
-                          value={students}
-                          onChange={(e) => setStudents(e.target.value)}
-                          min="0"
-                        />
-                        <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-                          For new courses, leave at 0
-                        </p>
-                      </div>
-
+                    <div className="grid grid-cols-1 gap-6">
                       {/* Price */}
                       <div>
                         <label htmlFor="price" className={labelClasses}>
@@ -797,28 +918,8 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
                           />
                         </div>
                         {errors.price && <p className={errorClasses}>{errors.price}</p>}
-                      </div>
-
-                      {/* Rating */}
-                      <div>
-                        <label htmlFor="rating" className={labelClasses}>
-                          Rating
-                        </label>
-                        <div className="relative">
-                          <FaStar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                          <input
-                            type="number"
-                            id="rating"
-                            className={`${inputClasses} pl-10`}
-                            value={rating}
-                            onChange={(e) => setRating(e.target.value)}
-                            step="0.1"
-                            min="0"
-                            max="5"
-                          />
-                        </div>
                         <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-                          For new courses, default rating is 4.0
+                          Set the price for your course in your local currency
                         </p>
                       </div>
                     </div>
@@ -851,40 +952,238 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
                   className="overflow-hidden"
                 >
                   <div className="p-4 space-y-4">
-                    {/* Image */}
+                    {/* Course Image Upload */}
                     <div>
-                      <label htmlFor="image" className={labelClasses}>
+                      <label htmlFor="courseImageUpload" className={labelClasses}>
                         Course Image
                       </label>
-                      <div className="relative">
-                        <FaImage className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <input
-                          type="text"
-                          id="image"
-                          className={`${inputClasses} pl-10`}
-                          value={image}
-                          onChange={(e) => setImage(e.target.value)}
-                          placeholder="e.g., swimming-course.jpg"
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <div
+                            className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-all ${
+                              isDarkMode
+                                ? "border-slate-600 hover:border-cyan-500 bg-slate-700/30"
+                                : "border-gray-300 hover:border-sky-500 bg-gray-50"
+                            }`}
+                            onClick={() => document.getElementById("courseImageUpload")?.click()}
+                          >
+                            <input
+                              type="file"
+                              id="courseImageUpload"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  // Create a preview URL
+                                  const imageUrl = URL.createObjectURL(file)
+                                  setImagePreview(imageUrl)
+
+                                  // Convert to base64 for API submission
+                                  const reader = new FileReader()
+                                  reader.onloadend = () => {
+                                    const base64String = reader.result as string
+                                    setImage(base64String)
+                                  }
+                                  reader.readAsDataURL(file)
+                                }
+                              }}
+                            />
+                            <FaUpload
+                              className={`mx-auto text-2xl mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}
+                            />
+                            <p className={isDarkMode ? "text-gray-300" : "text-gray-700"}>
+                              Click to upload course image
+                            </p>
+                            <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                              JPG, PNG or GIF, max 5MB
+                            </p>
+                          </div>
+
+                          {/* Alternative URL input */}
+                          <div className="mt-2">
+                            <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                              Or enter image URL:
+                            </p>
+                            <div className="relative">
+                              <FaImage className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                              <input
+                                type="text"
+                                id="imageUrl"
+                                className={`${inputClasses} pl-10`}
+                                value={typeof image === "string" && !image.startsWith("data:") ? image : ""}
+                                onChange={(e) => {
+                                  setImage(e.target.value)
+                                  setImagePreview(e.target.value)
+                                }}
+                                placeholder="e.g., https://example.com/image.jpg"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Image Preview */}
+                        <div>
+                          <div
+                            className={`rounded-lg overflow-hidden border ${isDarkMode ? "border-slate-600" : "border-gray-200"}`}
+                          >
+                            {imagePreview ? (
+                              <div className="relative">
+                                <img
+                                  src={imagePreview || "/placeholder.svg"}
+                                  alt="Course preview"
+                                  className="w-full h-48 object-cover"
+                                  onError={() => {
+                                    // If image fails to load, set a default
+                                    setImagePreview(`/placeholder.svg?height=200&width=400&query=swimming`)
+                                  }}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setImagePreview("")
+                                    setImage(getRandomImage())
+                                  }}
+                                  className={`absolute top-2 right-2 p-2 rounded-full ${
+                                    isDarkMode
+                                      ? "bg-slate-800/80 text-red-400 hover:bg-slate-700"
+                                      : "bg-white/80 text-red-500 hover:bg-gray-100"
+                                  }`}
+                                >
+                                  <FaTrash size={14} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div
+                                className={`h-48 flex items-center justify-center ${isDarkMode ? "bg-slate-800" : "bg-gray-100"}`}
+                              >
+                                <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                                  No image selected
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                            Preview of your course image
+                          </p>
+                        </div>
                       </div>
-                      <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-                        Enter image filename or URL. Default is "default.jpg"
-                      </p>
                     </div>
 
-                    {/* Future: Image upload component */}
-                    <div
-                      className={`p-4 border border-dashed rounded-lg text-center ${
-                        isDarkMode ? "border-gray-600 bg-slate-700/50" : "border-gray-300 bg-gray-50"
-                      }`}
-                    >
-                      <FaImage className={`mx-auto text-3xl mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
-                      <p className={isDarkMode ? "text-gray-300" : "text-gray-700"}>
-                        Image upload functionality coming soon
-                      </p>
-                      <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-                        For now, please enter the image filename
-                      </p>
+                    {/* Pool Image Upload */}
+                    <div>
+                      <label htmlFor="poolImageUpload" className={labelClasses}>
+                        <FaWater className="inline mr-2" /> Pool Image (Optional)
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <div
+                            className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-all ${
+                              isDarkMode
+                                ? "border-slate-600 hover:border-cyan-500 bg-slate-700/30"
+                                : "border-gray-300 hover:border-sky-500 bg-gray-50"
+                            }`}
+                            onClick={() => document.getElementById("poolImageUpload")?.click()}
+                          >
+                            <input
+                              type="file"
+                              id="poolImageUpload"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  // Create a preview URL
+                                  const imageUrl = URL.createObjectURL(file)
+                                  setPoolImagePreview(imageUrl)
+
+                                  // Convert to base64 for API submission
+                                  const reader = new FileReader()
+                                  reader.onloadend = () => {
+                                    const base64String = reader.result as string
+                                    setPoolImage(base64String)
+                                  }
+                                  reader.readAsDataURL(file)
+                                }
+                              }}
+                            />
+                            <FaUpload
+                              className={`mx-auto text-2xl mb-2 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}
+                            />
+                            <p className={isDarkMode ? "text-gray-300" : "text-gray-700"}>Click to upload pool image</p>
+                            <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                              JPG, PNG or GIF, max 5MB
+                            </p>
+                          </div>
+
+                          {/* Alternative URL input */}
+                          <div className="mt-2">
+                            <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                              Or enter image URL:
+                            </p>
+                            <div className="relative">
+                              <FaWater className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                              <input
+                                type="text"
+                                id="poolImageUrl"
+                                className={`${inputClasses} pl-10`}
+                                value={typeof poolImage === "string" && !poolImage.startsWith("data:") ? poolImage : ""}
+                                onChange={(e) => {
+                                  setPoolImage(e.target.value)
+                                  setPoolImagePreview(e.target.value)
+                                }}
+                                placeholder="e.g., https://example.com/pool.jpg"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Pool Image Preview */}
+                        <div>
+                          <div
+                            className={`rounded-lg overflow-hidden border ${isDarkMode ? "border-slate-600" : "border-gray-200"}`}
+                          >
+                            {poolImagePreview ? (
+                              <div className="relative">
+                                <img
+                                  src={poolImagePreview || "/placeholder.svg"}
+                                  alt="Pool preview"
+                                  className="w-full h-48 object-cover"
+                                  onError={() => {
+                                    // If image fails to load, set a default
+                                    setPoolImagePreview(`/placeholder.svg?height=200&width=400&query=swimming+pool`)
+                                  }}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setPoolImagePreview("")
+                                    setPoolImage("")
+                                  }}
+                                  className={`absolute top-2 right-2 p-2 rounded-full ${
+                                    isDarkMode
+                                      ? "bg-slate-800/80 text-red-400 hover:bg-slate-700"
+                                      : "bg-white/80 text-red-500 hover:bg-gray-100"
+                                  }`}
+                                >
+                                  <FaTrash size={14} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div
+                                className={`h-48 flex items-center justify-center ${isDarkMode ? "bg-slate-800" : "bg-gray-100"}`}
+                              >
+                                <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                                  No pool image selected
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                            Preview of your pool image (not yet supported by database)
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </motion.div>

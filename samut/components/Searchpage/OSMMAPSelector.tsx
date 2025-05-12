@@ -16,6 +16,17 @@ const createCustomIcon = () => {
   })
 }
 
+const getMarkerIcon = (isDark: boolean) => {
+  return L.icon({
+    iconUrl: isDark ? "/icons/marker-icon-blue.png" : "/icons/marker-icon-red.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: "/icons/marker-shadow.png",
+    shadowSize: [41, 41],
+  })
+}
+
 interface LocationItem {
   id: number
   name: string
@@ -73,9 +84,10 @@ const OSMMapSelector = ({
 
     // Use a different tile layer for dark mode
     if (isDarkMode) {
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      L.tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png", {
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://stadiamaps.com/">Stadia Maps</a>',
+        maxZoom: 20,
       }).addTo(map)
     } else {
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -85,6 +97,7 @@ const OSMMapSelector = ({
 
     markerRef.current = L.marker([mapCenter.lat, mapCenter.lng], {
       draggable: true,
+      icon: getMarkerIcon(isDarkMode),
     }).addTo(map)
 
     markerRef.current.on("dragend", (e) => {
@@ -101,7 +114,7 @@ const OSMMapSelector = ({
     instructorLocations.forEach((item) => {
       if (item.location && item.location.lat !== undefined && item.location.lng !== undefined) {
         L.marker([item.location.lat, item.location.lng], {
-          icon: createCustomIcon(),
+          icon: getMarkerIcon(isDarkMode),
         })
           .addTo(map)
           .bindPopup(`<strong>Instructor: ${item.name}</strong><br/>${item.location.address ?? ""}`)
@@ -112,7 +125,7 @@ const OSMMapSelector = ({
     courseLocations.forEach((item) => {
       if (item.location && item.location.lat !== undefined && item.location.lng !== undefined) {
         L.marker([item.location.lat, item.location.lng], {
-          icon: createCustomIcon(),
+          icon: getMarkerIcon(isDarkMode),
         })
           .addTo(map)
           .bindPopup(`<strong>Course: ${item.name}</strong><br/>${item.location.address ?? ""}`)
