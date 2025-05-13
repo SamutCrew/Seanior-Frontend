@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { FaPlus, FaCalendarAlt, FaChalkboardTeacher } from "react-icons/fa"
 import TeacherHeader from "@/components/Partial/PageDashboard/TeacherHeader"
 import TeacherStats from "@/components/Partial/PageDashboard/TeacherStats"
@@ -16,11 +16,22 @@ import CreateCourseModal from "@/components/Course/Modals/CreateCourseModal"
 import EditCourseModal from "@/components/Course/Modals/EditCourseModal"
 import DeleteCourseModal from "@/components/Course/Modals/DeleteCourseModal"
 import type { ScheduleItem } from "@/types/schedule"
-import type { Course, CourseType } from "@/types/course"
+import type { Course } from "@/types/course"
 import { useAppSelector } from "@/app/redux"
+import { useAuth } from "@/context/AuthContext"
+import { getAllCourses, createCourse, updateCourse, deleteCourse } from "@/api/course_api"
+import { getUserResources } from "@/api/resource_api"
+import LoadingPage from "@/components/Common/LoadingPage"
+import AlertResponse from "@/components/Responseback/AlertResponse"
 
 export default function TeacherDashboard() {
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
+  const { user } = useAuth()
+
+  // Data fetching state
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [resources, setResources] = useState<any[]>([])
 
   // Schedule data
   const [schedule, setSchedule] = useState<ScheduleItem[]>([
@@ -84,146 +95,10 @@ export default function TeacherDashboard() {
   ])
 
   // Available courses (not yet scheduled) - Added images
-  const [availableCourses, setAvailableCourses] = useState<Course[]>([
-    {
-      id: 201,
-      title: "Freestyle Mastery",
-      focus: "Technique Improvement",
-      level: "Intermediate",
-      duration: "8 weeks",
-      schedule: "Not Scheduled",
-      instructor: "Emma Johnson",
-      rating: 4.8,
-      students: 0,
-      price: 299,
-      location: {
-        address: "TBD",
-      },
-      courseType: "public-pool" as CourseType,
-      maxStudents: 12,
-      image: "/freestyle-swimming.png",
-    },
-    {
-      id: 202,
-      title: "Water Safety",
-      focus: "Safety Fundamentals",
-      level: "Beginner",
-      duration: "6 weeks",
-      schedule: "Not Scheduled",
-      instructor: "Michael Chen",
-      rating: 4.5,
-      students: 0,
-      price: 249,
-      location: {
-        address: "TBD",
-      },
-      courseType: "public-pool" as CourseType,
-      maxStudents: 15,
-      image: "/water-safety-swimming.png"
-    },
-    {
-      id: 203,
-      title: "Advanced Butterfly",
-      focus: "Technique Mastery",
-      level: "Advanced",
-      duration: "10 weeks",
-      schedule: "Not Scheduled",
-      instructor: "Sophia Rodriguez",
-      rating: 4.9,
-      students: 0,
-      price: 349,
-      location: {
-        address: "TBD",
-      },
-      courseType: "private-location" as CourseType,
-      maxStudents: 8,
-      image: "/butterfly-swimming.png",
-
-    },
-    {
-      id: 204,
-      title: "Breaststroke Technique",
-      focus: "Stroke Improvement",
-      level: "Intermediate",
-      duration: "8 weeks",
-      schedule: "Not Scheduled",
-      instructor: "James Wilson",
-      rating: 4.6,
-      students: 0,
-      price: 299,
-      location: {
-        address: "TBD",
-      },
-      courseType: "teacher-pool" as CourseType,
-      maxStudents: 10,
-      image: "/breaststroke-swimming.png",
-    },
-  ])
+  const [availableCourses, setAvailableCourses] = useState<Course[]>([])
 
   // Course management data
-  const [courses, setCourses] = useState<Course[]>([
-    {
-      id: 1,
-      title: "Freestyle Mastery",
-      focus: "Technique Improvement",
-      level: "Intermediate",
-      duration: "8 weeks",
-      schedule: "Mon/Wed 5-6pm",
-      instructor: "Alex Johnson",
-      rating: 4.8,
-      students: 24,
-      price: 299,
-      location: {
-        address: "Skyline Aquatic Center, Pool 2",
-      },
-      courseType: "public-pool",
-      description: "Master freestyle swimming techniques with professional guidance.",
-      curriculum: ["Body positioning", "Breathing techniques", "Arm stroke mechanics", "Kick techniques"],
-      requirements: ["Basic swimming ability", "Own swimming equipment"],
-      maxStudents: 30,
-    },
-    {
-      id: 2,
-      title: "Beginner Swimming",
-      focus: "Fundamentals",
-      level: "Beginner",
-      duration: "6 weeks",
-      schedule: "Tue/Thu 4-5pm",
-      instructor: "Sarah Miller",
-      rating: 4.9,
-      students: 18,
-      price: 249,
-      location: {
-        address: "Skyline Aquatic Center, Pool 1",
-      },
-      courseType: "teacher-pool",
-      description: "Learn the basics of swimming in a supportive environment.",
-      curriculum: ["Water comfort", "Floating", "Basic strokes", "Water safety"],
-      requirements: ["No previous experience needed"],
-      maxStudents: 20,
-    },
-    {
-      id: 3,
-      title: "Advanced Techniques",
-      focus: "Competition Prep",
-      level: "Advanced",
-      duration: "10 weeks",
-      schedule: "Mon/Wed/Fri 7-8:30pm",
-      instructor: "Alex Johnson",
-      rating: 4.7,
-      students: 12,
-      price: 399,
-      location: {
-        address: "Olympic Training Pool",
-      },
-      courseType: "private-location",
-      description: "Advanced training for competitive swimmers.",
-      curriculum: ["Race strategies", "Advanced techniques", "Speed drills", "Competition preparation"],
-      requirements: ["Competitive swimming experience", "Advanced swimming ability"],
-      maxStudents: 15,
-      image: "/swimmer-in-motion.png",
-    },
-  ])
+  const [courses, setCourses] = useState<Course[]>([])
 
   // UI state
   const [searchTerm, setSearchTerm] = useState("")
@@ -244,6 +119,187 @@ export default function TeacherDashboard() {
     { id: 2, name: "Jane Smith", type: "Schedule Change Request", date: "2023-06-02" },
   ])
 
+  // Fetch user resources
+  useEffect(() => {
+    const fetchUserResources = async () => {
+      if (!user || !user.user_id) return
+
+      try {
+        const response = await getUserResources(user.user_id)
+        console.log("User resources:", response)
+
+        if (response && response.resources && Array.isArray(response.resources)) {
+          setResources(response.resources)
+        } else {
+          console.warn("Unexpected resources response format:", response)
+          setResources([])
+        }
+      } catch (err) {
+        console.error("Error fetching user resources:", err)
+        setResources([])
+      }
+    }
+
+    if (user?.user_id) {
+      fetchUserResources()
+    }
+  }, [user])
+
+  // Fetch courses
+  useEffect(() => {
+    const fetchCourses = async () => {
+      if (!user || !user.user_id) {
+        setError("User not authenticated")
+        setIsLoading(false)
+        return
+      }
+
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        // Get all courses
+        const allCoursesResponse = await getAllCourses()
+        console.log("All courses response:", allCoursesResponse)
+
+        // Filter courses by instructor ID
+        let instructorCourses = []
+        if (Array.isArray(allCoursesResponse)) {
+          instructorCourses = allCoursesResponse.filter(
+            (course) =>
+              course.instructor_id === user.user_id ||
+              (course.instructor && course.instructor.user_id === user.user_id),
+          )
+        } else if (allCoursesResponse && Array.isArray(allCoursesResponse.data)) {
+          instructorCourses = allCoursesResponse.data.filter(
+            (course) =>
+              course.instructor_id === user.user_id ||
+              (course.instructor && course.instructor.user_id === user.user_id),
+          )
+        } else {
+          console.warn("Unexpected response format from courses API:", allCoursesResponse)
+          instructorCourses = []
+        }
+
+        console.log("Filtered instructor courses:", instructorCourses)
+
+        // Map API data to the format expected by the UI components
+        const mappedCourses = instructorCourses.map((course) => {
+          // Find matching images for this course
+          const courseImage = resources.find(
+            (img) => img.resource_type?.includes("image") && img.resource_name?.includes(course.id || course.course_id),
+          )
+
+          return mapApiCourseToUiCourse(course, courseImage)
+        })
+
+        setCourses(mappedCourses)
+
+        // Set available courses (courses with no students yet)
+        const availableMappedCourses = mappedCourses.filter((course) => course.students === 0)
+        setAvailableCourses(availableMappedCourses)
+      } catch (err: any) {
+        console.error("Error fetching courses:", err)
+        setError(`Failed to fetch courses: ${err.message || "Unknown error"}`)
+
+        // Set empty arrays on error to prevent UI issues
+        setCourses([])
+        setAvailableCourses([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (user?.user_id) {
+      fetchCourses()
+    }
+  }, [user, resources])
+
+  // Helper function to map API course data to UI course format
+  const mapApiCourseToUiCourse = (apiCourse: any, courseImage?: any): Course => {
+    try {
+      // Format schedule if it's an object
+      let scheduleStr = apiCourse.schedule || "Flexible schedule"
+      if (typeof apiCourse.schedule === "object" && apiCourse.schedule !== null) {
+        // Convert schedule object to string (e.g., "Monday, Wednesday, Friday")
+        scheduleStr = Object.keys(apiCourse.schedule)
+          .filter((day) => apiCourse.schedule[day])
+          .map((day) => day.charAt(0).toUpperCase() + day.slice(1))
+          .join(", ")
+
+        if (scheduleStr === "") {
+          scheduleStr = "Flexible schedule"
+        }
+      }
+
+      // Extract course ID - handle different API formats
+      const courseId = apiCourse.course_id || apiCourse.id || "unknown"
+
+      // Extract course name - handle different API formats
+      const courseName = apiCourse.course_name || apiCourse.title || apiCourse.name || "Untitled Course"
+
+      // Extract instructor information - handle different API formats
+      let instructorName = "Unknown Instructor"
+      let instructorId = apiCourse.instructor_id || ""
+
+      if (apiCourse.instructor) {
+        if (typeof apiCourse.instructor === "string") {
+          instructorName = apiCourse.instructor
+        } else if (typeof apiCourse.instructor === "object") {
+          instructorName = apiCourse.instructor.name || apiCourse.instructor.user_name || "Unknown"
+          instructorId = apiCourse.instructor.user_id || apiCourse.instructor.id || instructorId
+        }
+      }
+
+      // Use resource URL if available
+      const courseImageUrl = courseImage ? courseImage.resource_url : apiCourse.image || "/person-swimming.png"
+
+      return {
+        id: courseId,
+        title: courseName,
+        focus: apiCourse.description?.substring(0, 30) || "Swimming techniques",
+        level: apiCourse.level || "Beginner",
+        duration: `${apiCourse.course_duration || 8} weeks`,
+        schedule: scheduleStr,
+        instructor: instructorName,
+        rating: apiCourse.rating || 4.5,
+        students: apiCourse.students || 0,
+        price: apiCourse.price || 0,
+        location: {
+          address: apiCourse.location || "TBD",
+        },
+        courseType: apiCourse.pool_type || "public-pool",
+        description: apiCourse.description || "",
+        maxStudents: apiCourse.max_students || 10,
+        image: courseImageUrl,
+        created_at: apiCourse.created_at || new Date().toISOString(),
+        updated_at: apiCourse.updated_at || new Date().toISOString(),
+      }
+    } catch (err) {
+      console.error("Error mapping course data:", err)
+      // Return a fallback object with minimal required properties
+      return {
+        id: apiCourse.course_id || apiCourse.id || "unknown",
+        title: apiCourse.course_name || apiCourse.title || "Untitled Course",
+        focus: "Swimming techniques",
+        level: "Beginner",
+        duration: "8 weeks",
+        schedule: "Flexible schedule",
+        instructor: "Unknown",
+        rating: 4.5,
+        students: 0,
+        price: 0,
+        location: {
+          address: "TBD",
+        },
+        courseType: "public-pool",
+        description: "",
+        maxStudents: 10,
+        image: "/person-swimming.png",
+      }
+    }
+  }
+
   // Filter schedule items based on search term
   const filteredSchedule = schedule
     .map((day) => ({
@@ -261,51 +317,147 @@ export default function TeacherDashboard() {
   const filteredCourses = courses.filter((course) => {
     const matchesSearch =
       course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.focus.toLowerCase().includes(searchTerm.toLowerCase())
+      (course.focus && course.focus.toLowerCase().includes(searchTerm.toLowerCase()))
     const matchesLevel = selectedLevel ? course.level === selectedLevel : true
     return matchesSearch && matchesLevel
   })
 
   // Course CRUD operations
-  const handleAddCourse = (newCourseData: Partial<Course>) => {
-    const newCourse: Course = {
-      id: Math.max(...courses.map((c) => c.id), 0) + 1,
-      ...newCourseData,
-      instructor: newCourseData.instructor || "Alex Johnson",
-      rating: newCourseData.rating || 4.5,
-      students: newCourseData.students || 0,
-      courseType: newCourseData.courseType || "public-pool",
-    } as Course
-    setCourses([...courses, newCourse])
-    setIsCreateModalOpen(false)
+  const handleAddCourse = async (newCourseData: Partial<Course>) => {
+    try {
+      setIsLoading(true)
+
+      // Format the data for the API
+      const apiCourseData = {
+        course_name: newCourseData.title || "New Course",
+        instructor_id: user?.user_id || "",
+        price: newCourseData.price || 0,
+        pool_type: newCourseData.courseType || "public-pool",
+        location: newCourseData.location?.address || "",
+        description: newCourseData.description || "",
+        course_duration: Number.parseInt(newCourseData.duration?.split(" ")[0] || "8"),
+        level: newCourseData.level || "Beginner",
+        schedule: newCourseData.schedule || "Flexible schedule",
+        max_students: newCourseData.maxStudents || 10,
+      }
+
+      const response = await createCourse(apiCourseData)
+      console.log("Create course response:", response)
+
+      // Map the new course to UI format and add it to the state
+      const newCourse = mapApiCourseToUiCourse(response)
+      setCourses([newCourse, ...courses])
+
+      // If the course has no students, add it to available courses
+      if (newCourse.students === 0) {
+        setAvailableCourses([newCourse, ...availableCourses])
+      }
+
+      setIsCreateModalOpen(false)
+    } catch (err: any) {
+      console.error("Error creating course:", err)
+      setError(`Failed to create course: ${err.message || "Unknown error"}`)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleEditCourse = (editedCourseData: Partial<Course>) => {
-    setCourses(courses.map((course) => (course.id === currentCourse?.id ? { ...course, ...editedCourseData } : course)))
-    setIsEditModalOpen(false)
+  const handleEditCourse = async (editedCourseData: Partial<Course>) => {
+    if (!currentCourse || !currentCourse.id) {
+      setError("No course selected for editing")
+      return
+    }
+
+    try {
+      setIsLoading(true)
+
+      // Format the data for the API
+      const apiCourseData = {
+        course_name: editedCourseData.title || currentCourse.title,
+        price: editedCourseData.price || currentCourse.price,
+        pool_type: editedCourseData.courseType || currentCourse.courseType,
+        location: editedCourseData.location?.address || currentCourse.location?.address,
+        description: editedCourseData.description || currentCourse.description,
+        course_duration: Number.parseInt(
+          editedCourseData.duration?.split(" ")[0] || currentCourse.duration?.split(" ")[0] || "8",
+        ),
+        level: editedCourseData.level || currentCourse.level,
+        schedule: editedCourseData.schedule || currentCourse.schedule,
+        max_students: editedCourseData.maxStudents || currentCourse.maxStudents,
+      }
+
+      const response = await updateCourse(currentCourse.id, apiCourseData)
+      console.log("Update course response:", response)
+
+      // Map the updated course to UI format
+      const updatedCourse = mapApiCourseToUiCourse({
+        ...response,
+        instructor: currentCourse.instructor, // Preserve instructor info if not in response
+      })
+
+      // Update the course in the courses state
+      setCourses(courses.map((course) => (course.id === currentCourse.id ? updatedCourse : course)))
+
+      // Update the course in available courses if needed
+      setAvailableCourses(availableCourses.map((course) => (course.id === currentCourse.id ? updatedCourse : course)))
+
+      setIsEditModalOpen(false)
+    } catch (err: any) {
+      console.error("Error updating course:", err)
+      setError(`Failed to update course: ${err.message || "Unknown error"}`)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleDeleteCourse = () => {
-    if (currentCourse) {
+  const handleDeleteCourse = async () => {
+    if (!currentCourse || !currentCourse.id) {
+      setError("No course selected for deletion")
+      return
+    }
+
+    try {
+      setIsLoading(true)
+
+      await deleteCourse(currentCourse.id)
+
+      // Remove the course from the courses state
       setCourses(courses.filter((course) => course.id !== currentCourse.id))
+
+      // Remove the course from available courses if needed
+      setAvailableCourses(availableCourses.filter((course) => course.id !== currentCourse.id))
+
       setIsDeleteModalOpen(false)
+    } catch (err: any) {
+      console.error("Error deleting course:", err)
+      setError(`Failed to delete course: ${err.message || "Unknown error"}`)
+    } finally {
+      setIsLoading(false)
     }
   }
 
   // Calculate stats for the create course modal
   const courseStats = {
     totalCourses: courses.length,
-    totalStudents: courses.reduce((sum, course) => sum + course.students, 0),
+    totalStudents: courses.reduce((sum, course) => sum + (course.students || 0), 0),
     avgRating:
       courses.length > 0
-        ? (courses.reduce((sum, course) => sum + course.rating, 0) / courses.length).toFixed(1)
+        ? (courses.reduce((sum, course) => sum + (course.rating || 0), 0) / courses.length).toFixed(1)
         : "0.0",
-    totalRevenue: courses.reduce((sum, course) => sum + course.price * course.students, 0),
+    totalRevenue: courses.reduce((sum, course) => sum + (course.price || 0) * (course.students || 0), 0),
+  }
+
+  // Show loading state while fetching data
+  if (isLoading && courses.length === 0) {
+    return <LoadingPage />
   }
 
   return (
     <div className={`p-6 ${isDarkMode ? "bg-slate-900 text-white" : "bg-gray-50"}`}>
       <div className="max-w-7xl mx-auto">
+        {/* Error message */}
+        {error && <AlertResponse type="error" message={error} onClose={() => setError(null)} />}
+
         {/* Header */}
         <TeacherHeader searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
@@ -386,7 +538,9 @@ export default function TeacherDashboard() {
                 </div>
               </div>
 
-              {filteredCourses.length > 0 ? (
+              {isLoading && <div className="text-center py-8">Loading courses...</div>}
+
+              {!isLoading && filteredCourses.length > 0 ? (
                 view === "grid" ? (
                   <CourseGrid
                     courses={filteredCourses}
@@ -413,10 +567,12 @@ export default function TeacherDashboard() {
                   />
                 )
               ) : (
-                <CourseEmptyState
-                  hasAnyCourses={courses.length > 0}
-                  onCreateCourse={() => setIsCreateModalOpen(true)}
-                />
+                !isLoading && (
+                  <CourseEmptyState
+                    hasAnyCourses={courses.length > 0}
+                    onCreateCourse={() => setIsCreateModalOpen(true)}
+                  />
+                )
               )}
             </div>
           )}

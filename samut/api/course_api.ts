@@ -1,14 +1,12 @@
-// src/api/course_api.ts
-import apiClient from "@/api/api_client";
-import { APIEndpoints } from "@/constants/apiEndpoints";
-import { Course } from '@/types/course';
+import apiClient from "./api_client"
+import { APIEndpoints } from "@/constants/apiEndpoints"
 
-// Existing functions...
+// Get all courses
 export const getAllCourses = async () => {
-  const url = APIEndpoints.COURSE.RETRIEVE.ALL;
   try {
-    const response = await apiClient.get(url);
-    return response.data;
+    const response = await apiClient.get(APIEndpoints.COURSE.RETRIEVE.ALL)
+    console.log("API Response for all courses:", response)
+    return response.data
   } catch (error: any) {
     console.error("Error fetching all courses:", {
       message: error.message,
@@ -18,16 +16,65 @@ export const getAllCourses = async () => {
             data: error.response.data,
           }
         : null,
-    });
-    throw error;
-  }
-};
+    })
 
-export const createCourse = async (newCourseData: Course) => {
-  const url = APIEndpoints.COURSE.CREATE;
+    // Return empty array instead of throwing to prevent cascading errors
+    return []
+  }
+}
+
+// Get course by ID
+export const getCourseById = async (courseId: string) => {
+  const url = `${APIEndpoints.COURSE.RETRIEVE.BY_ID}/${courseId}`
   try {
-    const response = await apiClient.post(url, newCourseData);
-    return response.data;
+    const response = await apiClient.get(url)
+    console.log("API Response for course details:", response)
+    return response.data
+  } catch (error: any) {
+    console.error("Error fetching course details:", {
+      message: error.message,
+      response: error.response
+        ? {
+            status: error.response.status,
+            data: error.response.data,
+          }
+        : null,
+    })
+
+    // Return null instead of throwing to prevent cascading errors
+    return null
+  }
+}
+
+// Get courses by instructor ID
+export const getCoursesByInstructorId = async (instructorId: string) => {
+  const url = `${APIEndpoints.COURSE.RETRIEVE.BY_INSTRUCTOR}/${instructorId}`
+  try {
+    const response = await apiClient.get(url)
+    console.log("API Response for instructor courses:", response)
+    return response.data
+  } catch (error: any) {
+    console.error("Error fetching instructor courses:", {
+      message: error.message,
+      response: error.response
+        ? {
+            status: error.response.status,
+            data: error.response.data,
+          }
+        : null,
+    })
+
+    // Return empty array instead of throwing to prevent cascading errors
+    return []
+  }
+}
+
+// Create a new course
+export const createCourse = async (courseData: any) => {
+  try {
+    const response = await apiClient.post(APIEndpoints.COURSE.CREATE, courseData)
+    console.log("API Response for create course:", response)
+    return response.data
   } catch (error: any) {
     console.error("Error creating course:", {
       message: error.message,
@@ -37,27 +84,39 @@ export const createCourse = async (newCourseData: Course) => {
             data: error.response.data,
           }
         : null,
-    });
-    throw error;
+    })
+    throw error
   }
-};
+}
 
-export const updateCourse = async (courseId: string, updatedData: Partial<Course>) => {
-  const url = APIEndpoints.COURSE.UPDATE.replace("[courseId]", courseId)
+// Update a course
+export const updateCourse = async (courseId: string, courseData: any) => {
+  const url = `${APIEndpoints.COURSE.UPDATE}/${courseId}`
   try {
-    const response = await apiClient.put(url, updatedData);
-    return response.data;
+    const response = await apiClient.put(url, courseData)
+    console.log("API Response for update course:", response)
+    return response.data
   } catch (error: any) {
-    console.error("Error updating course:", error);
-    throw error;
+    console.error("Error updating course:", {
+      message: error.message,
+      response: error.response
+        ? {
+            status: error.response.status,
+            data: error.response.data,
+          }
+        : null,
+    })
+    throw error
   }
-};
+}
 
+// Delete a course
 export const deleteCourse = async (courseId: string) => {
-  const url = APIEndpoints.COURSE.DELETE.replace("[courseId]", courseId);
+  const url = `${APIEndpoints.COURSE.DELETE}/${courseId}`
   try {
-    const response = await apiClient.delete(url);
-    return response.data;
+    const response = await apiClient.delete(url)
+    console.log("API Response for delete course:", response)
+    return response.data
   } catch (error: any) {
     console.error("Error deleting course:", {
       message: error.message,
@@ -67,61 +126,7 @@ export const deleteCourse = async (courseId: string) => {
             data: error.response.data,
           }
         : null,
-    });
-    throw error;
+    })
+    throw error
   }
-};
-
-// New functions for image uploads
-export const uploadCourseImage = async (courseId: string, file: File) => {
-  const url = APIEndpoints.RESOURCE.CREATE.UPLOAD_COURSE_IMAGE.replace("[courseId]", courseId);
-  const formData = new FormData();
-  formData.append('file', file);
-
-  try {
-    const response = await apiClient.post(url, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  } catch (error: any) {
-    console.error("Error uploading course image:", {
-      message: error.message,
-      response: error.response
-        ? {
-            status: error.response.status,
-            data: error.response.data,
-          }
-        : null,
-    });
-    throw error;
-  }
-};
-
-export const uploadPoolImage = async (courseId: string, file: File) => {
-  const url = APIEndpoints.RESOURCE.CREATE.UPLOAD_POOL_IMAGE.replace("[courseId]", courseId);
-  const formData = new FormData();
-  formData.append('file', file);
-
-  try {
-    const response = await apiClient.post(url, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  } catch (error: any) {
-    console.error("Error uploading pool image:", {
-      message: error.message,
-      response: error.response
-        ? {
-            status: error.response.status,
-            data: error.response.data,
-          }
-        : null,
-    });
-    throw error;
-  }
-};
-  
+}
