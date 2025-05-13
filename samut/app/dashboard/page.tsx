@@ -252,26 +252,40 @@ export default function TeacherDashboard() {
       }
 
       // Use resource URL if available
-      const courseImageUrl = courseImage ? courseImage.resource_url : apiCourse.image || "/person-swimming.png"
+      const courseImageUrl = courseImage
+        ? courseImage.resource_url
+        : apiCourse.course_image || apiCourse.image || "/person-swimming.png"
+      const poolImageUrl = apiCourse.pool_image || null
 
+      // Create a course object that works with both the API and UI
       return {
-        id: courseId,
-        title: courseName,
+        course_id: courseId,
+        id: courseId, // Keep both for compatibility
+        course_name: courseName,
+        title: courseName, // Keep both for compatibility
+        instructor_id: instructorId,
         focus: apiCourse.description?.substring(0, 30) || "Swimming techniques",
+        price: apiCourse.price || 0,
+        pool_type: apiCourse.pool_type || "public-pool",
+        courseType: apiCourse.pool_type || "public-pool", // Keep both for compatibility
+        location: apiCourse.location || "TBD",
+        description: apiCourse.description || "",
+        course_duration: apiCourse.course_duration || 8,
+        duration: `${apiCourse.course_duration || 8} weeks`, // Keep both for compatibility
+        study_frequency: apiCourse.study_frequency || 0,
+        days_study: apiCourse.days_study || 0,
+        number_of_total_sessions: apiCourse.number_of_total_sessions || 0,
         level: apiCourse.level || "Beginner",
-        duration: `${apiCourse.course_duration || 8} weeks`,
         schedule: scheduleStr,
-        instructor: instructorName,
         rating: apiCourse.rating || 4.5,
         students: apiCourse.students || 0,
-        price: apiCourse.price || 0,
-        location: {
-          address: apiCourse.location || "TBD",
-        },
-        courseType: apiCourse.pool_type || "public-pool",
-        description: apiCourse.description || "",
-        maxStudents: apiCourse.max_students || 10,
-        image: courseImageUrl,
+        max_students: apiCourse.max_students || 10,
+        maxStudents: apiCourse.max_students || 10, // Keep both for compatibility
+        course_image: courseImageUrl,
+        image: courseImageUrl, // Keep both for compatibility
+        pool_image: poolImageUrl,
+        poolImage: poolImageUrl, // Keep both for compatibility
+        instructor: instructorName,
         created_at: apiCourse.created_at || new Date().toISOString(),
         updated_at: apiCourse.updated_at || new Date().toISOString(),
       }
@@ -279,23 +293,28 @@ export default function TeacherDashboard() {
       console.error("Error mapping course data:", err)
       // Return a fallback object with minimal required properties
       return {
+        course_id: apiCourse.course_id || apiCourse.id || "unknown",
         id: apiCourse.course_id || apiCourse.id || "unknown",
+        course_name: apiCourse.course_name || apiCourse.title || "Untitled Course",
         title: apiCourse.course_name || apiCourse.title || "Untitled Course",
+        instructor_id: apiCourse.instructor_id || "",
         focus: "Swimming techniques",
-        level: "Beginner",
-        duration: "8 weeks",
-        schedule: "Flexible schedule",
+        price: apiCourse.price || 0,
+        pool_type: apiCourse.pool_type || "public-pool",
+        courseType: apiCourse.pool_type || "public-pool",
+        location: apiCourse.location || "TBD",
+        description: apiCourse.description || "",
+        course_duration: apiCourse.course_duration || 8,
+        duration: `${apiCourse.course_duration || 8} weeks`,
+        level: apiCourse.level || "Beginner",
+        schedule: apiCourse.schedule || "Flexible schedule",
+        rating: apiCourse.rating || 4.5,
+        students: apiCourse.students || 0,
+        max_students: apiCourse.max_students || 10,
+        maxStudents: apiCourse.max_students || 10,
+        course_image: apiCourse.course_image || apiCourse.image || "/person-swimming.png",
+        image: apiCourse.course_image || apiCourse.image || "/person-swimming.png",
         instructor: "Unknown",
-        rating: 4.5,
-        students: 0,
-        price: 0,
-        location: {
-          address: "TBD",
-        },
-        courseType: "public-pool",
-        description: "",
-        maxStudents: 10,
-        image: "/person-swimming.png",
       }
     }
   }
@@ -315,9 +334,13 @@ export default function TeacherDashboard() {
 
   // Filter courses based on search term and level
   const filteredCourses = courses.filter((course) => {
+    const courseTitle = course.title || course.course_name || ""
+    const courseFocus = course.focus || course.description || ""
+
     const matchesSearch =
-      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (course.focus && course.focus.toLowerCase().includes(searchTerm.toLowerCase()))
+      courseTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      courseFocus.toLowerCase().includes(searchTerm.toLowerCase())
+
     const matchesLevel = selectedLevel ? course.level === selectedLevel : true
     return matchesSearch && matchesLevel
   })
@@ -329,16 +352,19 @@ export default function TeacherDashboard() {
 
       // Format the data for the API
       const apiCourseData = {
-        course_name: newCourseData.title || "New Course",
+        course_name: newCourseData.course_name || newCourseData.title || "New Course",
         instructor_id: user?.user_id || "",
         price: newCourseData.price || 0,
-        pool_type: newCourseData.courseType || "public-pool",
-        location: newCourseData.location?.address || "",
+        pool_type: newCourseData.pool_type || newCourseData.courseType || "public-pool",
+        location:
+          typeof newCourseData.location === "object" ? newCourseData.location.address : newCourseData.location || "",
         description: newCourseData.description || "",
-        course_duration: Number.parseInt(newCourseData.duration?.split(" ")[0] || "8"),
+        course_duration:
+          newCourseData.course_duration ||
+          (typeof newCourseData.duration === "string" ? Number.parseInt(newCourseData.duration.split(" ")[0]) : 8),
         level: newCourseData.level || "Beginner",
         schedule: newCourseData.schedule || "Flexible schedule",
-        max_students: newCourseData.maxStudents || 10,
+        max_students: newCourseData.max_students || newCourseData.maxStudents || 10,
       }
 
       const response = await createCourse(apiCourseData)
@@ -363,69 +389,131 @@ export default function TeacherDashboard() {
   }
 
   const handleEditCourse = async (editedCourseData: Partial<Course>) => {
-    if (!currentCourse || !currentCourse.id) {
+    if (!currentCourse) {
       setError("No course selected for editing")
+      return
+    }
+
+    const courseId = currentCourse.course_id || currentCourse.id
+    if (!courseId) {
+      setError("Course ID is missing")
       return
     }
 
     try {
       setIsLoading(true)
+      console.log("Editing course with data:", editedCourseData)
 
-      // Format the data for the API
-      const apiCourseData = {
-        course_name: editedCourseData.title || currentCourse.title,
-        price: editedCourseData.price || currentCourse.price,
-        pool_type: editedCourseData.courseType || currentCourse.courseType,
-        location: editedCourseData.location?.address || currentCourse.location?.address,
-        description: editedCourseData.description || currentCourse.description,
-        course_duration: Number.parseInt(
-          editedCourseData.duration?.split(" ")[0] || currentCourse.duration?.split(" ")[0] || "8",
-        ),
-        level: editedCourseData.level || currentCourse.level,
-        schedule: editedCourseData.schedule || currentCourse.schedule,
-        max_students: editedCourseData.maxStudents || currentCourse.maxStudents,
+      // Format the data for the API - only include fields that are actually changed
+      const apiCourseData: Record<string, any> = {}
+
+      // Only include fields that have been changed
+      if (editedCourseData.course_name !== undefined || editedCourseData.title !== undefined) {
+        apiCourseData.course_name = editedCourseData.course_name || editedCourseData.title
       }
 
-      const response = await updateCourse(currentCourse.id, apiCourseData)
+      if (editedCourseData.price !== undefined) {
+        apiCourseData.price = editedCourseData.price
+      }
+
+      if (editedCourseData.pool_type !== undefined || editedCourseData.courseType !== undefined) {
+        apiCourseData.pool_type = editedCourseData.pool_type || editedCourseData.courseType
+      }
+
+      if (editedCourseData.location !== undefined) {
+        apiCourseData.location =
+          typeof editedCourseData.location === "object" ? editedCourseData.location.address : editedCourseData.location
+      }
+
+      if (editedCourseData.description !== undefined) {
+        apiCourseData.description = editedCourseData.description
+      }
+
+      if (editedCourseData.course_duration !== undefined || editedCourseData.duration !== undefined) {
+        apiCourseData.course_duration =
+          editedCourseData.course_duration ||
+          (typeof editedCourseData.duration === "string"
+            ? Number.parseInt(editedCourseData.duration.split(" ")[0])
+            : undefined)
+      }
+
+      if (editedCourseData.level !== undefined) {
+        apiCourseData.level = editedCourseData.level
+      }
+
+      if (editedCourseData.schedule !== undefined) {
+        apiCourseData.schedule = editedCourseData.schedule
+      }
+
+      if (editedCourseData.max_students !== undefined || editedCourseData.maxStudents !== undefined) {
+        apiCourseData.max_students = editedCourseData.max_students || editedCourseData.maxStudents
+      }
+
+      if (editedCourseData.course_image !== undefined || editedCourseData.image !== undefined) {
+        apiCourseData.course_image = editedCourseData.course_image || editedCourseData.image
+      }
+
+      if (editedCourseData.pool_image !== undefined || editedCourseData.poolImage !== undefined) {
+        apiCourseData.pool_image = editedCourseData.pool_image || editedCourseData.poolImage
+      }
+
+      console.log("Sending API data:", apiCourseData)
+      const response = await updateCourse(courseId, apiCourseData)
       console.log("Update course response:", response)
 
       // Map the updated course to UI format
       const updatedCourse = mapApiCourseToUiCourse({
+        ...currentCourse,
         ...response,
         instructor: currentCourse.instructor, // Preserve instructor info if not in response
+        course_image: apiCourseData.course_image || currentCourse.course_image || currentCourse.image, // Preserve image if not in response
+        pool_image: apiCourseData.pool_image || currentCourse.pool_image || currentCourse.poolImage, // Preserve pool image if not in response
       })
 
       // Update the course in the courses state
-      setCourses(courses.map((course) => (course.id === currentCourse.id ? updatedCourse : course)))
+      setCourses(
+        courses.map((course) => (course.course_id === courseId || course.id === courseId ? updatedCourse : course)),
+      )
 
       // Update the course in available courses if needed
-      setAvailableCourses(availableCourses.map((course) => (course.id === currentCourse.id ? updatedCourse : course)))
+      setAvailableCourses(
+        availableCourses.map((course) =>
+          course.course_id === courseId || course.id === courseId ? updatedCourse : course,
+        ),
+      )
 
       setIsEditModalOpen(false)
+      setError(null) // Clear any previous errors
     } catch (err: any) {
       console.error("Error updating course:", err)
-      setError(`Failed to update course: ${err.message || "Unknown error"}`)
+      setError(`Failed to update course: ${err.response?.data?.message || err.message || "Unknown error"}`)
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleDeleteCourse = async () => {
-    if (!currentCourse || !currentCourse.id) {
+    if (!currentCourse) {
       setError("No course selected for deletion")
+      return
+    }
+
+    const courseId = currentCourse.course_id || currentCourse.id
+    if (!courseId) {
+      setError("Course ID is missing")
       return
     }
 
     try {
       setIsLoading(true)
 
-      await deleteCourse(currentCourse.id)
+      await deleteCourse(courseId)
 
       // Remove the course from the courses state
-      setCourses(courses.filter((course) => course.id !== currentCourse.id))
+      setCourses(courses.filter((course) => course.course_id !== courseId && course.id !== courseId))
 
       // Remove the course from available courses if needed
-      setAvailableCourses(availableCourses.filter((course) => course.id !== currentCourse.id))
+      setAvailableCourses(availableCourses.filter((course) => course.course_id !== courseId && course.id !== courseId))
 
       setIsDeleteModalOpen(false)
     } catch (err: any) {
@@ -545,6 +633,7 @@ export default function TeacherDashboard() {
                   <CourseGrid
                     courses={filteredCourses}
                     onEdit={(course) => {
+                      console.log("Setting current course for edit:", course)
                       setCurrentCourse(course)
                       setIsEditModalOpen(true)
                     }}
@@ -557,6 +646,7 @@ export default function TeacherDashboard() {
                   <CourseList
                     courses={filteredCourses}
                     onEdit={(course) => {
+                      console.log("Setting current course for edit:", course)
                       setCurrentCourse(course)
                       setIsEditModalOpen(true)
                     }}

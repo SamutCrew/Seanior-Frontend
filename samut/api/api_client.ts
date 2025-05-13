@@ -18,6 +18,13 @@ apiClient.interceptors.request.use(
       if (token) {
         config.headers["Authorization"] = `Bearer ${token}`
       }
+
+      // Log the request details for debugging
+      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`, {
+        headers: config.headers,
+        data: config.data,
+      })
+
       return config
     } catch (error) {
       console.error("Request preparation error:", error)
@@ -32,6 +39,11 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response) => {
+    // Log successful response for debugging
+    console.log(`API Response: ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+      data: response.data,
+    })
+
     return response
   },
   async (error) => {
