@@ -13,6 +13,8 @@ import type { Course } from "@/types/course"
 import LoadingPage from "@/components/Common/LoadingPage"
 import { HiAcademicCap, HiOutlineAcademicCap } from "react-icons/hi"
 import { FaSwimmer } from "react-icons/fa"
+import { getAllCourses } from "@/api/course_api"
+import Image from "next/image"
 
 export default function AllCoursesPage() {
   const router = useRouter()
@@ -45,16 +47,43 @@ export default function AllCoursesPage() {
   const [featuredCourses, setFeaturedCourses] = useState<Course[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [apiData, setApiData] = useState<any[]>([]) // Store original API data
 
-  // Mock data for courses with real images
+  // Load courses from API
   useEffect(() => {
     const loadCourses = async () => {
       try {
         setIsLoading(true)
         setError(null)
 
-        // In a real application, this would be an API call
-        // For now, we'll use mock data with real images
+        // Call the actual API instead of using mock data
+        console.log("Calling getAllCourses API...")
+        const coursesData = await getAllCourses()
+
+        // Log the API response
+        console.log("API Response - Courses Data:", coursesData)
+
+        // Store the original API data
+        setApiData(coursesData)
+
+        // Map API data to frontend Course type
+        const mappedCourses = mapApiCoursesToFrontend(coursesData)
+
+        // Set courses from API response
+        setCourses(mappedCourses)
+        setFilteredCourses(mappedCourses)
+
+        // Set featured courses (top 3 by rating)
+        const featured = [...mappedCourses].sort((a, b) => b.rating - a.rating).slice(0, 3)
+        setFeaturedCourses(featured)
+
+        setIsLoading(false)
+      } catch (err: any) {
+        console.error("Error loading courses:", err)
+        setError("Failed to load courses. Please try again later.")
+        setIsLoading(false)
+
+        // Fallback to mock data if API fails
         const mockCourses: Course[] = [
           {
             id: 1,
@@ -79,269 +108,62 @@ export default function AllCoursesPage() {
             maxStudents: 15,
             image: "/butterfly-undulation-drill.png",
           },
-          {
-            id: 2,
-            title: "Advanced Freestyle Technique",
-            focus: "Perfect your freestyle stroke for competitive swimming",
-            level: "Advanced",
-            duration: "6 weeks",
-            schedule: "Tue, Thu 6:30 PM - 8:00 PM",
-            instructor: "Michael Chen",
-            instructorId: "2",
-            instructorImage: "/diverse-female-student.png",
-            rating: 4.9,
-            students: 8,
-            price: 249,
-            location: {
-              address: "Olympic Pool, 456 Sports Ave",
-            },
-            courseType: "public-pool",
-            description: "Take your freestyle to the next level with advanced techniques and drills.",
-            curriculum: ["Stroke Analysis", "Efficiency Drills", "Race Strategy", "Advanced Turns"],
-            maxStudents: 10,
-            image: "/butterfly-swimming-technique.png",
-          },
-          {
-            id: 3,
-            title: "Toddler Water Confidence",
-            focus: "Introduce young children to water in a fun, safe environment",
-            level: "Beginner",
-            duration: "4 weeks",
-            schedule: "Sat 9:00 AM - 10:00 AM",
-            instructor: "Emma Rodriguez",
-            instructorId: "3",
-            instructorImage: "/butterfly-undulation-drill.png",
-            rating: 4.7,
-            students: 6,
-            price: 149,
-            location: {
-              address: "Kids Splash Center, 789 Family Rd",
-            },
-            courseType: "private-location",
-            description: "A gentle introduction to water for toddlers aged 2-4 years with parent participation.",
-            curriculum: ["Water Play", "Basic Floating", "Underwater Exploration", "Safety Skills"],
-            maxStudents: 8,
-            image: "/Teacher3.jpg",
-          },
-          {
-            id: 4,
-            title: "Intermediate Stroke Development",
-            focus: "Refine all four competitive swimming strokes",
-            level: "Intermediate",
-            duration: "10 weeks",
-            schedule: "Mon, Wed, Fri 4:00 PM - 5:30 PM",
-            instructor: "David Wilson",
-            instructorId: "4",
-            instructorImage: "/SwimmimgLanding.jpg",
-            rating: 4.6,
-            students: 10,
-            price: 299,
-            location: {
-              address: "Community Pool, 101 Recreation Blvd",
-            },
-            courseType: "public-pool",
-            description: "Comprehensive program covering all four competitive strokes with technique refinement.",
-            curriculum: ["Butterfly", "Backstroke", "Breaststroke", "Freestyle", "Individual Medley"],
-            maxStudents: 12,
-            image: "/Teacher3.jpg",
-          },
-          {
-            id: 5,
-            title: "Adult Learn-to-Swim",
-            focus: "Swimming basics for adults in a supportive environment",
-            level: "Beginner",
-            duration: "8 weeks",
-            schedule: "Tue, Thu 7:00 PM - 8:00 PM",
-            instructor: "Lisa Thompson",
-            instructorId: "5",
-            instructorImage: "/Teacher2.jpg",
-            rating: 4.9,
-            students: 5,
-            price: 219,
-            location: {
-              address: "Wellness Center, 202 Health St",
-            },
-            courseType: "public-pool",
-            description: "Designed specifically for adults who want to learn to swim in a judgment-free environment.",
-            curriculum: ["Water Comfort", "Floating", "Basic Strokes", "Deep Water Confidence"],
-            maxStudents: 6,
-            image: "/SwimmimgLanding.jpg",
-          },
-          {
-            id: 6,
-            title: "Competitive Swim Training",
-            focus: "Training program for competitive swimmers",
-            level: "Advanced",
-            duration: "12 weeks",
-            schedule: "Mon-Fri 6:00 AM - 7:30 AM",
-            instructor: "James Peterson",
-            instructorId: "6",
-            instructorImage: "/Teacher1.jpg",
-            rating: 4.8,
-            students: 15,
-            price: 349,
-            location: {
-              address: "Elite Swim Center, 303 Champion Ave",
-            },
-            courseType: "teacher-pool",
-            description: "Intensive training program for competitive swimmers looking to improve race times.",
-            curriculum: ["Race Strategy", "Advanced Technique", "Strength Training", "Mental Preparation"],
-            maxStudents: 20,
-            image: "/SwimmimgLanding.jpg",
-          },
-          {
-            id: 7,
-            title: "Water Safety & Rescue",
-            focus: "Learn essential water safety and rescue techniques",
-            level: "Intermediate",
-            duration: "4 weeks",
-            schedule: "Sat, Sun 1:00 PM - 3:00 PM",
-            instructor: "Robert Garcia",
-            instructorId: "7",
-            instructorImage: "/Teacher4.jpg",
-            rating: 4.7,
-            students: 12,
-            price: 179,
-            location: {
-              address: "Safety First Pool, 404 Lifeguard Ln",
-            },
-            courseType: "public-pool",
-            description:
-              "Essential course for anyone who spends time around water. Learn how to prevent and respond to water emergencies.",
-            curriculum: ["Prevention", "Recognition", "Basic Rescue", "CPR Basics"],
-            maxStudents: 15,
-            image: "/focused-freestyle.png",
-          },
-          {
-            id: 8,
-            title: "Senior Water Exercise",
-            focus: "Low-impact water exercises for seniors",
-            level: "Beginner",
-            duration: "Ongoing",
-            schedule: "Mon, Wed, Fri 10:00 AM - 11:00 AM",
-            instructor: "Patricia Lee",
-            instructorId: "8",
-            instructorImage: "/images/instructors/instructor-8.png",
-            rating: 4.9,
-            students: 18,
-            price: 129,
-            location: {
-              address: "Golden Years Center, 505 Senior Blvd",
-            },
-            courseType: "public-pool",
-            description:
-              "Gentle, effective water exercises designed specifically for seniors to improve mobility and strength.",
-            curriculum: ["Water Walking", "Joint Mobility", "Strength Exercises", "Balance Work"],
-            maxStudents: 20,
-            image: "/images/courses/senior-water-exercise.png",
-          },
-          {
-            id: 9,
-            title: "Triathlon Swim Preparation",
-            focus: "Open water swimming techniques for triathletes",
-            level: "Intermediate",
-            duration: "6 weeks",
-            schedule: "Tue, Thu 5:30 PM - 7:00 PM",
-            instructor: "Nathan Brown",
-            instructorId: "9",
-            instructorImage: "/images/instructors/instructor-9.png",
-            rating: 4.8,
-            students: 10,
-            price: 279,
-            location: {
-              address: "Triathlon Training Center, 606 Endurance Way",
-            },
-            courseType: "teacher-pool",
-            description: "Specialized training for triathletes focusing on open water techniques and race strategy.",
-            curriculum: ["Sighting", "Drafting", "Mass Start Practice", "Transition Speed"],
-            maxStudents: 12,
-            image: "/images/courses/triathlon-swimming.png",
-          },
-          {
-            id: 10,
-            title: "Aquatic Rehabilitation",
-            focus: "Therapeutic swimming for injury recovery",
-            level: "Beginner",
-            duration: "Varies",
-            schedule: "By appointment",
-            instructor: "Dr. Maria Santos",
-            instructorId: "10",
-            instructorImage: "/images/instructors/instructor-10.png",
-            rating: 4.9,
-            students: 4,
-            price: 399,
-            location: {
-              address: "Healing Waters Clinic, 707 Recovery Rd",
-            },
-            courseType: "private-location",
-            description: "Personalized aquatic therapy program for injury recovery and rehabilitation.",
-            curriculum: ["Assessment", "Personalized Program", "Progress Tracking", "Home Exercise Plan"],
-            maxStudents: 1,
-            image: "/images/courses/aquatic-rehab.png",
-          },
-          {
-            id: 11,
-            title: "Parent & Child Swimming",
-            focus: "Bond with your child while teaching water skills",
-            level: "Beginner",
-            duration: "6 weeks",
-            schedule: "Sat 10:30 AM - 11:30 AM",
-            instructor: "Emma Rodriguez",
-            instructorId: "3",
-            instructorImage: "/images/instructors/instructor-3.png",
-            rating: 4.8,
-            students: 8,
-            price: 169,
-            location: {
-              address: "Family Aquatic Center, 808 Bonding Blvd",
-            },
-            courseType: "public-pool",
-            description: "A fun course for parents and children (ages 4-7) to learn water skills together.",
-            curriculum: ["Water Games", "Basic Skills", "Safety Rules", "Confidence Building"],
-            maxStudents: 10,
-            image: "/images/courses/parent-child-swimming.png",
-          },
-          {
-            id: 12,
-            title: "Synchronized Swimming Basics",
-            focus: "Introduction to the art of synchronized swimming",
-            level: "Intermediate",
-            duration: "8 weeks",
-            schedule: "Wed, Fri 4:30 PM - 6:00 PM",
-            instructor: "Sophia Martinez",
-            instructorId: "11",
-            instructorImage: "/images/instructors/instructor-11.png",
-            rating: 4.7,
-            students: 12,
-            price: 229,
-            location: {
-              address: "Artistic Swim Center, 909 Performance Pl",
-            },
-            courseType: "public-pool",
-            description: "Learn the fundamentals of synchronized swimming, combining swimming, dance, and gymnastics.",
-            curriculum: ["Basic Figures", "Sculling Techniques", "Breath Control", "Simple Routines"],
-            maxStudents: 14,
-            image: "/images/courses/synchronized-swimming.png",
-          },
+          // ... other mock courses (keeping a few for fallback)
         ]
 
+        console.log("Using fallback mock data due to API error")
         setCourses(mockCourses)
         setFilteredCourses(mockCourses)
 
-        // Set featured courses (top 3 by rating)
+        // Set featured courses from mock data
         const featured = [...mockCourses].sort((a, b) => b.rating - a.rating).slice(0, 3)
         setFeaturedCourses(featured)
-
-        setIsLoading(false)
-      } catch (err) {
-        console.error("Error loading courses:", err)
-        setError("Failed to load courses. Please try again later.")
-        setIsLoading(false)
       }
     }
 
     loadCourses()
   }, [])
+
+  // Map API courses to frontend Course type
+  const mapApiCoursesToFrontend = (apiCourses: any[]): Course[] => {
+    return apiCourses.map((course) => {
+      // Extract instructor name from the instructor object if available
+      const instructorName = course.instructor?.name || "Unknown Instructor"
+
+      return {
+        id: course.course_id || course.id,
+        title: course.course_name || "Untitled Course",
+        focus: course.description?.substring(0, 50) + "..." || "Swimming course",
+        level: course.level || "Beginner",
+        duration: `${course.course_duration || 8} weeks`,
+        schedule: course.schedule || "Schedule not available",
+        instructor: instructorName,
+        instructorId: course.instructor?.user_id || "unknown",
+        instructorImage: course.instructor?.profile_img || "/instructor-teaching.png",
+        rating: course.rating || 4.0,
+        students: course.students || 0,
+        price: course.price || 0,
+        location: {
+          address: course.location || "Location not specified",
+        },
+        courseType:
+          course.pool_type?.toLowerCase() === "online"
+            ? "online"
+            : course.pool_type?.toLowerCase() === "offline"
+              ? "public-pool"
+              : "teacher-pool",
+        description: course.description || "No description available",
+        curriculum: course.curriculum?.split(",") || [],
+        maxStudents: course.max_students || 10,
+        image:
+          course.image ||
+          course.course_image ||
+          `/placeholder.svg?height=400&width=600&query=swimming+${course.level?.toLowerCase() || "beginner"}`,
+        // Store the original data for reference
+        originalData: course,
+      }
+    })
+  }
 
   // Update active filter count
   useEffect(() => {
@@ -460,6 +282,26 @@ export default function AllCoursesPage() {
     }
   }
 
+  // Refresh courses
+  const refreshCourses = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const coursesData = await getAllCourses()
+      setApiData(coursesData)
+      const mappedCourses = mapApiCoursesToFrontend(coursesData)
+      setCourses(mappedCourses)
+      setFilteredCourses(mappedCourses)
+      const featured = [...mappedCourses].sort((a, b) => b.rating - a.rating).slice(0, 3)
+      setFeaturedCourses(featured)
+      setIsLoading(false)
+    } catch (err: any) {
+      console.error("Error refreshing courses:", err)
+      setError("Failed to refresh courses. Please try again.")
+      setIsLoading(false)
+    }
+  }
+
   const resultsCount = filteredCourses.length
 
   if (isLoading) {
@@ -477,11 +319,7 @@ export default function AllCoursesPage() {
             className={`p-8 rounded-xl shadow-md ${isDarkMode ? "bg-slate-800 text-white" : "bg-white text-red-600"}`}
           >
             <p className="text-xl">{error}</p>
-            <Button
-              variant={isDarkMode ? "gradient" : "primary"}
-              className="mt-4"
-              onClick={() => window.location.reload()}
-            >
+            <Button variant={isDarkMode ? "gradient" : "primary"} className="mt-4" onClick={refreshCourses}>
               Try Again
             </Button>
           </motion.div>
@@ -760,6 +598,25 @@ export default function AllCoursesPage() {
             >
               <FaSwimmer className="mr-2" /> Advanced
             </div>
+          </div>
+        </div>
+
+        {/* API Data Debug Info */}
+        <div className="mb-4 p-4 bg-yellow-100 border border-yellow-300 rounded-md">
+          <h3 className="font-bold text-yellow-800 mb-2">API Data Information</h3>
+          <p className="text-yellow-800">Courses found from API: {apiData.length}</p>
+          <p className="text-yellow-800">Mapped courses: {courses.length}</p>
+          <p className="text-yellow-800">Filtered courses: {filteredCourses.length}</p>
+          <div className="mt-2 flex gap-2">
+            <Button variant="secondary" size="sm" onClick={() => console.log("API DATA:", apiData)}>
+              Log API Data
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => console.log("MAPPED COURSES:", courses)}>
+              Log Mapped Courses
+            </Button>
+            <Button variant="primary" size="sm" onClick={refreshCourses}>
+              Refresh Courses
+            </Button>
           </div>
         </div>
 
@@ -1140,10 +997,12 @@ export default function AllCoursesPage() {
                   <div className="flex flex-col md:flex-row">
                     <div className="relative md:w-1/4 h-48 md:h-auto">
                       <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-500 opacity-20"></div>
-                      <img
-                        src={course.image || "/placeholder.svg?key=25f2a"}
+                      <Image
+                        src={course.image || course.course_image || "/placeholder.svg?key=25f2a"}
                         alt={course.title}
                         className="w-full h-full object-cover"
+                        fill
+                        unoptimized
                       />
                       <div
                         className={`absolute top-3 left-3 px-2 py-1 rounded-md text-xs font-semibold ${
@@ -1207,10 +1066,12 @@ export default function AllCoursesPage() {
                       <div className="mt-auto flex items-center justify-between">
                         <div className="flex items-center text-sm">
                           <div className="relative h-8 w-8 rounded-full overflow-hidden mr-2">
-                            <img
+                            <Image
                               src={course.instructorImage || "/placeholder.svg"}
                               alt={`Instructor ${course.instructor}`}
-                              className="object-cover w-full h-full"
+                              className="object-cover"
+                              fill
+                              unoptimized
                             />
                           </div>
                           <span className={`font-medium ${isDarkMode ? "text-white" : "text-gray-800"}`}>

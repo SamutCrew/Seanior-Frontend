@@ -129,8 +129,8 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
 
   const studentNavItems = [
     { icon: Home, label: "Dashboard", href: "/student/dashboard" },
-    { icon: Search, label: "Find Instructors", href: "/teacher" },
-    { icon: BookOpen, label: "My Courses", href: "/student/courses" },
+    { icon: Search, label: "Find Instructors", href: "/allinstructor" },
+    { icon: BookOpen, label: "My Courses", href: "/my-courses" },
     { icon: Calendar, label: "My Schedule", href: "/student/schedule" },
     { icon: Clock, label: "Booking History", href: "/student/bookings" },
     { icon: User, label: "Profile", href: user?.user_id ? `/profile/${user.user_id}` : "/profile" },

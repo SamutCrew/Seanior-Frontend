@@ -1,8 +1,14 @@
-export type CourseType = "private-location" | "public-pool" | "teacher-pool"
+export type CourseType = "private-location" | "public-pool" | "teacher-pool" | "online"
 export type CourseStatus = "open" | "in-progress" | "completed"
 
 export interface Course {
-  id: number
+  id?: number
+  // API-specific field names
+  course_id?: string | number
+  course_name?: string
+  course_image?: string
+  course_duration?: number
+  pool_type?: string
   title: string
   focus: string
   level: string
@@ -25,6 +31,14 @@ export interface Course {
   maxStudents?: number
   image?: string
   progress?: CourseProgress
+  originalData?: any
+
+  // Add missing properties used in the API
+  study_frequency?: string
+  days_study?: number
+  number_of_total_sessions?: number
+  created_at?: string
+  updated_at?: string
 }
 
 export interface CourseProgress {
