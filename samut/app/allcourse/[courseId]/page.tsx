@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { use } from "react"
 import { useRouter } from "next/navigation"
 import { useAppSelector } from "@/app/redux"
 import { SectionTitle } from "@/components/Common/SectionTitle"
@@ -10,125 +9,71 @@ import { motion } from "framer-motion"
 import { Calendar, Clock, MapPin, Users, Award, ChevronRight, Star, DollarSign } from "lucide-react"
 import type { Course } from "@/types/course"
 import LoadingPage from "@/components/Common/LoadingPage"
-import { getCourseById } from "@/api/course_api"
-import Image from "next/image"
-import { FaSwimmer } from "react-icons/fa"
-
-// Define a type for the schedule object
-type ScheduleObject = {
-  [key: string]: string | null | undefined
-}
 
 export default function CourseDetailsPage({ params }: { params: { courseId: string } }) {
-  // Unwrap params using React.use()
-  const unwrappedParams = use(params)
-  // Get courseId from unwrapped params
-  const courseId = unwrappedParams.courseId
-
   const router = useRouter()
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
   const [course, setCourse] = useState<Course | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [imageError, setImageError] = useState(false)
-
-  // Format schedule to handle object or string
-  const formatSchedule = (schedule: unknown): string => {
-    if (!schedule) return "Schedule not available"
-
-    // If it's already a string, return it
-    if (typeof schedule === "string") return schedule
-
-    // If it's an object, format it
-    if (typeof schedule === "object" && schedule !== null) {
-      try {
-        // Try to convert from JSON string if needed
-        const scheduleObj: ScheduleObject = schedule as ScheduleObject
-
-        // Format the object into a readable string
-        return Object.entries(scheduleObj)
-          .filter(([_, value]) => value) // Only include days that have values
-          .map(([day, time]) => `${day.charAt(0).toUpperCase() + day.slice(1)}: ${time}`)
-          .join(", ")
-      } catch (e) {
-        console.error("Error formatting schedule:", e)
-        return "Schedule available upon request"
-      }
-    }
-
-    return "Schedule not available"
-  }
 
   useEffect(() => {
     const fetchCourse = async () => {
       try {
         setIsLoading(true)
         setError(null)
-        setImageError(false)
 
-        console.log(`Fetching course details for ID: ${courseId}`)
-
-        const data = await getCourseById(courseId)
-        console.log("Course data:", data)
-
-        // Format the schedule properly
-        let formattedSchedule = "Schedule not available"
-        if (data.schedule) {
-          if (typeof data.schedule === "string") {
-            formattedSchedule = data.schedule
-          } else if (typeof data.schedule === "object") {
-            formattedSchedule = Object.entries(data.schedule)
-              .filter(([_, value]) => value)
-              .map(([day, time]) => `${day.charAt(0).toUpperCase() + day.slice(1)}: ${time}`)
-              .join(", ")
+        // In a real application, this would be an API call
+        // For now, we'll simulate fetching the course by ID
+        setTimeout(() => {
+          // Mock course data
+          const mockCourse: Course = {
+            id: Number.parseInt(params.courseId),
+            title: "Advanced Freestyle Technique",
+            focus: "Perfect your freestyle stroke for competitive swimming",
+            level: "Advanced",
+            duration: "6 weeks",
+            schedule: "Tue, Thu 6:30 PM - 8:00 PM",
+            instructor: "Michael Chen",
+            instructorId: "2",
+            rating: 4.9,
+            students: 8,
+            price: 249,
+            location: {
+              address: "Olympic Pool, 456 Sports Ave",
+            },
+            courseType: "public-pool",
+            description:
+              "Take your freestyle to the next level with advanced techniques and drills. This course is designed for swimmers who already have a solid foundation in freestyle and want to improve their efficiency, speed, and endurance. Through video analysis, targeted drills, and personalized feedback, you'll refine your stroke mechanics and develop a more powerful, efficient freestyle technique.",
+            curriculum: [
+              "Stroke Analysis and Biomechanics",
+              "Efficiency Drills and Technique Refinement",
+              "Breathing Patterns and Rhythm",
+              "Race Strategy and Pacing",
+              "Advanced Turns and Underwater Work",
+              "Sprint and Distance Variations",
+            ],
+            requirements: [
+              "Comfortable swimming at least 200m freestyle without stopping",
+              "Basic understanding of freestyle technique",
+              "Ability to perform flip turns",
+              "Own swimming equipment (fins, paddles, snorkel recommended)",
+            ],
+            maxStudents: 10,
           }
-        }
 
-        // Map API data to the Course type
-        const mappedCourse: Course = {
-          id: data.course_id ? Number.parseInt(data.course_id, 10) || data.course_id : Number.parseInt(courseId, 10),
-          title: data.course_name || "Swimming Course",
-          focus: data.description?.substring(0, 100) || "Learn professional swimming techniques",
-          level: data.level || "Beginner",
-          duration: `${data.course_duration || 8} weeks`,
-          schedule: formattedSchedule,
-          instructor: data.instructor?.name || "Professional Instructor",
-          instructorId: data.instructor?.user_id || data.instructor_id || "1",
-          instructorImage: data.instructor?.profile_img || "/swimming-instructor.png",
-          rating: data.rating || 4.5,
-          students: data.students || 0,
-          price: data.price || 199,
-          location: {
-            address: data.location || "Main Swimming Pool",
-          },
-          courseType: data.pool_type || "public-pool",
-          description: data.description || "This is a comprehensive swimming course.",
-          curriculum: Array.isArray(data.curriculum)
-            ? data.curriculum
-            : ["Swimming fundamentals", "Water safety", "Basic strokes", "Breathing techniques", "Advanced techniques"],
-          requirements: Array.isArray(data.requirements)
-            ? data.requirements
-            : ["Swimwear required", "Basic comfort in water recommended"],
-          maxStudents: data.max_students || 15,
-          image: data.course_image || "/placeholder.svg?key=9qy8b",
-          study_frequency: data.study_frequency || "Twice a week",
-          days_study: data.days_study || 2,
-          number_of_total_sessions: data.number_of_total_sessions || 16,
-          course_image: data.course_image || "/placeholder.svg?key=kuamv",
-          originalData: data,
-        }
-
-        setCourse(mappedCourse)
-        setIsLoading(false)
-      } catch (err: any) {
+          setCourse(mockCourse)
+          setIsLoading(false)
+        }, 1000)
+      } catch (err) {
         console.error("Error fetching course:", err)
-        setError(err.message || "Failed to load course details. Please try again later.")
+        setError("Failed to load course details. Please try again later.")
         setIsLoading(false)
       }
     }
 
     fetchCourse()
-  }, [courseId])
+  }, [params.courseId])
 
   if (isLoading) {
     return <LoadingPage />
@@ -203,7 +148,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  <Button
+                <Button
                     variant={isDarkMode ? "gradient" : "primary"}
                     size="lg"
                     className={`${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
@@ -217,24 +162,13 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
               </div>
               <div className="hidden md:block relative mt-8 md:mt-0">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-cyan-500/20 rounded-xl"></div>
-                <div className="relative w-[400px] h-[300px]">
-                  <Image
-                    src={
-                      imageError
-                        ? "/placeholder.svg?height=400&width=600&query=swimming+course"
-                        : course.image ||
-                          course.course_image ||
-                          "/placeholder.svg?height=400&width=600&query=swimming+course"
-                    }
-                    alt={course.title}
-                    className="rounded-xl shadow-lg object-cover"
-                    fill
-                    unoptimized
-                    onError={() => setImageError(true)}
-                  />
-                </div>
+                <img
+                  src="/breaststroke-swimming.png"
+                  alt={course.title}
+                  className="rounded-xl shadow-lg w-[400px] h-[300px] object-cover"
+                />
                 <div className="absolute bottom-4 right-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-2 rounded-lg font-bold">
-                  ${course.price.toLocaleString()}
+                  ${course.price}
                 </div>
               </div>
             </div>
@@ -328,15 +262,11 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 About the Instructor
               </h2>
               <div className="flex items-center mb-6">
-                <div className="relative w-16 h-16 rounded-full overflow-hidden mr-4">
-                  <Image
-                    src={course.instructorImage || "/instructor-teaching.png"}
-                    alt={course.instructor}
-                    className="object-cover"
-                    fill
-                    unoptimized
-                  />
-                </div>
+                <img
+                  src="/Teacher2.jpg"
+                  alt={course.instructor}
+                  className="w-16 h-16 rounded-full object-cover mr-4"
+                />
                 <div>
                   <h3 className={`text-lg font-bold ${isDarkMode ? "text-white" : "text-gray-800"}`}>
                     {course.instructor}
@@ -345,13 +275,13 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 </div>
               </div>
               <p className={`mb-4 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                Professional swimming instructor with expertise in teaching students of all levels. Specialized in{" "}
-                {course.level.toLowerCase()} level swimming techniques and water safety.
+                Professional swimming instructor with over 10 years of experience training competitive swimmers.
+                Specialized in advanced technique development and race strategy.
               </p>
               <Button
                 variant="outline"
                 className={isDarkMode ? "border-slate-700 text-white" : ""}
-                onClick={() => router.push(`/allinstructor/${course.instructorId}`)}
+                onClick={() => router.push(`/instructor/${course.instructorId}`)}
               >
                 View Instructor Profile
               </Button>
@@ -369,23 +299,14 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
               }`}
             >
               <div className="md:hidden mb-6">
-                <div className="relative h-48 w-full">
-                  <Image
-                    src={
-                      imageError
-                        ? "/placeholder.svg?height=400&width=600&query=swimming+course"
-                        : course.image ||
-                          course.course_image ||
-                          "/placeholder.svg?height=400&width=600&query=swimming+course"
-                    }
+                <div className="relative">
+                  <img
+                    src="/placeholder.svg?key=gig3h"
                     alt={course.title}
-                    className="object-cover rounded-lg"
-                    fill
-                    unoptimized
-                    onError={() => setImageError(true)}
+                    className="w-full h-48 object-cover rounded-lg"
                   />
                   <div className="absolute bottom-3 right-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-3 py-1 rounded-lg font-bold">
-                    ${course.price.toLocaleString()}
+                    ${course.price}
                   </div>
                 </div>
               </div>
@@ -409,9 +330,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   <Clock className={`w-5 h-5 mr-3 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
                   <div>
                     <p className="font-medium">Duration</p>
-                    <p>
-                      {course.duration} ({course.number_of_total_sessions} sessions)
-                    </p>
+                    <p>{course.duration}</p>
                   </div>
                 </div>
 
@@ -450,26 +369,6 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                     <p className="text-lg font-bold">${course.price}</p>
                   </div>
                 </div>
-
-                <div className={`flex items-start ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                  <Clock className={`w-5 h-5 mr-3 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
-                  <div>
-                    <p className="font-medium">Frequency</p>
-                    <p>
-                      {course.study_frequency} ({course.days_study} days per week)
-                    </p>
-                  </div>
-                </div>
-
-                <div className={`flex items-start ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                  <FaSwimmer
-                    className={`w-5 h-5 mr-3 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
-                  />
-                  <div>
-                    <p className="font-medium">Pool Type</p>
-                    <p>{course.courseType}</p>
-                  </div>
-                </div>
               </div>
 
               <Button
@@ -500,22 +399,18 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 + i * 0.1 }}
                 className="cursor-pointer"
-                onClick={() => router.push(`/allcourse/${Number(courseId) + i}`)}
+                onClick={() => router.push(`/allcourse/${i}`)}
               >
                 <div
                   className={`rounded-xl overflow-hidden shadow-md ${
                     isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white"
                   }`}
                 >
-                  <div className="relative h-48 w-full">
-                    <Image
-                      src={`/placeholder.svg?key=gb1oa&key=8yh7w&key=i1x6p&key=nr1j8&height=400&width=600&query=swimming+${
-                        i === 1 ? "beginner" : i === 2 ? "intermediate" : "advanced"
-                      }`}
+                  <div className="relative">
+                    <img
+                      src="/Teacher2.jpg"
                       alt="Related Course"
-                      className="object-cover"
-                      fill
-                      unoptimized
+                      className="w-full h-48 object-cover"
                     />
                     <div
                       className={`absolute top-3 left-3 px-2 py-1 rounded-md text-xs font-semibold ${
@@ -544,7 +439,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                       <div className="flex items-center">
                         <Star className="w-4 h-4 text-yellow-400 mr-1" />
                         <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                          {(4.5 + i * 0.1).toFixed(1)}
+                          {4.5 + (i * 0.1).toFixed(1)}
                         </span>
                       </div>
                       <span className={`font-bold ${isDarkMode ? "text-white" : "text-gray-800"}`}>

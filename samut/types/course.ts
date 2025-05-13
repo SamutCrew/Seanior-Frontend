@@ -1,8 +1,7 @@
-export type CourseType = "private-location" | "public-pool" | "teacher-pool" | "online"
+export type CourseType = "private-location" | "public-pool" | "teacher-pool"
 export type CourseStatus = "open" | "in-progress" | "completed"
 
 export interface Course {
-
   course_id: string;
   course_name: string;
   instructor_id: string;
@@ -38,7 +37,6 @@ export interface Course {
     created_at: string;
     updated_at: string;
   };
-
 }
 
 export interface CourseProgress {
