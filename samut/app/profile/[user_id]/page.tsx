@@ -16,6 +16,7 @@ import { useAppSelector } from "@/app/redux"
 
 const Profile = () => {
   const { user, refreshUser } = useAuth()
+  console.log(user)
   const { user_id } = useParams()
   const router = useRouter()
 

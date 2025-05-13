@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { getAllUsers } from '@/api/';
-import { getAllResources } from '@/api';
+import { getAllUsers, getAllResources, getAllCourses } from '@/api/';
 import { getAllInstructorRequests } from '@/api/instructor_request_api';
 import { useAuth } from '@/context/AuthContext';
 import withLayout from '@/hocs/WithLayout';
@@ -9,6 +8,7 @@ import { LayoutType } from '@/types/layout';
 import type { User, Resource } from '@/types';
 import { UserType } from '@/types/model/user';
 import { InstructorRequestData } from '@/types/model/instructor_request';
+import { Course } from '@/types/course';
 import Link from 'next/link';
 import { Pie, Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js';
@@ -39,7 +39,7 @@ const AdminDashboard = () => {
   const [instructorRequests, setInstructorRequests] = useState<InstructorRequest[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [courses, setCourses] = useState<number>(5); // Mock data
+  const [courses, setCourses] = useState<Course[]>([]);
 
   useEffect(() => {
     if (!user || user.user_type !== 'admin') {
@@ -68,8 +68,14 @@ const AdminDashboard = () => {
           console.warn('Unexpected instructor requests data, expected an object with a requests array:', requestData);
         }
 
-        // Mock courses data
-        setCourses(5);
+        // Fetch courses
+        const courseData = await getAllCourses();
+        if (Array.isArray(courseData)) {
+          setCourses(courseData);
+        } else {
+          setCourses([]);
+          console.warn('Unexpected courses data, expected an array:', courseData);
+        }
 
         setError(null);
       } catch (err) {
@@ -250,14 +256,14 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Courses */}
+          {/* Courses */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
           <div className="flex items-center mb-2">
             <FaBook className="text-indigo-500 mr-2" size={24} />
             <h2 className="text-xl font-semibold">Courses</h2>
           </div>
           <p className="text-gray-600 dark:text-gray-300 mb-2">
-            Total Courses: <span className="text-indigo-500 font-semibold">{courses}</span>
+            Total Courses: <span className="text-indigo-500 font-semibold">{courses.length}</span>
           </p>
           <Link href="/admin/course" className="text-blue-500 hover:underline font-medium">
             See Details

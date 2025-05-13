@@ -1,3 +1,8 @@
+
+import apiClient from "@/api/api_client";
+
+import { Course } from '@/types/course';
+
 import { APIEndpoints } from "@/constants/apiEndpoints"
 import { auth } from "@/lib/firebase"
 
@@ -43,6 +48,8 @@ const getFirebaseToken = async () => {
   }
 }
 
+
+// Existing functions...
 export const getAllCourses = async () => {
   const url = APIEndpoints.COURSE.RETRIEVE.ALL
   try {
@@ -210,48 +217,10 @@ export const getCourseById = async (courseId: string) => {
   }
 }
 
-// Helper function to create fallback course data
-const createFallbackCourse = (courseId: string) => {
-  return {
-    id: courseId,
-    course_id: courseId,
-    course_name: "Swimming Course",
-    title: "Swimming Course",
-    description:
-      "This is a comprehensive swimming course designed to help students of all levels improve their swimming skills.",
-    level: "Intermediate",
-    course_duration: 8,
-    schedule: "Mondays and Wednesdays, 5:00 PM - 6:30 PM",
-    instructor_name: "Professional Instructor",
-    instructor_id: "1",
-    rating: 4.5,
-    students: 12,
-    price: 199,
-    location: "Main Swimming Pool, 123 Aquatic Center",
-    pool_type: "public-pool",
-    curriculum: [
-      "Swimming fundamentals",
-      "Water safety",
-      "Basic strokes",
-      "Breathing techniques",
-      "Advanced techniques",
-    ],
-    requirements: ["Swimwear required", "Basic comfort in water recommended"],
-    max_students: 15,
-    course_image: "/placeholder.svg?key=tnyv7",
-    study_frequency: "Twice a week",
-    days_study: 2,
-    number_of_total_sessions: 16,
-    instructor: {
-      name: "Professional Instructor",
-      user_id: "1",
-      profile_img: "/instructor-teaching.png",
-    },
-  }
-}
 
-// Helper function to compress image data
-const compressImageData = async (imageData: string): Promise<string> => {
+export const updateCourse = async (courseId: string, updatedData: Partial<Course>) => {
+  const url = APIEndpoints.COURSE.UPDATE.replace("[courseId]", courseId)
+
   try {
     // If the image is already small enough, return it as is
     if (imageData.length < 500000) {
@@ -267,238 +236,77 @@ const compressImageData = async (imageData: string): Promise<string> => {
   }
 }
 
-// Update the createCourse function to properly handle the course_image field
-export const createCourse = async (courseData: CourseDbData) => {
-  try {
-    // Get the token from Firebase AND localStorage as fallback
-    const firebaseToken = await getFirebaseToken()
-    const localToken = localStorage.getItem("authToken")
-    const token = firebaseToken || localToken
 
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    }
-
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`
-    }
-
-    console.log("Create course headers:", headers)
-
-    // Create a new object with the correct field names
-    const processedData = { ...courseData }
-
-    // If image is still in the data, move it to course_image and delete the original
-    if ((processedData as any).image) {
-      processedData.course_image = (processedData as any).image
-      delete (processedData as any).image
-    }
-
-    // Ensure study_frequency is a string
-    if (typeof processedData.study_frequency !== "string") {
-      processedData.study_frequency = String(processedData.study_frequency)
-    }
-
-    // If the image is a base64 string, we need to handle it
-    if (typeof processedData.course_image === "string" && processedData.course_image.startsWith("data:image")) {
-      // Compress the image if it's too large
-      processedData.course_image = await compressImageData(processedData.course_image)
-    }
-
-    // Fix pool_type if needed
-    if (processedData.pool_type === "teacher-pool") {
-      processedData.pool_type = "instructor_pool"
-    }
-
-    // Ensure schedule is a string
-    if (typeof processedData.schedule !== "string") {
-      processedData.schedule = JSON.stringify(processedData.schedule)
-    }
-
-    console.log("Processed data being sent to API:", {
-      ...processedData,
-      course_image: processedData.course_image ? `${processedData.course_image.substring(0, 20)}... (truncated)` : null,
-    })
-
-    const response = await fetch(`${API_BASE_URL}${APIEndpoints.COURSE.CREATE}`, {
-      method: "POST",
-      headers,
-      credentials: "include",
-      body: JSON.stringify(processedData),
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error("API Error Response:", errorText)
-      try {
-        const errorData = JSON.parse(errorText)
-        throw new Error(errorData.message || "Failed to create course")
-      } catch (e) {
-        throw new Error(`Failed to create course: ${response.status} ${response.statusText}`)
-      }
-    }
-
-    return await response.json()
-  } catch (error) {
-    console.error("Error creating course:", error)
-    throw error
-  }
-}
-
-export const updateCourse = async (courseId: string, courseData: CourseDbData) => {
-  try {
-    console.log("Sending update data to API:", {
-      ...courseData,
-      course_image: courseData.course_image ? `${courseData.course_image.substring(0, 20)}... (truncated)` : null,
-    })
-    console.log("Course ID:", courseId)
-    console.log("Pool type:", courseData.pool_type)
-    console.log("Course duration (raw):", courseData.course_duration)
-    console.log("Course duration (type):", typeof courseData.course_duration)
-
-    // Ensure course_duration is a number
-    if (typeof courseData.course_duration !== "number") {
-      courseData.course_duration = Number(courseData.course_duration) || 1
-    }
-
-    console.log("Course duration (after conversion):", courseData.course_duration)
-
-    // Get the token from Firebase AND localStorage as fallback
-    const firebaseToken = await getFirebaseToken()
-    const localToken = localStorage.getItem("authToken")
-    const token = firebaseToken || localToken
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    }
-
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`
-    }
-
-    console.log("Update course headers:", headers)
-
-    // Use the direct endpoint path instead of relying on APIEndpoints constant
-    const endpoint = `/courses/update/${courseId}`
-
-    // Create a new object with the correct field names
-    const processedData = { ...courseData }
-
-    // If image is still in the data, move it to course_image and delete the original
-    if ((processedData as any).image) {
-      processedData.course_image = (processedData as any).image
-      delete (processedData as any).image
-    }
-
-    // Ensure study_frequency is a string
-    if (typeof processedData.study_frequency !== "string") {
-      processedData.study_frequency = String(processedData.study_frequency)
-    }
-
-    // If the image is a base64 string, we need to handle it
-    if (typeof processedData.course_image === "string" && processedData.course_image.startsWith("data:image")) {
-      // Compress the image if it's too large
-      processedData.course_image = await compressImageData(processedData.course_image)
-    }
-
-    // Fix pool_type if needed
-    if (processedData.pool_type === "teacher-pool") {
-      processedData.pool_type = "instructor_pool"
-    }
-
-    // Ensure schedule is a string
-    if (typeof processedData.schedule !== "string") {
-      processedData.schedule = JSON.stringify(processedData.schedule)
-    }
-
-    // If instructor_id is provided, transform it to the format expected by the API
-    if (processedData.instructor_id) {
-      // Some APIs expect a nested instructor object
-      ;(processedData as any).instructor = {
-        connect: {
-          user_id: processedData.instructor_id,
-        },
-      }
-      // Remove the instructor_id field to avoid confusion
-      delete processedData.instructor_id
-    }
-
-    console.log("Processed update data being sent to API:", {
-      ...processedData,
-      course_image: processedData.course_image ? `${processedData.course_image.substring(0, 20)}... (truncated)` : null,
-    })
-
-    console.log(`Sending update request to: ${API_BASE_URL}${endpoint}`)
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: "PUT",
-      headers,
-      credentials: "include",
-      body: JSON.stringify(processedData),
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error("API Error Response:", errorText)
-      try {
-        const errorData = JSON.parse(errorText)
-        throw new Error(errorData.message || "Failed to update course")
-      } catch (e) {
-        throw new Error(`Failed to update course: ${response.status} ${response.statusText}`)
-      }
-    }
-
-    return await response.json()
-  } catch (error) {
-    console.error("Error updating course:", error)
-    throw error
-  }
-}
-
-// Replace the entire deleteCourse function with this simplified version that matches the Swagger documentation
 export const deleteCourse = async (courseId: string) => {
+  const url = APIEndpoints.COURSE.DELETE.replace("[courseId]", courseId);
   try {
-    // Get the token from Firebase AND localStorage as fallback
-    const firebaseToken = await getFirebaseToken()
-    const localToken = localStorage.getItem("authToken")
-    const token = firebaseToken || localToken
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    }
-
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`
-    }
-
-    // Use the exact endpoint path from the Swagger documentation
-    const endpoint = `/courses/delete/${courseId}`
-    const fullUrl = `${API_BASE_URL}${endpoint}`
-
-    console.log(`Sending delete request to: ${fullUrl}`)
-
-    const response = await fetch(fullUrl, {
-      method: "DELETE",
-      headers,
-      credentials: "include",
-    })
-
-    if (!response.ok) {
-      // Handle specific error cases based on status code
-      switch (response.status) {
-        case 400:
-          throw new Error("Invalid input")
-        case 403:
-          throw new Error("You are not allowed to delete this course")
-        case 404:
-          throw new Error("Course not found")
-        default:
-          throw new Error(`Failed to delete course: ${response.status} ${response.statusText}`)
-      }
-    }
-
-    return { success: true, message: "Course deleted successfully" }
-  } catch (error) {
-    console.error("Error deleting course:", error)
-    throw error
+    const response = await apiClient.delete(url);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error deleting course:", {
+      message: error.message,
+      response: error.response
+        ? {
+            status: error.response.status,
+            data: error.response.data,
+          }
+        : null,
+    });
+    throw error;
   }
-}
+};
+
+// New functions for image uploads
+export const uploadCourseImage = async (courseId: string, file: File) => {
+  const url = APIEndpoints.RESOURCE.CREATE.UPLOAD_COURSE_IMAGE.replace("[courseId]", courseId);
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await apiClient.post(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error("Error uploading course image:", {
+      message: error.message,
+      response: error.response
+        ? {
+            status: error.response.status,
+            data: error.response.data,
+          }
+        : null,
+    });
+    throw error;
+  }
+};
+
+export const uploadPoolImage = async (courseId: string, file: File) => {
+  const url = APIEndpoints.RESOURCE.CREATE.UPLOAD_POOL_IMAGE.replace("[courseId]", courseId);
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await apiClient.post(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error("Error uploading pool image:", {
+      message: error.message,
+      response: error.response
+        ? {
+            status: error.response.status,
+            data: error.response.data,
+          }
+        : null,
+    });
+    throw error;
+  }
+};
+  
+
