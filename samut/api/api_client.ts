@@ -1,29 +1,28 @@
 import axios from "axios"
 import { getAuthToken } from "@/context/authToken"
 
+// Create a more robust API client with better error handling
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "",
+  timeout: 15000, // 15 seconds timeout
   headers: {
     "Content-Type": "application/json",
   },
 })
 
-// Don't retry these status codes as they indicate client errors, not server issues
-const NON_RETRYABLE_STATUS_CODES = [400, 401, 403, 404, 422]
-
+// Add request interceptor for logging
 apiClient.interceptors.request.use(
   async (config) => {
     try {
-      const token = await getAuthToken()
-      if (token) {
-        config.headers["Authorization"] = `Bearer ${token}`
-      }
-
-      // Log the request details for debugging
       console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`, {
         headers: config.headers,
         data: config.data,
       })
+
+      const token = await getAuthToken()
+      if (token) {
+        config.headers["Authorization"] = `Bearer ${token}`
+      }
 
       return config
     } catch (error) {
@@ -32,47 +31,47 @@ apiClient.interceptors.request.use(
     }
   },
   (error) => {
-    console.error("Request error:", error)
+    console.error("API request error:", error)
     return Promise.reject(error)
   },
 )
 
+// Add response interceptor for better error handling
 apiClient.interceptors.response.use(
   (response) => {
-    // Log successful response for debugging
-    console.log(`API Response: ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+    console.log(`API Response (${response.status}):`, {
+      url: response.config.url,
+      method: response.config.method,
       data: response.data,
     })
-
     return response
   },
   async (error) => {
-    // Log detailed error information
-    console.error("API error details:", {
-      message: error.message,
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      data: error.response?.data,
-    })
-
-    // Don't retry if:
-    // 1. We don't have a response (network error)
-    // 2. The status code indicates a client error (4xx)
-    // 3. We've already retried this request
-    if (!error.response || NON_RETRYABLE_STATUS_CODES.includes(error.response.status) || error.config?._isRetry) {
-      return Promise.reject(error)
+    // Handle network errors (when no response is received)
+    if (!error.response) {
+      console.error("API network error:", {
+        message: error.message,
+        url: error.config?.url,
+        method: error.config?.method,
+      })
+      // Return a standardized error object
+      return Promise.reject({
+        message: "Network error. Please check your internet connection.",
+        isNetworkError: true,
+        originalError: error,
+      })
     }
 
-    // Mark this request as a retry to prevent infinite loops
-    error.config._isRetry = true
+    // Handle API errors (when a response with error status is received)
+    console.error("API error details:", {
+      message: error.message,
+      url: error.config.url,
+      method: error.config.method,
+      status: error.response.status,
+      data: error.response.data,
+    })
 
-    // Wait a bit before retrying
-    console.log("Retrying request once after 1000ms delay...")
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Try one more time
-    return apiClient.request(error.config)
+    return Promise.reject(error)
   },
 )
 

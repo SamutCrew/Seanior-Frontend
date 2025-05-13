@@ -167,22 +167,36 @@ export default function TeacherDashboard() {
         setError(null)
 
         // Get all courses
+        console.log("Fetching all courses for user:", user.user_id)
         const allCoursesResponse = await getAllCourses()
+
+        // Safety check for API response
+        if (!allCoursesResponse) {
+          console.warn("API returned null or undefined response")
+          setCourses([])
+          setAvailableCourses([])
+          setIsLoading(false)
+          return
+        }
+
         console.log("All courses response:", allCoursesResponse)
 
-        // Filter courses by instructor ID
+        // Filter courses by instructor ID - handle different API response formats
         let instructorCourses = []
+
         if (Array.isArray(allCoursesResponse)) {
           instructorCourses = allCoursesResponse.filter(
             (course) =>
-              course.instructor_id === user.user_id ||
-              (course.instructor && course.instructor.user_id === user.user_id),
+              course &&
+              (course.instructor_id === user.user_id ||
+                (course.instructor && course.instructor.user_id === user.user_id)),
           )
         } else if (allCoursesResponse && Array.isArray(allCoursesResponse.data)) {
           instructorCourses = allCoursesResponse.data.filter(
             (course) =>
-              course.instructor_id === user.user_id ||
-              (course.instructor && course.instructor.user_id === user.user_id),
+              course &&
+              (course.instructor_id === user.user_id ||
+                (course.instructor && course.instructor.user_id === user.user_id)),
           )
         } else {
           console.warn("Unexpected response format from courses API:", allCoursesResponse)
@@ -192,14 +206,19 @@ export default function TeacherDashboard() {
         console.log("Filtered instructor courses:", instructorCourses)
 
         // Map API data to the format expected by the UI components
-        const mappedCourses = instructorCourses.map((course) => {
-          // Find matching images for this course
-          const courseImage = resources.find(
-            (img) => img.resource_type?.includes("image") && img.resource_name?.includes(course.id || course.course_id),
-          )
+        const mappedCourses = instructorCourses
+          .filter((course) => course) // Filter out any null/undefined courses
+          .map((course) => {
+            // Find matching images for this course
+            const courseImage = resources.find(
+              (img) =>
+                img &&
+                img.resource_type?.includes("image") &&
+                img.resource_name?.includes(course.id || course.course_id),
+            )
 
-          return mapApiCourseToUiCourse(course, courseImage)
-        })
+            return mapApiCourseToUiCourse(course, courseImage)
+          })
 
         setCourses(mappedCourses)
 
@@ -207,8 +226,8 @@ export default function TeacherDashboard() {
         const availableMappedCourses = mappedCourses.filter((course) => course.students === 0)
         setAvailableCourses(availableMappedCourses)
       } catch (err: any) {
-        console.error("Error fetching courses:", err)
-        setError(`Failed to fetch courses: ${err.message || "Unknown error"}`)
+        console.error("Error in fetchCourses:", err)
+        setError(`Failed to fetch courses: ${err?.message || "Unknown error"}`)
 
         // Set empty arrays on error to prevent UI issues
         setCourses([])
@@ -218,6 +237,7 @@ export default function TeacherDashboard() {
       }
     }
 
+    // Only fetch courses if user is authenticated
     if (user?.user_id) {
       fetchCourses()
     }

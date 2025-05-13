@@ -1,21 +1,20 @@
 import apiClient from "./api_client"
 import { APIEndpoints } from "@/constants/apiEndpoints"
 
-// Get all courses
+// Modify the getAllCourses function to better handle network errors
 export const getAllCourses = async () => {
   try {
+    console.log("Fetching all courses...")
     const response = await apiClient.get(APIEndpoints.COURSE.RETRIEVE.ALL)
     console.log("API Response for all courses:", response)
     return response.data
   } catch (error: any) {
+    // More detailed error logging
     console.error("Error fetching all courses:", {
-      message: error.message,
-      response: error.response
-        ? {
-            status: error.response.status,
-            data: error.response.data,
-          }
-        : null,
+      message: error?.message || "Unknown error",
+      status: error?.response?.status,
+      data: error?.response?.data,
+      stack: error?.stack,
     })
 
     // Return empty array instead of throwing to prevent cascading errors
@@ -34,15 +33,19 @@ export const getCourseById = async (courseId: string) => {
     console.log("API Response for course details:", response)
     return response.data
   } catch (error: any) {
+    // More detailed error logging
     console.error("Error fetching course details:", {
-      message: error.message,
-      response: error.response
-        ? {
-            status: error.response.status,
-            data: error.response.data,
-          }
-        : null,
+      courseId,
+      message: error?.message || "Unknown error",
+      status: error?.response?.status,
+      data: error?.response?.data,
+      stack: error?.stack,
     })
+
+    // For 404 errors, log a more specific message
+    if (error?.response?.status === 404) {
+      console.warn(`Course with ID ${courseId} not found. This is likely because the course doesn't exist.`)
+    }
 
     // Return null instead of throwing to prevent cascading errors
     return null
