@@ -6,6 +6,9 @@ import Image from "next/image"
 import { useAppSelector } from "@/app/redux"
 import { motion } from "framer-motion"
 import Link from "next/link"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import type React from "react"
 
 interface CourseCardProps {
   course: Course
@@ -33,16 +36,27 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
   // Get dark mode state from Redux store
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
+  // State to track image loading errors
+  const [imageError, setImageError] = useState(false)
+  const [instructorImageError, setInstructorImageError] = useState(false)
+
+  // Debug image paths
+  console.log("Course image path:", course.image || course.course_image)
+
   // Get a random default image if not provided
   const getRandomImage = (images: string[]) => {
     return images[Math.floor(Math.random() * images.length)]
   }
 
   // Default instructor image if not provided
-  const instructorImage = course.instructorImage || getRandomImage(DEFAULT_INSTRUCTOR_IMAGES)
+  const instructorImage = instructorImageError
+    ? getRandomImage(DEFAULT_INSTRUCTOR_IMAGES)
+    : course.instructorImage || getRandomImage(DEFAULT_INSTRUCTOR_IMAGES)
 
-  // Default course image if not provided
-  const courseImage = course.image || getRandomImage(DEFAULT_COURSE_IMAGES)
+  // Default course image if not provided or if there was an error loading the image
+  const courseImage = imageError
+    ? getRandomImage(DEFAULT_COURSE_IMAGES)
+    : course.image || course.course_image || getRandomImage(DEFAULT_COURSE_IMAGES)
 
   // Format location to be more user-friendly
   const formatLocation = (location: { address: string }) => {
@@ -210,6 +224,21 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
     }
   }
 
+  const router = useRouter()
+
+  // Add this function to handle course card clicks if it doesn't already exist
+  const handleCourseClick = (e: React.MouseEvent) => {
+    // If we have an edit function, we're in the dashboard context
+    // Don't navigate, as the edit modal should be opened instead
+    if (onEdit) {
+      onEdit(course)
+      return
+    }
+
+    // Otherwise, navigate to the course details page
+    router.push(`/allcourse/${course.id || course.course_id}`)
+  }
+
   // Render featured variant
   if (variant === "featured") {
     return (
@@ -220,11 +249,19 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
         className={`rounded-xl overflow-hidden group ${
           isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white border border-gray-100"
         } shadow-lg h-full`}
+        onClick={(e) => handleCourseClick(e)}
       >
         <div className="flex flex-col md:flex-row h-full">
           {/* Left side - Image */}
           <div className="relative md:w-2/5 h-64 md:h-auto">
-            <Image src={courseImage || "/placeholder.svg"} alt={course.title} fill className="object-cover" />
+            <Image
+              src={courseImage || "/placeholder.svg"}
+              alt={course.title}
+              fill
+              className="object-cover"
+              unoptimized
+              onError={() => setImageError(true)}
+            />
 
             {/* Featured Badge */}
             <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold shadow-lg">
@@ -233,7 +270,7 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
 
             {/* Course Title Overlay */}
             <div className="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black/80 to-transparent">
-              <h3 className="text-xl font-bold text-white">{course.title}</h3>
+              <h3 className="text-xl font-bold text-white">{course.title || course.course_name}</h3>
               <div className="flex items-center gap-2 mt-2">
                 <span className={getLevelBadgeStyle(course.level)}>{course.level}</span>
                 <div className="flex items-center gap-1 text-white">
@@ -255,6 +292,8 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
                   alt={`Instructor ${course.instructor}`}
                   fill
                   className="object-cover"
+                  unoptimized
+                  onError={() => setInstructorImageError(true)}
                 />
               </div>
               <div className="ml-3">
@@ -330,7 +369,7 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
                 </span>
               </div>
 
-              <Link href={`/course/${course.id}`}>
+              <Link href={`/course/${course.id || course.course_id}`}>
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
@@ -360,6 +399,7 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
               ? "bg-slate-800 border border-slate-700 hover:border-indigo-700 shadow-lg shadow-slate-900/30"
               : "bg-white border border-gray-100 hover:border-indigo-200 shadow-md hover:shadow-lg"
           }`}
+        onClick={(e) => handleCourseClick(e)}
       >
         {/* Course Image */}
         <div className="relative h-40 w-full overflow-hidden">
@@ -368,6 +408,8 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
             alt={course.title}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
+            unoptimized
+            onError={() => setImageError(true)}
           />
 
           {/* Level Badge */}
@@ -390,7 +432,7 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
         {/* Content */}
         <div className="p-4 flex-grow flex flex-col">
           <h3 className={`text-lg font-bold mb-1 line-clamp-1 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-            {course.title}
+            {course.title || course.course_name}
           </h3>
 
           <div className="flex items-center gap-2 mb-2">
@@ -400,6 +442,8 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
                 alt={`Instructor ${course.instructor}`}
                 fill
                 className="object-cover"
+                unoptimized
+                onError={() => setInstructorImageError(true)}
               />
             </div>
             <span className={`text-xs ${isDarkMode ? "text-slate-300" : "text-gray-600"}`}>{course.instructor}</span>
@@ -447,7 +491,7 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
               <FaCalendarAlt className="text-xs" />
               <span>{course.duration}</span>
             </div>
-            <Link href={`/course/${course.id}`}>
+            <Link href={`/course/${course.id || course.course_id}`}>
               <button
                 className={`text-xs font-medium px-3 py-1 rounded-full ${
                   isDarkMode
@@ -477,6 +521,7 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
             ? "bg-slate-800 border border-slate-700 hover:border-indigo-600 shadow-lg shadow-slate-900/30"
             : "bg-white border border-gray-100 hover:border-indigo-200 shadow-md hover:shadow-lg"
         }`}
+      onClick={(e) => handleCourseClick(e)}
     >
       {/* Course Image with Overlay */}
       <div className="relative h-48 w-full overflow-hidden">
@@ -485,6 +530,8 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
           alt={course.title}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
+          unoptimized
+          onError={() => setImageError(true)}
         />
 
         {/* Gradient Overlay */}
@@ -496,7 +543,7 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
 
         {/* Course Title on Image */}
         <div className="absolute bottom-0 left-0 right-0 p-4">
-          <h3 className="text-xl font-bold text-white mb-1 drop-shadow-md">{course.title}</h3>
+          <h3 className="text-xl font-bold text-white mb-1 drop-shadow-md">{course.title || course.course_name}</h3>
           <div className="flex items-center justify-between">
             <span className={getLevelBadgeStyle(course.level)}>{course.level}</span>
             <div className="flex items-center gap-1 bg-black/30 text-white px-2 py-1 rounded-full text-xs">
@@ -596,6 +643,8 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
               alt={`Instructor ${course.instructor}`}
               fill
               className="object-cover"
+              unoptimized
+              onError={() => setInstructorImageError(true)}
             />
           </div>
           <div className="ml-3">
@@ -619,7 +668,10 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => onEdit(course)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onEdit(course)
+                }}
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200
                   ${
                     isDarkMode
@@ -635,7 +687,10 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => onDelete(course)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(course)
+                }}
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200
                   ${
                     isDarkMode
@@ -651,7 +706,7 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
 
         {/* Join Now Button - Only show if no edit/delete buttons */}
         {!onEdit && !onDelete && (
-          <Link href={`/course/${course.id}`}>
+          <Link href={`/course/${course.id || course.course_id}`}>
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}

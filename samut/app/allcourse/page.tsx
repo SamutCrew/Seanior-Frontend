@@ -14,6 +14,7 @@ import LoadingPage from "@/components/Common/LoadingPage"
 import { HiAcademicCap, HiOutlineAcademicCap } from "react-icons/hi"
 import { FaSwimmer } from "react-icons/fa"
 import { getAllCourses } from "@/api/course_api"
+import Image from "next/image"
 
 export default function AllCoursesPage() {
   const router = useRouter()
@@ -156,6 +157,7 @@ export default function AllCoursesPage() {
         maxStudents: course.max_students || 10,
         image:
           course.image ||
+          course.course_image ||
           `/placeholder.svg?height=400&width=600&query=swimming+${course.level?.toLowerCase() || "beginner"}`,
         // Store the original data for reference
         originalData: course,
@@ -995,10 +997,12 @@ export default function AllCoursesPage() {
                   <div className="flex flex-col md:flex-row">
                     <div className="relative md:w-1/4 h-48 md:h-auto">
                       <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-500 opacity-20"></div>
-                      <img
-                        src={course.image || "/placeholder.svg?key=25f2a"}
+                      <Image
+                        src={course.image || course.course_image || "/placeholder.svg?key=25f2a"}
                         alt={course.title}
                         className="w-full h-full object-cover"
+                        fill
+                        unoptimized
                       />
                       <div
                         className={`absolute top-3 left-3 px-2 py-1 rounded-md text-xs font-semibold ${
@@ -1062,10 +1066,12 @@ export default function AllCoursesPage() {
                       <div className="mt-auto flex items-center justify-between">
                         <div className="flex items-center text-sm">
                           <div className="relative h-8 w-8 rounded-full overflow-hidden mr-2">
-                            <img
+                            <Image
                               src={course.instructorImage || "/placeholder.svg"}
                               alt={`Instructor ${course.instructor}`}
-                              className="object-cover w-full h-full"
+                              className="object-cover"
+                              fill
+                              unoptimized
                             />
                           </div>
                           <span className={`font-medium ${isDarkMode ? "text-white" : "text-gray-800"}`}>

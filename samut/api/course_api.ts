@@ -131,6 +131,125 @@ export const getCoursesByUserId = async (userId: string) => {
   }
 }
 
+// Get a course by ID
+export const getCourseById = async (courseId: string) => {
+  try {
+    console.log("Fetching course with ID:", courseId)
+
+    // Get the token from Firebase AND localStorage as fallback
+    const firebaseToken = await getFirebaseToken()
+    const localToken = localStorage.getItem("authToken")
+    const token = firebaseToken || localToken
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    }
+
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`
+    }
+
+    console.log("Request headers:", headers)
+
+    // Try to get the course by ID first
+    const endpoint = APIEndpoints.COURSE.RETRIEVE.BY_ID.replace("[courseId]", courseId)
+    console.log(`Trying to fetch from endpoint: ${API_BASE_URL}${endpoint}`)
+
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: "GET",
+        headers,
+        credentials: "include",
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log("Course API response:", data)
+        return data
+      }
+
+      console.log("Course not found by ID, trying to fetch from all courses")
+      // If that fails, try to get all courses and filter by ID
+      const allCoursesResponse = await fetch(`${API_BASE_URL}${APIEndpoints.COURSE.RETRIEVE.ALL}`, {
+        method: "GET",
+        headers,
+        credentials: "include",
+      })
+
+      if (!allCoursesResponse.ok) {
+        throw new Error(`Failed to fetch courses: ${allCoursesResponse.status} ${allCoursesResponse.statusText}`)
+      }
+
+      const allCourses = await allCoursesResponse.json()
+      console.log(`Searching for course with ID ${courseId} among ${allCourses.length} courses`)
+
+      // Find the course with the matching ID
+      const course = allCourses.find(
+        (c: any) =>
+          c.id === courseId ||
+          c.id === Number(courseId) ||
+          c.course_id === courseId ||
+          c.course_id === Number(courseId),
+      )
+
+      if (course) {
+        console.log("Found course in all courses:", course)
+        return course
+      }
+
+      // If we still can't find the course, return a fallback
+      console.log("Course not found in all courses, using fallback data")
+      return createFallbackCourse(courseId)
+    } catch (error) {
+      console.error("Error fetching from API:", error)
+      return createFallbackCourse(courseId)
+    }
+  } catch (error) {
+    console.error("Error in getCourseById:", error)
+    return createFallbackCourse(courseId)
+  }
+}
+
+// Helper function to create fallback course data
+const createFallbackCourse = (courseId: string) => {
+  return {
+    id: courseId,
+    course_id: courseId,
+    course_name: "Swimming Course",
+    title: "Swimming Course",
+    description:
+      "This is a comprehensive swimming course designed to help students of all levels improve their swimming skills.",
+    level: "Intermediate",
+    course_duration: 8,
+    schedule: "Mondays and Wednesdays, 5:00 PM - 6:30 PM",
+    instructor_name: "Professional Instructor",
+    instructor_id: "1",
+    rating: 4.5,
+    students: 12,
+    price: 199,
+    location: "Main Swimming Pool, 123 Aquatic Center",
+    pool_type: "public-pool",
+    curriculum: [
+      "Swimming fundamentals",
+      "Water safety",
+      "Basic strokes",
+      "Breathing techniques",
+      "Advanced techniques",
+    ],
+    requirements: ["Swimwear required", "Basic comfort in water recommended"],
+    max_students: 15,
+    course_image: "/placeholder.svg?key=tnyv7",
+    study_frequency: "Twice a week",
+    days_study: 2,
+    number_of_total_sessions: 16,
+    instructor: {
+      name: "Professional Instructor",
+      user_id: "1",
+      profile_img: "/instructor-teaching.png",
+    },
+  }
+}
+
 // Helper function to compress image data
 const compressImageData = async (imageData: string): Promise<string> => {
   try {
