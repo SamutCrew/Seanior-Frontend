@@ -19,7 +19,14 @@ import type { ScheduleItem } from "@/types/schedule"
 import type { Course } from "@/types/course"
 import { useAppSelector } from "@/app/redux"
 import { useAuth } from "@/context/AuthContext"
-import { getAllCourses, createCourse, updateCourse, deleteCourse } from "@/api/course_api"
+import {
+  getAllCourses,
+  createCourse,
+  updateCourse,
+  deleteCourse,
+  uploadCourseImage,
+  uploadPoolImage,
+} from "@/api/course_api"
 import { getUserResources } from "@/api/resource_api"
 import LoadingPage from "@/components/Common/LoadingPage"
 import AlertResponse from "@/components/Responseback/AlertResponse"
@@ -31,6 +38,7 @@ export default function TeacherDashboard() {
   // Data fetching state
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [resources, setResources] = useState<any[]>([])
 
   // Schedule data
@@ -349,29 +357,66 @@ export default function TeacherDashboard() {
   const handleAddCourse = async (newCourseData: Partial<Course>) => {
     try {
       setIsLoading(true)
+      setError(null)
+
+      // Extract image files from the form data
+      const courseImageFile = newCourseData.courseImageFile as File | undefined
+      const poolImageFile = newCourseData.poolImageFile as File | undefined
+
+      // Remove file objects from the data before sending to API
+      const apiCourseData = { ...newCourseData }
+      delete apiCourseData.courseImageFile
+      delete apiCourseData.poolImageFile
 
       // Format the data for the API
-      const apiCourseData = {
-        course_name: newCourseData.course_name || newCourseData.title || "New Course",
+      const formattedData = {
+        course_name: apiCourseData.course_name || "New Course",
         instructor_id: user?.user_id || "",
-        price: newCourseData.price || 0,
-        pool_type: newCourseData.pool_type || newCourseData.courseType || "public-pool",
-        location:
-          typeof newCourseData.location === "object" ? newCourseData.location.address : newCourseData.location || "",
-        description: newCourseData.description || "",
-        course_duration:
-          newCourseData.course_duration ||
-          (typeof newCourseData.duration === "string" ? Number.parseInt(newCourseData.duration.split(" ")[0]) : 8),
-        level: newCourseData.level || "Beginner",
-        schedule: newCourseData.schedule || "Flexible schedule",
-        max_students: newCourseData.max_students || newCourseData.maxStudents || 10,
+        price: apiCourseData.price || 0,
+        pool_type: apiCourseData.pool_type || "public-pool",
+        location: apiCourseData.location || "",
+        description: apiCourseData.description || "",
+        course_duration: apiCourseData.course_duration || 8,
+        study_frequency: apiCourseData.study_frequency || "1",
+        days_study: apiCourseData.days_study || 0,
+        number_of_total_sessions: apiCourseData.number_of_total_sessions || 8,
+        level: apiCourseData.level || "Beginner",
+        schedule: apiCourseData.schedule || {},
+        max_students: apiCourseData.max_students || 10,
       }
 
-      const response = await createCourse(apiCourseData)
+      console.log("Creating course with data:", formattedData)
+      const response = await createCourse(formattedData)
       console.log("Create course response:", response)
 
-      // Map the new course to UI format and add it to the state
-      const newCourse = mapApiCourseToUiCourse(response)
+      // Get the new course ID
+      const newCourseId = response.course_id || response.id
+
+      if (!newCourseId) {
+        throw new Error("Failed to get course ID from response")
+      }
+
+      // Upload course image if provided
+      let courseImageUrl = ""
+      if (courseImageFile) {
+        const imageResponse = await uploadCourseImage(newCourseId, courseImageFile)
+        courseImageUrl = imageResponse.resource_url
+      }
+
+      // Upload pool image if provided
+      let poolImageUrl = ""
+      if (poolImageFile) {
+        const imageResponse = await uploadPoolImage(newCourseId, poolImageFile)
+        poolImageUrl = imageResponse.resource_url
+      }
+
+      // Map the new course to UI format with image URLs
+      const newCourse = mapApiCourseToUiCourse({
+        ...response,
+        course_image: courseImageUrl,
+        pool_image: poolImageUrl,
+      })
+
       setCourses([newCourse, ...courses])
 
       // If the course has no students, add it to available courses
@@ -380,6 +425,10 @@ export default function TeacherDashboard() {
       }
 
       setIsCreateModalOpen(false)
+
+      // Show success message
+      setSuccess("Course created successfully!")
+      setTimeout(() => setSuccess(null), 3000)
     } catch (err: any) {
       console.error("Error creating course:", err)
       setError(`Failed to create course: ${err.message || "Unknown error"}`)
@@ -402,72 +451,97 @@ export default function TeacherDashboard() {
 
     try {
       setIsLoading(true)
-      console.log("Editing course with data:", editedCourseData)
+      setError(null)
 
-      // Format the data for the API - only include fields that are actually changed
-      const apiCourseData: Record<string, any> = {}
+      // Extract image files from the form data
+      const courseImageFile = editedCourseData.courseImageFile as File | undefined
+      const poolImageFile = editedCourseData.poolImageFile as File | undefined
+
+      // Remove file objects from the data before sending to API
+      const apiCourseData: Record<string, any> = { ...editedCourseData }
+      delete apiCourseData.courseImageFile
+      delete apiCourseData.poolImageFile
+
+      console.log("Editing course with data:", apiCourseData)
 
       // Only include fields that have been changed
-      if (editedCourseData.course_name !== undefined || editedCourseData.title !== undefined) {
-        apiCourseData.course_name = editedCourseData.course_name || editedCourseData.title
+      const cleanedData: Record<string, any> = {}
+
+      if (apiCourseData.course_name !== undefined) {
+        cleanedData.course_name = apiCourseData.course_name
       }
 
-      if (editedCourseData.price !== undefined) {
-        apiCourseData.price = editedCourseData.price
+      if (apiCourseData.price !== undefined) {
+        cleanedData.price = apiCourseData.price
       }
 
-      if (editedCourseData.pool_type !== undefined || editedCourseData.courseType !== undefined) {
-        apiCourseData.pool_type = editedCourseData.pool_type || editedCourseData.courseType
+      if (apiCourseData.pool_type !== undefined) {
+        cleanedData.pool_type = apiCourseData.pool_type
       }
 
-      if (editedCourseData.location !== undefined) {
-        apiCourseData.location =
-          typeof editedCourseData.location === "object" ? editedCourseData.location.address : editedCourseData.location
+      if (apiCourseData.location !== undefined) {
+        cleanedData.location = apiCourseData.location
       }
 
-      if (editedCourseData.description !== undefined) {
-        apiCourseData.description = editedCourseData.description
+      if (apiCourseData.description !== undefined) {
+        cleanedData.description = apiCourseData.description
       }
 
-      if (editedCourseData.course_duration !== undefined || editedCourseData.duration !== undefined) {
-        apiCourseData.course_duration =
-          editedCourseData.course_duration ||
-          (typeof editedCourseData.duration === "string"
-            ? Number.parseInt(editedCourseData.duration.split(" ")[0])
-            : undefined)
+      if (apiCourseData.course_duration !== undefined) {
+        cleanedData.course_duration = apiCourseData.course_duration
       }
 
-      if (editedCourseData.level !== undefined) {
-        apiCourseData.level = editedCourseData.level
+      if (apiCourseData.study_frequency !== undefined) {
+        cleanedData.study_frequency = apiCourseData.study_frequency
       }
 
-      if (editedCourseData.schedule !== undefined) {
-        apiCourseData.schedule = editedCourseData.schedule
+      if (apiCourseData.days_study !== undefined) {
+        cleanedData.days_study = apiCourseData.days_study
       }
 
-      if (editedCourseData.max_students !== undefined || editedCourseData.maxStudents !== undefined) {
-        apiCourseData.max_students = editedCourseData.max_students || editedCourseData.maxStudents
+      if (apiCourseData.number_of_total_sessions !== undefined) {
+        cleanedData.number_of_total_sessions = apiCourseData.number_of_total_sessions
       }
 
-      if (editedCourseData.course_image !== undefined || editedCourseData.image !== undefined) {
-        apiCourseData.course_image = editedCourseData.course_image || editedCourseData.image
+      if (apiCourseData.level !== undefined) {
+        cleanedData.level = apiCourseData.level
       }
 
-      if (editedCourseData.pool_image !== undefined || editedCourseData.poolImage !== undefined) {
-        apiCourseData.pool_image = editedCourseData.pool_image || editedCourseData.poolImage
+      if (apiCourseData.schedule !== undefined) {
+        cleanedData.schedule = apiCourseData.schedule
       }
 
-      console.log("Sending API data:", apiCourseData)
-      const response = await updateCourse(courseId, apiCourseData)
+      if (apiCourseData.max_students !== undefined) {
+        cleanedData.max_students = apiCourseData.max_students
+      }
+
+      console.log("Sending API data:", cleanedData)
+      const response = await updateCourse(courseId, cleanedData)
       console.log("Update course response:", response)
+
+      // Upload course image if provided
+      let courseImageUrl = currentCourse.course_image || currentCourse.image
+      if (courseImageFile) {
+        const imageResponse = await uploadCourseImage(courseId, courseImageFile)
+        courseImageUrl = imageResponse.resource_url
+      }
+
+      // Upload pool image if provided
+      let poolImageUrl = currentCourse.pool_image || currentCourse.poolImage
+      if (poolImageFile) {
+        const imageResponse = await uploadPoolImage(courseId, poolImageFile)
+        poolImageUrl = imageResponse.resource_url
+      }
 
       // Map the updated course to UI format
       const updatedCourse = mapApiCourseToUiCourse({
         ...currentCourse,
         ...response,
         instructor: currentCourse.instructor, // Preserve instructor info if not in response
-        course_image: apiCourseData.course_image || currentCourse.course_image || currentCourse.image, // Preserve image if not in response
-        pool_image: apiCourseData.pool_image || currentCourse.pool_image || currentCourse.poolImage, // Preserve pool image if not in response
+        course_image: courseImageUrl,
+        image: courseImageUrl,
+        pool_image: poolImageUrl,
+        poolImage: poolImageUrl,
       })
 
       // Update the course in the courses state
@@ -484,6 +558,10 @@ export default function TeacherDashboard() {
 
       setIsEditModalOpen(false)
       setError(null) // Clear any previous errors
+
+      // Show success message
+      setSuccess("Course updated successfully!")
+      setTimeout(() => setSuccess(null), 3000)
     } catch (err: any) {
       console.error("Error updating course:", err)
       setError(`Failed to update course: ${err.response?.data?.message || err.message || "Unknown error"}`)
@@ -516,6 +594,10 @@ export default function TeacherDashboard() {
       setAvailableCourses(availableCourses.filter((course) => course.course_id !== courseId && course.id !== courseId))
 
       setIsDeleteModalOpen(false)
+
+      // Show success message
+      setSuccess("Course deleted successfully!")
+      setTimeout(() => setSuccess(null), 3000)
     } catch (err: any) {
       console.error("Error deleting course:", err)
       setError(`Failed to delete course: ${err.message || "Unknown error"}`)
@@ -545,6 +627,9 @@ export default function TeacherDashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Error message */}
         {error && <AlertResponse type="error" message={error} onClose={() => setError(null)} />}
+
+        {/* Success message */}
+        {success && <AlertResponse type="success" message={success} onClose={() => setSuccess(null)} />}
 
         {/* Header */}
         <TeacherHeader searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
@@ -611,7 +696,7 @@ export default function TeacherDashboard() {
                       : "bg-sky-600 hover:bg-sky-700"
                   } text-white px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-all duration-200 shadow-sm hover:shadow`}
                 >
-                  <FaPlus /> New Course
+                  <FaPlus /> Create New Course
                 </button>
 
                 <div className="flex gap-4 w-full md:w-auto">

@@ -2,41 +2,54 @@ export type CourseType = "private-location" | "public-pool" | "teacher-pool"
 export type CourseStatus = "open" | "in-progress" | "completed"
 
 export interface Course {
-  course_id: string;
-  course_name: string;
-  instructor_id: string;
-  price: number;
-  pool_type: string;
-  location: string;
-  description: string;
-  course_duration: number;
-  study_frequency: number;
-  days_study: number;
-  number_of_total_sessions: number;
-  level: string;
-  schedule: string;
-  rating: number;
-  students: number;
-  max_students: number;
-  course_image?: string;
-  pool_image?: string;
-  created_at: string;
-  updated_at: string;
-  instructor: {
-    user_id: string;
-    firebase_uid: string;
-    email: string;
-    name: string;
-    password: string | null;
-    gender: string | null;
-    address: string | null;
-    phone_number: string | null;
-    profile_img: string | null;
-    user_type: string | null;
-    description: string | null;
-    created_at: string;
-    updated_at: string;
-  };
+  course_id: string
+  id?: string // Added for compatibility
+  course_name: string
+  title?: string // Added for compatibility
+  instructor_id: string
+  price: number
+  pool_type: string
+  courseType?: string // Added for compatibility
+  location?: string | { address: string } // Updated to handle both string and object
+  description: string
+  focus?: string // Added for compatibility
+  course_duration: number
+  duration?: string // Added for compatibility
+  study_frequency: number | string
+  days_study: number
+  number_of_total_sessions: number
+  level: string
+  schedule: string | object
+  rating?: number
+  students: number
+  max_students?: number
+  maxStudents?: number // Added for compatibility
+  course_image?: string
+  image?: string // Added for compatibility
+  pool_image?: string
+  poolImage?: string // Added for compatibility
+  created_at: string
+  updated_at: string
+  instructor?:
+    | {
+        user_id: string
+        firebase_uid: string
+        email: string
+        name: string
+        password: string | null
+        gender: string | null
+        address: string | null
+        phone_number: string | null
+        profile_img: string | null
+        user_type: string | null
+        description: string | null
+        created_at: string
+        updated_at: string
+      }
+    | string // Updated to handle both object and string
+  instructorImage?: string // Added for compatibility
+  courseImageFile?: File // Added for file upload
+  poolImageFile?: File // Added for file upload
 }
 
 export interface CourseProgress {

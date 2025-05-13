@@ -52,8 +52,17 @@ export const getCourseById = async (courseId: string) => {
 // Create a new course
 export const createCourse = async (courseData: any) => {
   try {
-    console.log("Creating course with data:", courseData)
-    const response = await apiClient.post(APIEndpoints.COURSE.CREATE, courseData)
+    // Process schedule data if it exists
+    const processedData = { ...courseData }
+
+    if (processedData.schedule && typeof processedData.schedule === "object") {
+      // Convert schedule to JSON string for API
+      processedData.schedule = JSON.stringify(processedData.schedule)
+      console.log("Schedule data converted to string for API:", processedData.schedule)
+    }
+
+    console.log("Creating course with data:", processedData)
+    const response = await apiClient.post(APIEndpoints.COURSE.CREATE, processedData)
     console.log("API Response for create course:", response)
     return response.data
   } catch (error: any) {
@@ -73,10 +82,28 @@ export const createCourse = async (courseData: any) => {
 // Update a course
 export const updateCourse = async (courseId: string, courseData: any) => {
   try {
+    // Create a deep copy of the data to avoid reference issues
+    const processedData = JSON.parse(JSON.stringify(courseData))
+
     // Clean up the data before sending to API
     const cleanedData = Object.fromEntries(
-      Object.entries(courseData).filter(([_, value]) => value !== undefined && value !== null),
+      Object.entries(processedData).filter(([_, value]) => value !== undefined && value !== null),
     )
+
+    // Ensure schedule is properly formatted if it exists
+    if (cleanedData.schedule && typeof cleanedData.schedule === "object") {
+      console.log("Schedule data in API before formatting:", cleanedData.schedule)
+
+      // Log selected days for debugging
+      const selectedDays = Object.keys(cleanedData.schedule)
+        .filter((day) => cleanedData.schedule[day].selected)
+        .join(", ")
+      console.log("Selected days before API call:", selectedDays || "None")
+
+      // Convert schedule to JSON string for API
+      cleanedData.schedule = JSON.stringify(cleanedData.schedule)
+      console.log("Schedule data in API after formatting (stringified):", cleanedData.schedule)
+    }
 
     console.log(`Updating course ${courseId} with data:`, cleanedData)
 
@@ -102,6 +129,25 @@ export const updateCourse = async (courseId: string, courseData: any) => {
     // If PUT fails with 405 Method Not Allowed, try PATCH
     if (putError.response && putError.response.status === 405) {
       try {
+        // Create a deep copy of the data again for PATCH request
+        const processedData = JSON.parse(JSON.stringify(courseData))
+
+        // Clean up the data
+        const cleanedData = Object.fromEntries(
+          Object.entries(processedData).filter(([_, value]) => value !== undefined && value !== null),
+        )
+
+        // Ensure schedule is properly formatted
+        if (cleanedData.schedule && typeof cleanedData.schedule === "object") {
+          // Log selected days for debugging
+          const selectedDays = Object.keys(cleanedData.schedule)
+            .filter((day) => cleanedData.schedule[day].selected)
+            .join(", ")
+          console.log("Selected days before PATCH API call:", selectedDays || "None")
+
+          cleanedData.schedule = JSON.stringify(cleanedData.schedule)
+        }
+
         const url = APIEndpoints.COURSE.UPDATE.replace("[courseId]", courseId)
         console.log(`Trying PATCH request to ${url}`)
         const patchResponse = await apiClient.patch(url, cleanedData)
