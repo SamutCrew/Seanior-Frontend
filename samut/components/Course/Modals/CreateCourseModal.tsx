@@ -39,6 +39,22 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
         return // Don't proceed if required fields are missing
       }
 
+      // Check if location is already a string (already formatted)
+      if (typeof data.location === "string") {
+        // Location is already formatted, proceed with submission
+        await onSubmit(data)
+        return
+      }
+
+      // Ensure location has all required properties if it's an object
+      if (typeof data.location === "object" && data.location !== null) {
+        if (!data.location.lat || !data.location.lng || !data.location.address) {
+          console.error("Location data is incomplete")
+          setIsSubmitting(false)
+          return
+        }
+      }
+
       await onSubmit(data)
     } catch (error) {
       console.error("Error submitting course:", error)

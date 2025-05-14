@@ -1,7 +1,8 @@
 // src/api/resource_api.ts
 import apiClient from "@/api/api_client"
 import { APIEndpoints } from "@/constants/apiEndpoints"
-
+import { Resource } from "@/types";
+import { getAuthToken } from "@/context/authToken";
 // Get all resources for a user
 export const getUserResources = async (userId: string) => {
   const url = APIEndpoints.RESOURCE.RETRIEVE.ALL_BY_USERID.replace("[userId]", userId)
@@ -106,5 +107,63 @@ export const getAllResources = async () => {
   } catch (error: any) {
     console.error("getAllResources error:", error.message);
     return error.message;
+  }
+};
+
+
+
+
+
+export const uploadIdCard = async (
+  userId: string,
+  file: File,
+): Promise<Resource> => {
+  const formData = new FormData();
+  try {
+    formData.append("file", file);
+
+    const token = await getAuthToken();
+
+    const response = await apiClient.post<Resource>(
+      APIEndpoints.RESOURCE.CREATE.UPLOAD_ID_CARD.replace("[userId]", userId),
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading the ID card:", error);
+    throw error;
+  }
+};
+
+export const uploadSwimmingLicense = async (
+  userId: string,
+  file: File,
+): Promise<Resource> => {
+  const formData = new FormData();
+  try {
+    formData.append("file", file);
+
+    const token = await getAuthToken();
+
+    const response = await apiClient.post<Resource>(
+      APIEndpoints.RESOURCE.CREATE.UPLOAD_SWIMMING_LICENSE.replace("[userId]", userId),
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading the swimming license:", error);
+    throw error;
   }
 };

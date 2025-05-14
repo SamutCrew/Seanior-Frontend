@@ -87,3 +87,4 @@ export const rejectInstructorRequest = async (requestId: string, rejectionReason
     throw error;
   }
 };
+

@@ -20,7 +20,10 @@ import {
   FaSave,
   FaTimes,
   FaKeyboard,
+  FaCrosshairs,
+  FaSync,
 } from "react-icons/fa"
+import OSMMapSelector from "@/components/Searchpage/OSMMAPSelector"
 
 interface EnhancedCourseFormProps {
   initialData?: Partial<Course>
@@ -28,6 +31,102 @@ interface EnhancedCourseFormProps {
   onCancel: () => void
   isSubmitting?: boolean
   isEditing?: boolean
+}
+
+// Function to convert coordinates to address using Nominatim (OpenStreetMap)
+async function reverseGeocode(lat: number, lng: number): Promise<string> {
+  try {
+    // Use Nominatim API for reverse geocoding
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=th,en`,
+    )
+
+    if (!response.ok) {
+      throw new Error(`Geocoding failed: ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    // Extract relevant address components
+    // Prioritize Thai names when available
+    const road = data.address.road || data.address.pedestrian || ""
+    const suburb = data.address.suburb || ""
+    const district = data.address.district || data.address.city_district || ""
+    const city = data.address.city || data.address.town || data.address.village || ""
+
+    // Construct a simplified address string
+    let address = ""
+    if (road) address += road
+    if (suburb && suburb !== road) address += address ? `, ${suburb}` : suburb
+    if (district && !address.includes(district)) address += address ? `, ${district}` : district
+    if (city && !address.includes(city)) address += address ? `, ${city}` : city
+
+    // If we couldn't construct a meaningful address, use the display_name
+    if (!address.trim()) {
+      address = data.display_name
+    }
+
+    return address
+  } catch (error) {
+    console.error("Error during reverse geocoding:", error)
+    // Return coordinates as fallback
+    return `${lat.toFixed(6)}, ${lng.toFixed(6)}`
+  }
+}
+
+// Helper function to parse location data
+function parseLocationData(locationData: any) {
+  if (!locationData) {
+    return { lat: 13.7563, lng: 100.5018, address: "" }
+  }
+
+  // If location is a string (from database), try to parse it
+  if (typeof locationData === "string") {
+    try {
+      // First try to parse as JSON
+      const parsedLocation = JSON.parse(locationData)
+      console.log("Successfully parsed location string as JSON:", parsedLocation)
+      return parsedLocation
+    } catch (e) {
+      console.log("Failed to parse as JSON, trying alternative format parsing")
+
+      // If JSON parsing fails, try to extract coordinates from the string format
+      // Format example: "Latitude: 13.758060, Longitude: 100.512886 (Lat: 13.758060, Lng: 100.512886)"
+      try {
+        // Extract latitude using regex
+        const latMatch = locationData.match(/Latitude:\s*([\d.]+)/i) || locationData.match(/Lat:\s*([\d.]+)/i)
+
+        // Extract longitude using regex
+        const lngMatch = locationData.match(/Longitude:\s*([\d.]+)/i) || locationData.match(/Lng:\s*([\d.]+)/i)
+
+        if (latMatch && lngMatch) {
+          const lat = Number.parseFloat(latMatch[1])
+          const lng = Number.parseFloat(lngMatch[1])
+
+          console.log("Extracted coordinates from string:", { lat, lng })
+
+          return {
+            lat,
+            lng,
+            address: locationData, // Use the original string as address for now
+          }
+        }
+      } catch (extractError) {
+        console.error("Failed to extract coordinates from string:", extractError)
+      }
+
+      // If all parsing attempts fail, return default with the string as address
+      console.error("Could not parse location data, using default coordinates")
+      return { lat: 13.7563, lng: 100.5018, address: locationData }
+    }
+  }
+
+  // If it's already an object, ensure it has all required fields
+  return {
+    lat: locationData.lat || 13.7563,
+    lng: locationData.lng || 100.5018,
+    address: locationData.address || "",
+  }
 }
 
 export default function EnhancedCourseForm({
@@ -39,6 +138,12 @@ export default function EnhancedCourseForm({
 }: EnhancedCourseFormProps) {
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
+  const [isGeocodingLoading, setIsGeocodingLoading] = useState(false)
+
+  // Process initial location data
+  const processedLocationData = parseLocationData(initialData?.location)
+  console.log("Initial location data:", initialData?.location)
+  console.log("Processed location data:", processedLocationData)
 
   // Form state
   const [currentStep, setCurrentStep] = useState(1)
@@ -65,7 +170,7 @@ export default function EnhancedCourseForm({
       course_name: initialData?.course_name || "",
       price: initialData?.price || 0,
       pool_type: initialData?.pool_type || "public-pool",
-      location: initialData?.location || "",
+      location: processedLocationData,
       description: initialData?.description || "",
       course_duration: initialData?.course_duration || 8,
       study_frequency: initialData?.study_frequency || "1",
@@ -78,6 +183,23 @@ export default function EnhancedCourseForm({
       poolImageFile: null as File | null,
     }
   })
+
+  // Map state
+  const [mapCenter, setMapCenter] = useState({
+    lat: processedLocationData?.lat || 13.7563,
+    lng: processedLocationData?.lng || 100.5018,
+  })
+  const [showCoordinates, setShowCoordinates] = useState(false)
+
+  // Update map center when location changes
+  useEffect(() => {
+    if (formData.location?.lat && formData.location?.lng) {
+      setMapCenter({
+        lat: formData.location.lat,
+        lng: formData.location.lng,
+      })
+    }
+  }, [formData.location?.lat, formData.location?.lng])
 
   // Refs for keyboard navigation
   const courseNameRef = useRef<HTMLInputElement>(null)
@@ -185,6 +307,163 @@ export default function EnhancedCourseForm({
     }
   }
 
+  // Handle address change
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newAddress = e.target.value
+
+    // Update the location with the new address
+    setFormData((prevData) => ({
+      ...prevData,
+      location: {
+        ...prevData.location,
+        address: newAddress,
+      },
+    }))
+
+    // Clear error
+    if (errors.location) {
+      setErrors({
+        ...errors,
+        location: "",
+      })
+    }
+  }
+
+  // Handle location selection from map
+  const handleLocationSelect = async (location: { lat: number; lng: number }) => {
+    console.log("Location selected in EnhancedCourseForm:", location)
+
+    // Format coordinates for display
+    const formattedCoords = `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`
+
+    // Start geocoding process
+    setIsGeocodingLoading(true)
+
+    try {
+      // Get address from coordinates
+      const address = await reverseGeocode(location.lat, location.lng)
+
+      // Create a new location object with all required fields
+      const newLocation = {
+        ...formData.location, // Keep any existing fields
+        lat: location.lat,
+        lng: location.lng,
+        address: address, // Include the address in the location object
+      }
+
+      // Update form data with new location
+      setFormData((prevData) => ({
+        ...prevData,
+        location: newLocation,
+      }))
+
+      // Update map center to match new location
+      setMapCenter({
+        lat: location.lat,
+        lng: location.lng,
+      })
+
+      // Clear error
+      if (errors.location) {
+        setErrors({
+          ...errors,
+          location: "",
+        })
+      }
+
+      console.log("Updated form data with new location:", newLocation)
+    } catch (error) {
+      console.error("Error getting address:", error)
+
+      // Fallback to coordinates if geocoding fails
+      const newLocation = {
+        ...formData.location, // Keep any existing fields
+        lat: location.lat,
+        lng: location.lng,
+        address: formattedCoords,
+      }
+
+      setFormData((prevData) => ({
+        ...prevData,
+        location: newLocation,
+      }))
+    } finally {
+      setIsGeocodingLoading(false)
+    }
+  }
+
+  // Toggle showing coordinates
+  const toggleCoordinates = () => {
+    setShowCoordinates(!showCoordinates)
+  }
+
+  // Use current location
+  const useCurrentLocation = async () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords
+
+          // Format coordinates for display
+          const formattedCoords = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+
+          // Start geocoding process
+          setIsGeocodingLoading(true)
+
+          try {
+            // Get address from coordinates
+            const address = await reverseGeocode(latitude, longitude)
+
+            // Update form data with current location
+            const newLocation = {
+              ...formData.location, // Keep any existing fields
+              lat: latitude,
+              lng: longitude,
+              address: address,
+            }
+
+            setFormData((prevData) => ({
+              ...prevData,
+              location: newLocation,
+            }))
+
+            // Update map center
+            setMapCenter({
+              lat: latitude,
+              lng: longitude,
+            })
+
+            console.log("Using current location with address:", newLocation)
+          } catch (error) {
+            console.error("Error getting address for current location:", error)
+
+            // Fallback to coordinates if geocoding fails
+            const newLocation = {
+              ...formData.location, // Keep any existing fields
+              lat: latitude,
+              lng: longitude,
+              address: formattedCoords,
+            }
+
+            setFormData((prevData) => ({
+              ...prevData,
+              location: newLocation,
+            }))
+          } finally {
+            setIsGeocodingLoading(false)
+          }
+        },
+        (error) => {
+          console.error("Error getting current location:", error)
+          alert("Unable to get your current location. Please check your browser permissions.")
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+      )
+    } else {
+      alert("Geolocation is not supported by your browser")
+    }
+  }
+
   // Handle schedule changes
   const handleScheduleChange = (scheduleData: any) => {
     console.log("Schedule changed in EnhancedCourseForm:", scheduleData)
@@ -248,8 +527,8 @@ export default function EnhancedCourseForm({
         newErrors.price = "Price must be greater than 0"
       }
 
-      if (!formData.location.trim()) {
-        newErrors.location = "Location is required"
+      if (!formData.location?.address?.trim()) {
+        newErrors.location = "Location address is required"
       }
 
       if (!formData.description.trim()) {
@@ -321,6 +600,12 @@ export default function EnhancedCourseForm({
 
       // Create a copy of the form data for submission
       const submissionData = { ...formData }
+
+      // Convert location object to string for Prisma
+      if (submissionData.location && typeof submissionData.location === "object") {
+        // Stringify the location object for database storage
+        submissionData.location = JSON.stringify(submissionData.location)
+      }
 
       // Ensure schedule is properly formatted for submission
       if (submissionData.schedule && typeof submissionData.schedule === "object") {
@@ -575,13 +860,69 @@ export default function EnhancedCourseForm({
                   id="location"
                   name="location"
                   className={`${inputClasses} pl-10 ${isDarkMode ? "focus:border-red-500 focus:ring-red-500" : "focus:border-red-500 focus:ring-red-500"}`}
-                  value={formData.location}
-                  onChange={handleChange}
+                  value={formData.location?.address || ""}
+                  onChange={handleAddressChange}
                   placeholder="e.g., Aquatic Center, Los Angeles, CA"
                   ref={locationRef}
+                  disabled={isGeocodingLoading}
                 />
+                {isGeocodingLoading && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <FaSync className="animate-spin text-gray-400" size={16} />
+                  </div>
+                )}
               </div>
               {errors.location && <p className="mt-1 text-sm text-red-500">{errors.location}</p>}
+
+              {/* Map controls */}
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={useCurrentLocation}
+                  className={`text-sm flex items-center gap-1 ${
+                    isDarkMode ? "text-cyan-400 hover:text-cyan-300" : "text-sky-600 hover:text-sky-700"
+                  }`}
+                  disabled={isGeocodingLoading}
+                >
+                  <FaCrosshairs size={14} />
+                  Use Current Location
+                </button>
+
+                <button
+                  type="button"
+                  onClick={toggleCoordinates}
+                  className={`text-sm flex items-center gap-1 ${
+                    isDarkMode ? "text-cyan-400 hover:text-cyan-300" : "text-sky-600 hover:text-sky-700"
+                  }`}
+                >
+                  <FaMapMarkerAlt size={14} />
+                  {showCoordinates ? "Hide Coordinates" : "Show Coordinates"}
+                </button>
+              </div>
+
+              {/* Location coordinates display */}
+              {showCoordinates && formData.location?.lat && formData.location?.lng && (
+                <div className={`mt-2 text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                  Coordinates: {formData.location.lat.toFixed(6)}, {formData.location.lng.toFixed(6)}
+                </div>
+              )}
+
+              {/* Map container */}
+              <div className="mt-3 rounded-lg overflow-hidden border border-gray-300">
+                <OSMMapSelector
+                  center={mapCenter}
+                  onLocationSelect={handleLocationSelect}
+                  forceLightMode={true}
+                  initialMarker={
+                    formData.location?.lat && formData.location?.lng
+                      ? {
+                          lat: formData.location.lat,
+                          lng: formData.location.lng,
+                        }
+                      : undefined
+                  }
+                />
+              </div>
             </div>
 
             <div>
@@ -841,7 +1182,12 @@ export default function EnhancedCourseForm({
                 <div className={`p-2 rounded ${isDarkMode ? "bg-slate-800" : "bg-white"}`}>
                   <span className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Location:</span>
                   <div className={`text-base font-medium mt-1 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
-                    {formData.location}
+                    {formData.location?.address}
+                    {showCoordinates && formData.location?.lat && formData.location?.lng && (
+                      <div className={`text-xs mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                        Coordinates: {formData.location.lat.toFixed(6)}, {formData.location.lng.toFixed(6)}
+                      </div>
+                    )}
                   </div>
                 </div>
 
