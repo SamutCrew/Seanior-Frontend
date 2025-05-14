@@ -96,3 +96,15 @@ export const deleteResource = async (userId: string, resourceId: string) => {
     throw error
   }
 }
+
+
+export const getAllResources = async () => {
+  const url = APIEndpoints.RESOURCE.RETRIEVE.ALL;
+  try {
+    const response = await apiClient.get(url);
+    return response.data;
+  } catch (error: any) {
+    console.error("getAllResources error:", error.message);
+    return error.message;
+  }
+};
