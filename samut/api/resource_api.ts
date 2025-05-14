@@ -110,9 +110,66 @@ export const getAllResources = async () => {
   }
 };
 
+<<<<<<< Updated upstream
 
 
 
+=======
+export const uploadResource = async (
+  userId: string,
+  file: File,
+): Promise<Resource> => {
+  const formData = new FormData();
+  try {
+    formData.append("userId", userId);
+    formData.append("file", file);
+
+    const token = await getAuthToken();
+
+    const response = await apiClient.post<Resource>(
+      APIEndpoints.RESOURCE.CREATE.UPLOAD.replace("[userId]", userId),
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading the resource:", error);
+    throw error;
+  }
+};
+
+export const uploadProfileImage = async (
+  userId: string,
+  file: File,
+): Promise<Resource> => {
+  const formData = new FormData();
+  try {
+    formData.append("file", file);
+
+    const token = await getAuthToken();
+
+    const response = await apiClient.post<Resource>(
+      APIEndpoints.RESOURCE.CREATE.UPLOAD_PROFILE_IMAGE.replace("[userId]", userId),
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error uploading the profile image:", error);
+    throw error;
+  }
+};
+>>>>>>> Stashed changes
 
 export const uploadIdCard = async (
   userId: string,
