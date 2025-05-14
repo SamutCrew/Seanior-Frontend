@@ -1,62 +1,78 @@
+import axios from "axios"
+import { getAuthToken } from "@/context/authToken"
 
-// api_client.ts
-import { Toast } from "@/components/Responseback/Toast";
-import axios from "axios";
-import { getAuthToken } from "@/context/authToken";
-
-
+// Create a more robust API client with better error handling
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "",
+  timeout: 15000, // 15 seconds timeout
   headers: {
     "Content-Type": "application/json",
   },
-});
+})
 
-let retryCount = 0;
-
+// Add request interceptor for logging
 apiClient.interceptors.request.use(
   async (config) => {
-    const token = await getAuthToken();
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
+    try {
+      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`, {
+        headers: config.headers,
+        data: config.data,
+      })
+
+      const token = await getAuthToken()
+      if (token) {
+        config.headers["Authorization"] = `Bearer ${token}`
+      }
+
+      return config
+    } catch (error) {
+      console.error("Request preparation error:", error)
+      return Promise.reject(error)
     }
-    return config;
   },
   (error) => {
-    console.error("Request error:", error);
-    return Promise.reject(error);
-  }
-);
+    console.error("API request error:", error)
+    return Promise.reject(error)
+  },
+)
 
+// Add response interceptor for better error handling
 apiClient.interceptors.response.use(
   (response) => {
-    retryCount = 0;
-    return response;
+    console.log(`API Response (${response.status}):`, {
+      url: response.config.url,
+      method: response.config.method,
+      data: response.data,
+    })
+    return response
   },
   async (error) => {
-    retryCount++;
+    // Handle network errors (when no response is received)
+    if (!error.response) {
+      console.error("API network error:", {
+        message: error.message,
+        url: error.config?.url,
+        method: error.config?.method,
+      })
+      // Return a standardized error object
+      return Promise.reject({
+        message: "Network error. Please check your internet connection.",
+        isNetworkError: true,
+        originalError: error,
+      })
+    }
+
+    // Handle API errors (when a response with error status is received)
     console.error("API error details:", {
       message: error.message,
-      config: error.config,
-      response: error.response,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
+      url: error.config.url,
+      method: error.config.method,
+      status: error.response.status,
+      data: error.response.data,
+    })
 
-    if (retryCount <= 2) {
-      const errorMsg = "Request failed. Retrying...";
+    return Promise.reject(error)
+  },
+)
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log(`Retrying request (${retryCount}/3)`);
-      return apiClient.request(error.config); // Retry the request
-    } else {
-      const errorMsg =
-        error.response?.data?.message || "An unexpected error occurred.";
-      retryCount = 0;
-      // Toast.error("Retry . . .");
-      return Promise.reject(error);
-    }
-  }
-);
-
-export default apiClient;
+export default apiClient

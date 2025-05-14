@@ -1,33 +1,73 @@
-// src/api/course_api.ts
-import apiClient from "@/api/api_client";
-import { APIEndpoints } from "@/constants/apiEndpoints";
-import { Course } from '@/types/course';
+import apiClient from "./api_client"
+import { APIEndpoints } from "@/constants/apiEndpoints"
 
-// Existing functions...
+// Modify the getAllCourses function to better handle network errors
 export const getAllCourses = async () => {
-  const url = APIEndpoints.COURSE.RETRIEVE.ALL;
   try {
-    const response = await apiClient.get(url);
-    return response.data;
+    console.log("Fetching all courses...")
+    const response = await apiClient.get(APIEndpoints.COURSE.RETRIEVE.ALL)
+    console.log("API Response for all courses:", response)
+    return response.data
   } catch (error: any) {
+    // More detailed error logging
     console.error("Error fetching all courses:", {
-      message: error.message,
-      response: error.response
-        ? {
-            status: error.response.status,
-            data: error.response.data,
-          }
-        : null,
-    });
-    throw error;
-  }
-};
+      message: error?.message || "Unknown error",
+      status: error?.response?.status,
+      data: error?.response?.data,
+      stack: error?.stack,
+    })
 
-export const createCourse = async (newCourseData: Course) => {
-  const url = APIEndpoints.COURSE.CREATE;
+    // Return empty array instead of throwing to prevent cascading errors
+    return []
+  }
+}
+
+// Get course by ID
+export const getCourseById = async (courseId: string) => {
   try {
-    const response = await apiClient.post(url, newCourseData);
-    return response.data;
+    // Replace the placeholder in the URL with the actual courseId
+    const url = APIEndpoints.COURSE.RETRIEVE.BY_ID.replace("[courseId]", courseId)
+    console.log(`Fetching course details from: ${url}`)
+
+    const response = await apiClient.get(url)
+    console.log("API Response for course details:", response)
+    return response.data
+  } catch (error: any) {
+    // More detailed error logging
+    console.error("Error fetching course details:", {
+      courseId,
+      message: error?.message || "Unknown error",
+      status: error?.response?.status,
+      data: error?.response?.data,
+      stack: error?.stack,
+    })
+
+    // For 404 errors, log a more specific message
+    if (error?.response?.status === 404) {
+      console.warn(`Course with ID ${courseId} not found. This is likely because the course doesn't exist.`)
+    }
+
+    // Return null instead of throwing to prevent cascading errors
+    return null
+  }
+}
+
+// Create a new course
+export const createCourse = async (courseData: any) => {
+  try {
+    // Process schedule data if it exists
+    const processedData = { ...courseData }
+
+    if (processedData.schedule && typeof processedData.schedule === "object") {
+      // Convert schedule to JSON string for API
+      processedData.schedule = JSON.stringify(processedData.schedule)
+      console.log("Schedule data converted to string for API:", processedData.schedule)
+    }
+
+    console.log("Creating course with data:", processedData)
+    const response = await apiClient.post(APIEndpoints.COURSE.CREATE, processedData)
+    console.log("API Response for create course:", response)
+    return response.data
   } catch (error: any) {
     console.error("Error creating course:", {
       message: error.message,
@@ -37,54 +77,123 @@ export const createCourse = async (newCourseData: Course) => {
             data: error.response.data,
           }
         : null,
-    });
-    throw error;
+    })
+    throw error
   }
-};
+}
 
-export const updateCourse = async (courseId: string, updatedData: Partial<Course>) => {
-  const url = APIEndpoints.COURSE.UPDATE.replace("[courseId]", courseId)
+// Update a course
+export const updateCourse = async (courseId: string, courseData: any) => {
   try {
-    const response = await apiClient.put(url, updatedData);
-    return response.data;
-  } catch (error: any) {
-    console.error("Error updating course:", error);
-    throw error;
-  }
-};
+    // Create a deep copy of the data to avoid reference issues
+    const processedData = JSON.parse(JSON.stringify(courseData))
 
-export const deleteCourse = async (courseId: string) => {
-  const url = APIEndpoints.COURSE.DELETE.replace("[courseId]", courseId);
-  try {
-    const response = await apiClient.delete(url);
-    return response.data;
-  } catch (error: any) {
-    console.error("Error deleting course:", {
-      message: error.message,
-      response: error.response
+    // Clean up the data before sending to API
+    const cleanedData = Object.fromEntries(
+      Object.entries(processedData).filter(([_, value]) => value !== undefined && value !== null),
+    )
+
+    // Ensure schedule is properly formatted if it exists
+    if (cleanedData.schedule && typeof cleanedData.schedule === "object") {
+      console.log("Schedule data in API before formatting:", cleanedData.schedule)
+
+      // Log selected days for debugging
+      const selectedDays = Object.keys(cleanedData.schedule)
+        .filter((day) => cleanedData.schedule[day].selected)
+        .join(", ")
+      console.log("Selected days before API call:", selectedDays || "None")
+
+      // Convert schedule to JSON string for API
+      cleanedData.schedule = JSON.stringify(cleanedData.schedule)
+      console.log("Schedule data in API after formatting (stringified):", cleanedData.schedule)
+    }
+
+    console.log(`Updating course ${courseId} with data:`, cleanedData)
+
+    // Correctly replace the placeholder in the URL with the actual courseId
+    const url = APIEndpoints.COURSE.UPDATE.replace("[courseId]", courseId)
+    console.log(`Sending PUT request to ${url}`)
+
+    // Some APIs expect PUT, others PATCH - try PUT first
+    const response = await apiClient.put(url, cleanedData)
+    console.log("API Response for update course:", response)
+    return response.data
+  } catch (putError: any) {
+    console.error("Error updating course with PUT:", {
+      message: putError.message,
+      response: putError.response
         ? {
-            status: error.response.status,
-            data: error.response.data,
+            status: putError.response.status,
+            data: putError.response.data,
           }
         : null,
-    });
-    throw error;
+    })
+
+    // If PUT fails with 405 Method Not Allowed, try PATCH
+    if (putError.response && putError.response.status === 405) {
+      try {
+        // Create a deep copy of the data again for PATCH request
+        const processedData = JSON.parse(JSON.stringify(courseData))
+
+        // Clean up the data
+        const cleanedData = Object.fromEntries(
+          Object.entries(processedData).filter(([_, value]) => value !== undefined && value !== null),
+        )
+
+        // Ensure schedule is properly formatted
+        if (cleanedData.schedule && typeof cleanedData.schedule === "object") {
+          // Log selected days for debugging
+          const selectedDays = Object.keys(cleanedData.schedule)
+            .filter((day) => cleanedData.schedule[day].selected)
+            .join(", ")
+          console.log("Selected days before PATCH API call:", selectedDays || "None")
+
+          cleanedData.schedule = JSON.stringify(cleanedData.schedule)
+        }
+
+        const url = APIEndpoints.COURSE.UPDATE.replace("[courseId]", courseId)
+        console.log(`Trying PATCH request to ${url}`)
+        const patchResponse = await apiClient.patch(url, cleanedData)
+        console.log("API Response for update course with PATCH:", patchResponse)
+        return patchResponse.data
+      } catch (patchError: any) {
+        console.error("Error updating course with PATCH:", {
+          message: patchError.message,
+          response: patchError.response
+            ? {
+                status: patchError.response.status,
+                data: patchError.response.data,
+              }
+            : null,
+        })
+        throw patchError
+      }
+    }
+
+    // If it's not a 405 error, throw the original error
+    throw putError
   }
-};
+}
 
-// New functions for image uploads
-export const uploadCourseImage = async (courseId: string, file: File) => {
-  const url = APIEndpoints.RESOURCE.CREATE.UPLOAD_COURSE_IMAGE.replace("[courseId]", courseId);
-  const formData = new FormData();
-  formData.append('file', file);
-
+// Upload course image
+export const uploadCourseImage = async (courseId: string, imageFile: File) => {
   try {
+    const url = APIEndpoints.RESOURCE.CREATE.UPLOAD_COURSE_IMAGE.replace("[courseId]", courseId)
+    console.log(`Uploading course image to ${url}`)
+
+    const formData = new FormData()
+    formData.append("file", imageFile)
+    formData.append("resource_type", "course_image")
+    formData.append("resource_name", `course_${courseId}`)
+
     const response = await apiClient.post(url, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
-    });
-    return response.data;
+    })
+
+    console.log("API Response for course image upload:", response)
+    return response.data
   } catch (error: any) {
     console.error("Error uploading course image:", {
       message: error.message,
@@ -94,23 +203,30 @@ export const uploadCourseImage = async (courseId: string, file: File) => {
             data: error.response.data,
           }
         : null,
-    });
-    throw error;
+    })
+    throw error
   }
-};
+}
 
-export const uploadPoolImage = async (courseId: string, file: File) => {
-  const url = APIEndpoints.RESOURCE.CREATE.UPLOAD_POOL_IMAGE.replace("[courseId]", courseId);
-  const formData = new FormData();
-  formData.append('file', file);
-
+// Upload pool image
+export const uploadPoolImage = async (courseId: string, imageFile: File) => {
   try {
+    const url = APIEndpoints.RESOURCE.CREATE.UPLOAD_POOL_IMAGE.replace("[courseId]", courseId)
+    console.log(`Uploading pool image to ${url}`)
+
+    const formData = new FormData()
+    formData.append("file", imageFile)
+    formData.append("resource_type", "pool_image")
+    formData.append("resource_name", `pool_${courseId}`)
+
     const response = await apiClient.post(url, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
-    });
-    return response.data;
+    })
+
+    console.log("API Response for pool image upload:", response)
+    return response.data
   } catch (error: any) {
     console.error("Error uploading pool image:", {
       message: error.message,
@@ -120,8 +236,31 @@ export const uploadPoolImage = async (courseId: string, file: File) => {
             data: error.response.data,
           }
         : null,
-    });
-    throw error;
+    })
+    throw error
   }
-};
-  
+}
+
+// Delete a course
+export const deleteCourse = async (courseId: string) => {
+  try {
+    // Replace the placeholder in the URL with the actual courseId
+    const url = APIEndpoints.COURSE.DELETE.replace("[courseId]", courseId)
+    console.log(`Deleting course from: ${url}`)
+
+    const response = await apiClient.delete(url)
+    console.log("API Response for delete course:", response)
+    return response.data
+  } catch (error: any) {
+    console.error("Error deleting course:", {
+      message: error.message,
+      response: error.response
+        ? {
+            status: error.response.status,
+            data: error.response.data,
+          }
+        : null,
+    })
+    throw error
+  }
+}

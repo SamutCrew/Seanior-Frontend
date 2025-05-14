@@ -14,17 +14,132 @@ interface CourseCardProps {
   variant?: "compact" | "featured" | "standard"
 }
 
+/**
+ * Safely formats a schedule for display without trying to parse invalid JSON
+ */
+export const safeFormatSchedule = (schedule: any): string => {
+  // If schedule is already a string and doesn't look like JSON, return it directly
+  if (typeof schedule === "string") {
+    // Check if it's already a formatted string (not JSON)
+    if (
+      schedule.includes("Monday") ||
+      schedule.includes("Tuesday") ||
+      schedule.includes("Wednesday") ||
+      schedule.includes("Thursday") ||
+      schedule.includes("Friday") ||
+      schedule.includes("Saturday") ||
+      schedule.includes("Sunday")
+    ) {
+      return schedule
+    }
+
+    // Only try to parse if it looks like JSON
+    if (schedule.trim().startsWith("{") && schedule.trim().endsWith("}")) {
+      try {
+        const parsed = JSON.parse(schedule)
+        return formatScheduleObject(parsed)
+      } catch (error) {
+        console.log("Schedule string couldn't be parsed as JSON, using as is:", schedule)
+        return schedule
+      }
+    }
+
+    return schedule
+  }
+
+  // If it's an object, format it
+  if (schedule && typeof schedule === "object") {
+    return formatScheduleObject(schedule)
+  }
+
+  return "Flexible schedule"
+}
+
+/**
+ * Formats a schedule object into a readable string
+ */
+const formatScheduleObject = (scheduleObj: any): string => {
+  try {
+    const selectedDays = Object.keys(scheduleObj)
+      .filter((day) => scheduleObj[day]?.selected)
+      .map((day) => {
+        const dayName = day.charAt(0).toUpperCase() + day.slice(1)
+        const ranges = scheduleObj[day].ranges || []
+        const times = ranges
+          .map((range: any) => {
+            // Format time to AM/PM
+            const formatTime = (time: string) => {
+              const [hours, minutes] = time.split(":").map(Number)
+              const period = hours >= 12 ? "PM" : "AM"
+              const displayHours = hours % 12 || 12
+              return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`
+            }
+
+            return `${formatTime(range.start)} - ${formatTime(range.end)}`
+          })
+          .join(", ")
+
+        return `${dayName}: ${times}`
+      })
+
+    return selectedDays.length > 0 ? selectedDays.join(" • ") : "No days selected"
+  } catch (error) {
+    console.error("Error formatting schedule object:", error)
+    return "Schedule format error"
+  }
+}
+
 export default function CourseCard({ course, onEdit, onDelete, variant = "standard" }: CourseCardProps) {
   // Get dark mode state from Redux store
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
+  // Get course title (handle both title and course_name)
+  const courseTitle = course.title || course.course_name || "Untitled Course"
+
+  // Get course focus/description
+  const courseFocus = course.focus || course.description || "Swimming techniques"
+
+  // Get course ID (handle both id and course_id)
+  const courseId = course.id || course.course_id || "unknown"
+
+  // Get instructor name
+  let instructorName = "Unknown Instructor"
+  if (typeof course.instructor === "string") {
+    instructorName = course.instructor
+  } else if (course.instructor && typeof course.instructor === "object") {
+    instructorName = course.instructor.name || "Unknown Instructor"
+  }
+
   // Default instructor image if not provided
   const instructorImage =
     course.instructorImage ||
-    `/placeholder.svg?height=200&width=200&query=swimming instructor portrait ${course.instructor}`
+    `/placeholder.svg?height=200&width=200&query=swimming instructor portrait ${instructorName}`
 
   // Default course image if not provided
-  const courseImage = course.image || `/placeholder.svg?height=400&width=800&query=swimming pool ${course.level} class`
+  const courseImage =
+    course.image ||
+    course.course_image ||
+    `/placeholder.svg?height=400&width=800&query=swimming pool ${course.level} class`
+
+  // Get location (handle both string and object)
+  let locationAddress = "TBD"
+  if (typeof course.location === "string") {
+    locationAddress = course.location
+  } else if (course.location && typeof course.location === "object" && "address" in course.location) {
+    locationAddress = course.location.address as string
+  }
+
+  // Get course type
+  const courseType = course.courseType || course.pool_type || "public-pool"
+
+  // Get max students
+  const maxStudents = course.maxStudents || course.max_students || 10
+
+  // Get duration
+  const duration = course.duration || `${course.course_duration || 8} weeks`
+
+  // Get schedule - safely formatted
+  const scheduleStr = safeFormatSchedule(course.schedule) || "Flexible schedule"
 
   // Function to get level badge styling
   const getLevelBadgeStyle = (level: string) => {
@@ -73,7 +188,7 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
         <div className="flex flex-col md:flex-row h-full">
           {/* Left side - Image */}
           <div className="relative md:w-2/5 h-64 md:h-auto">
-            <Image src={courseImage || "/placeholder.svg"} alt={course.title} fill className="object-cover" />
+            <Image src={courseImage || "/placeholder.svg"} alt={courseTitle} fill className="object-cover" />
 
             {/* Featured Badge */}
             <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold shadow-lg">
@@ -82,15 +197,15 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
 
             {/* Course Title Overlay */}
             <div className="absolute bottom-0 left-0 p-4 w-full bg-gradient-to-t from-black/80 to-transparent">
-              <h3 className="text-xl font-bold text-white">{course.title}</h3>
+              <h3 className="text-xl font-bold text-white">{courseTitle}</h3>
               <div className="flex items-center gap-2 mt-2">
                 <span className={getLevelBadgeStyle(course.level)}>{course.level}</span>
                 <div className="flex items-center gap-1 text-white">
                   <FaStar className="text-amber-400" />
-                  <span>{course.rating.toFixed(1)}</span>
+                  <span>{(course.rating || 4.5).toFixed(1)}</span>
                 </div>
               </div>
-              <p className="text-white/90 text-sm mt-2 line-clamp-2">{course.focus}</p>
+              <p className="text-white/90 text-sm mt-2 line-clamp-2">{courseFocus}</p>
             </div>
           </div>
 
@@ -101,7 +216,7 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
               <div className="relative h-12 w-12 rounded-full overflow-hidden border-2 border-gray-200 shadow-sm">
                 <Image
                   src={instructorImage || "/placeholder.svg"}
-                  alt={`Instructor ${course.instructor}`}
+                  alt={`Instructor ${instructorName}`}
                   fill
                   className="object-cover"
                 />
@@ -109,7 +224,7 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
               <div className="ml-3">
                 <p className="text-xs font-medium text-indigo-600">INSTRUCTOR</p>
                 <h4 className={`text-base font-bold ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                  {course.instructor}
+                  {instructorName}
                 </h4>
               </div>
             </div>
@@ -119,20 +234,18 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
               <div className="mr-6">
                 <div className="flex items-center mb-1">
                   <FaCalendarAlt className="text-indigo-500 mr-2" />
-                  <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>{course.schedule}</span>
+                  <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>{scheduleStr}</span>
                 </div>
                 <div className="flex items-center">
                   <FaClock className="text-indigo-500 mr-2" />
-                  <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>{course.duration}</span>
+                  <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>{duration}</span>
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center mb-1">
                   <FaMapMarkerAlt className="text-indigo-500 mr-2" />
-                  <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                    {course.location.address}
-                  </span>
+                  <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>{locationAddress}</span>
                 </div>
                 <div className="flex items-center">
                   <FaUsers className="text-indigo-500 mr-2" />
@@ -149,12 +262,10 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
                 <div className={`text-2xl font-bold ${isDarkMode ? "text-white" : "text-gray-800"}`}>
                   ${course.price}
                 </div>
-                <span className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-                  {course.courseType || "public-pool"}
-                </span>
+                <span className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>{courseType}</span>
               </div>
 
-              <Link href={`/course/${course.id}`}>
+              <Link href={`/course/${courseId}`}>
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
@@ -189,7 +300,7 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
         <div className="relative h-40 w-full overflow-hidden">
           <Image
             src={courseImage || "/placeholder.svg"}
-            alt={course.title}
+            alt={courseTitle}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
@@ -214,35 +325,35 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
         {/* Content */}
         <div className="p-4 flex-grow flex flex-col">
           <h3 className={`text-lg font-bold mb-1 line-clamp-1 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-            {course.title}
+            {courseTitle}
           </h3>
 
           <div className="flex items-center gap-2 mb-2">
             <div className="relative h-6 w-6 rounded-full overflow-hidden">
               <Image
                 src={instructorImage || "/placeholder.svg"}
-                alt={`Instructor ${course.instructor}`}
+                alt={`Instructor ${instructorName}`}
                 fill
                 className="object-cover"
               />
             </div>
-            <span className={`text-xs ${isDarkMode ? "text-slate-300" : "text-gray-600"}`}>{course.instructor}</span>
+            <span className={`text-xs ${isDarkMode ? "text-slate-300" : "text-gray-600"}`}>{instructorName}</span>
             <div className="flex items-center gap-1 ml-auto">
               <FaStar className="text-amber-400 text-xs" />
-              <span className="text-xs font-medium">{course.rating.toFixed(1)}</span>
+              <span className="text-xs font-medium">{(course.rating || 4.5).toFixed(1)}</span>
             </div>
           </div>
 
           <p className={`text-xs mb-3 line-clamp-2 ${isDarkMode ? "text-slate-400" : "text-gray-500"}`}>
-            {course.focus}
+            {courseFocus}
           </p>
 
           <div className="mt-auto pt-2 flex items-center justify-between">
             <div className={`flex items-center gap-1 text-xs ${isDarkMode ? "text-slate-400" : "text-gray-500"}`}>
               <FaCalendarAlt className="text-xs" />
-              <span>{course.duration}</span>
+              <span>{duration}</span>
             </div>
-            <Link href={`/course/${course.id}`}>
+            <Link href={`/course/${courseId}`}>
               <button
                 className={`text-xs font-medium px-3 py-1 rounded-full ${
                   isDarkMode
@@ -277,7 +388,7 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
       <div className="relative h-48 w-full overflow-hidden">
         <Image
           src={courseImage || "/placeholder.svg"}
-          alt={course.title}
+          alt={courseTitle}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
@@ -291,7 +402,7 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
 
         {/* Course Title on Image */}
         <div className="absolute bottom-0 left-0 right-0 p-4">
-          <h3 className="text-xl font-bold text-white mb-1 drop-shadow-md">{course.title}</h3>
+          <h3 className="text-xl font-bold text-white mb-1 drop-shadow-md">{courseTitle}</h3>
           <div className="flex items-center justify-between">
             <span className={getLevelBadgeStyle(course.level)}>{course.level}</span>
             <div className="flex items-center gap-1 bg-black/30 text-white px-2 py-1 rounded-full text-xs">
@@ -309,14 +420,12 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
             <div className={`p-1.5 rounded-full ${isDarkMode ? "bg-indigo-900/50" : "bg-indigo-100"}`}>
               <FaSwimmer className={`text-sm ${isDarkMode ? "text-indigo-400" : "text-indigo-600"}`} />
             </div>
-            <p className={`text-sm font-medium ${isDarkMode ? "text-indigo-400" : "text-indigo-600"}`}>
-              {course.focus}
-            </p>
+            <p className={`text-sm font-medium ${isDarkMode ? "text-indigo-400" : "text-indigo-600"}`}>{courseFocus}</p>
           </div>
           <div className="flex items-center gap-1 ml-auto">
             <FaStar className="text-amber-400" />
             <span className={`text-sm font-medium ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-              {course.rating.toFixed(1)}
+              {(course.rating || 4.5).toFixed(1)}
             </span>
           </div>
         </div>
@@ -324,15 +433,15 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className={`flex items-center gap-2 text-sm ${isDarkMode ? "text-slate-300" : "text-gray-600"}`}>
             <FaCalendarAlt className={isDarkMode ? "text-indigo-400" : "text-indigo-600"} />
-            <span>{course.duration}</span>
+            <span>{duration}</span>
           </div>
           <div className={`flex items-center gap-2 text-sm ${isDarkMode ? "text-slate-300" : "text-gray-600"}`}>
             <FaClock className={isDarkMode ? "text-indigo-400" : "text-indigo-600"} />
-            <span>{course.schedule}</span>
+            <span>{scheduleStr}</span>
           </div>
           <div className={`flex items-center gap-2 text-sm ${isDarkMode ? "text-slate-300" : "text-gray-600"}`}>
             <FaMapMarkerAlt className={isDarkMode ? "text-indigo-400" : "text-indigo-600"} />
-            <span>{course.location.address}</span>
+            <span>{locationAddress}</span>
           </div>
           <div className={`flex items-center gap-2 text-sm ${isDarkMode ? "text-slate-300" : "text-gray-600"}`}>
             <HiUserGroup className={isDarkMode ? "text-indigo-400" : "text-indigo-600"} />
@@ -352,21 +461,21 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
           >
             <Image
               src={instructorImage || "/placeholder.svg"}
-              alt={`Instructor ${course.instructor}`}
+              alt={`Instructor ${instructorName}`}
               fill
               className="object-cover"
             />
           </div>
           <div className="ml-3">
             <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-gray-500"}`}>Instructor</p>
-            <h4 className={`text-sm font-bold ${isDarkMode ? "text-white" : "text-gray-800"}`}>{course.instructor}</h4>
+            <h4 className={`text-sm font-bold ${isDarkMode ? "text-white" : "text-gray-800"}`}>{instructorName}</h4>
           </div>
           <div className="ml-auto">
             <span
               className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
               ${isDarkMode ? "bg-slate-700 text-slate-300" : "bg-gray-100 text-gray-700"}`}
             >
-              {course.courseType || "Private"}
+              {courseType}
             </span>
           </div>
         </div>
@@ -410,7 +519,7 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
 
         {/* Join Now Button - Only show if no edit/delete buttons */}
         {!onEdit && !onDelete && (
-          <Link href={`/course/${course.id}`}>
+          <Link href={`/course/${courseId}`}>
             <motion.button
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}

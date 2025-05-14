@@ -13,6 +13,7 @@ import type { Course } from "@/types/course"
 import LoadingPage from "@/components/Common/LoadingPage"
 import { HiAcademicCap, HiOutlineAcademicCap } from "react-icons/hi"
 import { FaSwimmer } from "react-icons/fa"
+import { getAllCourses } from "@/api/course_api"
 
 export default function AllCoursesPage() {
   const router = useRouter()
@@ -46,296 +47,90 @@ export default function AllCoursesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Mock data for courses with real images
+  // Load courses from API
   useEffect(() => {
     const loadCourses = async () => {
       try {
         setIsLoading(true)
         setError(null)
 
-        // In a real application, this would be an API call
-        // For now, we'll use mock data with real images
-        const mockCourses: Course[] = [
-          {
-            id: 1,
-            title: "Beginner Swimming Fundamentals",
-            focus: "Learn basic swimming techniques and water safety",
-            level: "Beginner",
-            duration: "8 weeks",
-            schedule: "Mon, Wed 5:00 PM - 6:00 PM",
-            instructor: "Sarah Johnson",
-            instructorId: "1",
-            instructorImage: "/confident-swim-coach.png",
-            rating: 4.8,
-            students: 12,
-            price: 199,
-            location: {
-              address: "Aquatic Center, 123 Main St",
-            },
-            courseType: "public-pool",
-            description:
-              "Perfect for first-time swimmers. Build confidence in the water and learn fundamental techniques.",
-            curriculum: ["Water Safety", "Floating Techniques", "Basic Strokes", "Breathing Control"],
-            maxStudents: 15,
-            image: "/butterfly-undulation-drill.png",
-          },
-          {
-            id: 2,
-            title: "Advanced Freestyle Technique",
-            focus: "Perfect your freestyle stroke for competitive swimming",
-            level: "Advanced",
-            duration: "6 weeks",
-            schedule: "Tue, Thu 6:30 PM - 8:00 PM",
-            instructor: "Michael Chen",
-            instructorId: "2",
-            instructorImage: "/diverse-female-student.png",
-            rating: 4.9,
-            students: 8,
-            price: 249,
-            location: {
-              address: "Olympic Pool, 456 Sports Ave",
-            },
-            courseType: "public-pool",
-            description: "Take your freestyle to the next level with advanced techniques and drills.",
-            curriculum: ["Stroke Analysis", "Efficiency Drills", "Race Strategy", "Advanced Turns"],
-            maxStudents: 10,
-            image: "/butterfly-swimming-technique.png",
-          },
-          {
-            id: 3,
-            title: "Toddler Water Confidence",
-            focus: "Introduce young children to water in a fun, safe environment",
-            level: "Beginner",
-            duration: "4 weeks",
-            schedule: "Sat 9:00 AM - 10:00 AM",
-            instructor: "Emma Rodriguez",
-            instructorId: "3",
-            instructorImage: "/butterfly-undulation-drill.png",
-            rating: 4.7,
-            students: 6,
-            price: 149,
-            location: {
-              address: "Kids Splash Center, 789 Family Rd",
-            },
-            courseType: "private-location",
-            description: "A gentle introduction to water for toddlers aged 2-4 years with parent participation.",
-            curriculum: ["Water Play", "Basic Floating", "Underwater Exploration", "Safety Skills"],
-            maxStudents: 8,
-            image: "/Teacher3.jpg",
-          },
-          {
-            id: 4,
-            title: "Intermediate Stroke Development",
-            focus: "Refine all four competitive swimming strokes",
-            level: "Intermediate",
-            duration: "10 weeks",
-            schedule: "Mon, Wed, Fri 4:00 PM - 5:30 PM",
-            instructor: "David Wilson",
-            instructorId: "4",
-            instructorImage: "/SwimmimgLanding.jpg",
-            rating: 4.6,
-            students: 10,
-            price: 299,
-            location: {
-              address: "Community Pool, 101 Recreation Blvd",
-            },
-            courseType: "public-pool",
-            description: "Comprehensive program covering all four competitive strokes with technique refinement.",
-            curriculum: ["Butterfly", "Backstroke", "Breaststroke", "Freestyle", "Individual Medley"],
-            maxStudents: 12,
-            image: "/Teacher3.jpg",
-          },
-          {
-            id: 5,
-            title: "Adult Learn-to-Swim",
-            focus: "Swimming basics for adults in a supportive environment",
-            level: "Beginner",
-            duration: "8 weeks",
-            schedule: "Tue, Thu 7:00 PM - 8:00 PM",
-            instructor: "Lisa Thompson",
-            instructorId: "5",
-            instructorImage: "/Teacher2.jpg",
-            rating: 4.9,
-            students: 5,
-            price: 219,
-            location: {
-              address: "Wellness Center, 202 Health St",
-            },
-            courseType: "public-pool",
-            description: "Designed specifically for adults who want to learn to swim in a judgment-free environment.",
-            curriculum: ["Water Comfort", "Floating", "Basic Strokes", "Deep Water Confidence"],
-            maxStudents: 6,
-            image: "/SwimmimgLanding.jpg",
-          },
-          {
-            id: 6,
-            title: "Competitive Swim Training",
-            focus: "Training program for competitive swimmers",
-            level: "Advanced",
-            duration: "12 weeks",
-            schedule: "Mon-Fri 6:00 AM - 7:30 AM",
-            instructor: "James Peterson",
-            instructorId: "6",
-            instructorImage: "/Teacher1.jpg",
-            rating: 4.8,
-            students: 15,
-            price: 349,
-            location: {
-              address: "Elite Swim Center, 303 Champion Ave",
-            },
-            courseType: "teacher-pool",
-            description: "Intensive training program for competitive swimmers looking to improve race times.",
-            curriculum: ["Race Strategy", "Advanced Technique", "Strength Training", "Mental Preparation"],
-            maxStudents: 20,
-            image: "/SwimmimgLanding.jpg",
-          },
-          {
-            id: 7,
-            title: "Water Safety & Rescue",
-            focus: "Learn essential water safety and rescue techniques",
-            level: "Intermediate",
-            duration: "4 weeks",
-            schedule: "Sat, Sun 1:00 PM - 3:00 PM",
-            instructor: "Robert Garcia",
-            instructorId: "7",
-            instructorImage: "/Teacher4.jpg",
-            rating: 4.7,
-            students: 12,
-            price: 179,
-            location: {
-              address: "Safety First Pool, 404 Lifeguard Ln",
-            },
-            courseType: "public-pool",
-            description:
-              "Essential course for anyone who spends time around water. Learn how to prevent and respond to water emergencies.",
-            curriculum: ["Prevention", "Recognition", "Basic Rescue", "CPR Basics"],
-            maxStudents: 15,
-            image: "/focused-freestyle.png",
-          },
-          {
-            id: 8,
-            title: "Senior Water Exercise",
-            focus: "Low-impact water exercises for seniors",
-            level: "Beginner",
-            duration: "Ongoing",
-            schedule: "Mon, Wed, Fri 10:00 AM - 11:00 AM",
-            instructor: "Patricia Lee",
-            instructorId: "8",
-            instructorImage: "/images/instructors/instructor-8.png",
-            rating: 4.9,
-            students: 18,
-            price: 129,
-            location: {
-              address: "Golden Years Center, 505 Senior Blvd",
-            },
-            courseType: "public-pool",
-            description:
-              "Gentle, effective water exercises designed specifically for seniors to improve mobility and strength.",
-            curriculum: ["Water Walking", "Joint Mobility", "Strength Exercises", "Balance Work"],
-            maxStudents: 20,
-            image: "/images/courses/senior-water-exercise.png",
-          },
-          {
-            id: 9,
-            title: "Triathlon Swim Preparation",
-            focus: "Open water swimming techniques for triathletes",
-            level: "Intermediate",
-            duration: "6 weeks",
-            schedule: "Tue, Thu 5:30 PM - 7:00 PM",
-            instructor: "Nathan Brown",
-            instructorId: "9",
-            instructorImage: "/images/instructors/instructor-9.png",
-            rating: 4.8,
-            students: 10,
-            price: 279,
-            location: {
-              address: "Triathlon Training Center, 606 Endurance Way",
-            },
-            courseType: "teacher-pool",
-            description: "Specialized training for triathletes focusing on open water techniques and race strategy.",
-            curriculum: ["Sighting", "Drafting", "Mass Start Practice", "Transition Speed"],
-            maxStudents: 12,
-            image: "/images/courses/triathlon-swimming.png",
-          },
-          {
-            id: 10,
-            title: "Aquatic Rehabilitation",
-            focus: "Therapeutic swimming for injury recovery",
-            level: "Beginner",
-            duration: "Varies",
-            schedule: "By appointment",
-            instructor: "Dr. Maria Santos",
-            instructorId: "10",
-            instructorImage: "/images/instructors/instructor-10.png",
-            rating: 4.9,
-            students: 4,
-            price: 399,
-            location: {
-              address: "Healing Waters Clinic, 707 Recovery Rd",
-            },
-            courseType: "private-location",
-            description: "Personalized aquatic therapy program for injury recovery and rehabilitation.",
-            curriculum: ["Assessment", "Personalized Program", "Progress Tracking", "Home Exercise Plan"],
-            maxStudents: 1,
-            image: "/images/courses/aquatic-rehab.png",
-          },
-          {
-            id: 11,
-            title: "Parent & Child Swimming",
-            focus: "Bond with your child while teaching water skills",
-            level: "Beginner",
-            duration: "6 weeks",
-            schedule: "Sat 10:30 AM - 11:30 AM",
-            instructor: "Emma Rodriguez",
-            instructorId: "3",
-            instructorImage: "/images/instructors/instructor-3.png",
-            rating: 4.8,
-            students: 8,
-            price: 169,
-            location: {
-              address: "Family Aquatic Center, 808 Bonding Blvd",
-            },
-            courseType: "public-pool",
-            description: "A fun course for parents and children (ages 4-7) to learn water skills together.",
-            curriculum: ["Water Games", "Basic Skills", "Safety Rules", "Confidence Building"],
-            maxStudents: 10,
-            image: "/images/courses/parent-child-swimming.png",
-          },
-          {
-            id: 12,
-            title: "Synchronized Swimming Basics",
-            focus: "Introduction to the art of synchronized swimming",
-            level: "Intermediate",
-            duration: "8 weeks",
-            schedule: "Wed, Fri 4:30 PM - 6:00 PM",
-            instructor: "Sophia Martinez",
-            instructorId: "11",
-            instructorImage: "/images/instructors/instructor-11.png",
-            rating: 4.7,
-            students: 12,
-            price: 229,
-            location: {
-              address: "Artistic Swim Center, 909 Performance Pl",
-            },
-            courseType: "public-pool",
-            description: "Learn the fundamentals of synchronized swimming, combining swimming, dance, and gymnastics.",
-            curriculum: ["Basic Figures", "Sculling Techniques", "Breath Control", "Simple Routines"],
-            maxStudents: 14,
-            image: "/images/courses/synchronized-swimming.png",
-          },
-        ]
+        // Fetch courses from API
+        const response = await getAllCourses()
+        console.log("API Response:", response) // Debug log
 
-        setCourses(mockCourses)
-        setFilteredCourses(mockCourses)
+        if (response && Array.isArray(response)) {
+          // Create properly formatted course objects that match CourseCard expectations
+          const formattedCourses = response.map((course) => {
+            // Extract instructor name from instructor object if needed
+            let instructorName = "Unknown Instructor"
+            if (typeof course.instructor === "object" && course.instructor !== null) {
+              instructorName = course.instructor.name || "Unknown Instructor"
+            } else if (typeof course.instructor === "string") {
+              instructorName = course.instructor
+            }
 
-        // Set featured courses (top 3 by rating)
-        const featured = [...mockCourses].sort((a, b) => b.rating - a.rating).slice(0, 3)
-        setFeaturedCourses(featured)
+            // Create a location object if it doesn't exist
+            let locationObj = { address: "No location specified" }
+            if (typeof course.location === "object" && course.location !== null) {
+              locationObj = course.location
+            } else if (typeof course.location === "string") {
+              locationObj = { address: course.location }
+            }
 
-        setIsLoading(false)
+            // Format schedule if it's an object
+            let scheduleStr = "Flexible schedule"
+            if (typeof course.schedule === "object" && course.schedule !== null) {
+              // Convert schedule object to string (e.g., "Monday, Wednesday, Friday")
+              scheduleStr = Object.keys(course.schedule)
+                .filter((day) => course.schedule[day])
+                .map((day) => day.charAt(0).toUpperCase() + day.slice(1))
+                .join(", ")
+
+              if (scheduleStr === "") {
+                scheduleStr = "Flexible schedule"
+              }
+            } else if (typeof course.schedule === "string") {
+              scheduleStr = course.schedule
+            }
+
+            // Return a properly formatted course object
+            return {
+              id: course.course_id || course.id || String(Math.random()),
+              title: course.course_name || course.title || "Untitled Course",
+              focus: course.description || course.focus || "",
+              level: course.level || "Beginner",
+              duration: course.course_duration ? `${course.course_duration} weeks` : "8 weeks",
+              schedule: scheduleStr,
+              instructor: instructorName,
+              instructorId: course.instructor_id || "",
+              instructorImage: course.instructor?.profile_img || "/instructor-teaching.png",
+              rating: course.rating || 4.5,
+              students: course.students || 0,
+              price: course.price || 0,
+              location: locationObj,
+              courseType: course.pool_type || "public-pool",
+              description: course.description || "",
+              curriculum: Array.isArray(course.curriculum) ? course.curriculum : [],
+              maxStudents: course.max_students || 10,
+              image: course.course_image || course.pool_image || "/outdoor-swimming-pool.png",
+            }
+          })
+
+          console.log("Formatted Courses:", formattedCourses) // Debug log
+
+          setCourses(formattedCourses)
+          setFilteredCourses(formattedCourses)
+
+          // Set featured courses (top 3 by rating)
+          const featured = [...formattedCourses].sort((a, b) => b.rating - a.rating).slice(0, 3)
+          setFeaturedCourses(featured)
+        } else {
+          throw new Error("Invalid response format")
+        }
       } catch (err) {
         console.error("Error loading courses:", err)
         setError("Failed to load courses. Please try again later.")
+      } finally {
         setIsLoading(false)
       }
     }
@@ -356,17 +151,19 @@ export default function AllCoursesPage() {
 
   // Apply filters and search
   useEffect(() => {
-    let results = courses
+    if (!courses.length) return
+
+    let results = [...courses]
 
     // Apply search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
       results = results.filter(
         (course) =>
-          course.title.toLowerCase().includes(term) ||
-          course.focus.toLowerCase().includes(term) ||
-          course.instructor.toLowerCase().includes(term) ||
-          course.level.toLowerCase().includes(term),
+          (course.title && course.title.toLowerCase().includes(term)) ||
+          (course.focus && course.focus.toLowerCase().includes(term)) ||
+          (course.instructor && course.instructor.toLowerCase().includes(term)) ||
+          (course.level && course.level.toLowerCase().includes(term)),
       )
     }
 
@@ -395,19 +192,23 @@ export default function AllCoursesPage() {
     }
 
     // Apply duration filter
-    if (courseFilters.duration) {
-      results = results.filter((course) => course.duration.includes(courseFilters.duration))
+    if (courseFilters.duration && results.length > 0) {
+      results = results.filter((course) => course.duration && course.duration.includes(courseFilters.duration))
     }
 
     // Apply location filter
     if (courseFilters.location) {
-      results = results.filter((course) => course.location.address.includes(courseFilters.location))
+      results = results.filter(
+        (course) =>
+          course.location && course.location.address && course.location.address.includes(courseFilters.location),
+      )
     }
 
     // Apply instructor filter
     if (courseFilters.instructor) {
-      results = results.filter((course) =>
-        course.instructor.toLowerCase().includes(courseFilters.instructor.toLowerCase()),
+      results = results.filter(
+        (course) =>
+          course.instructor && course.instructor.toLowerCase().includes(courseFilters.instructor.toLowerCase()),
       )
     }
 
@@ -436,7 +237,7 @@ export default function AllCoursesPage() {
     }
   }
 
-  const viewCourseDetails = (id: number) => {
+  const viewCourseDetails = (id: number | string) => {
     router.push(`/allcourse/${id}`)
   }
 
@@ -508,7 +309,7 @@ export default function AllCoursesPage() {
           {/* Floating Book Icons */}
           {[...Array(8)].map((_, i) => (
             <motion.div
-              key={i}
+              key={`floating-icon-${i}`}
               className="absolute"
               style={{
                 left: `${Math.random() * 100}%`,
@@ -1113,7 +914,7 @@ export default function AllCoursesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {filteredCourses.map((course, index) => (
                 <motion.div
-                  key={course.id}
+                  key={`course-grid-${course.id || index}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
@@ -1128,7 +929,7 @@ export default function AllCoursesPage() {
             <div className="flex flex-col gap-4 mb-12">
               {filteredCourses.map((course, index) => (
                 <motion.div
-                  key={course.id}
+                  key={`course-list-${course.id || index}`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
