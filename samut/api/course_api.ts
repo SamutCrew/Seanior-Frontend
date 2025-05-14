@@ -181,6 +181,18 @@ export const uploadCourseImage = async (courseId: string, imageFile: File) => {
     const url = APIEndpoints.RESOURCE.CREATE.UPLOAD_COURSE_IMAGE.replace("[courseId]", courseId)
     console.log(`Uploading course image to ${url}`)
 
+    // Validate file before uploading
+    if (!imageFile) {
+      console.error("No image file provided for course image upload")
+      throw new Error("Image file is required")
+    }
+
+    console.log("Course image file details:", {
+      name: imageFile.name,
+      type: imageFile.type,
+      size: `${(imageFile.size / 1024).toFixed(2)} KB`,
+    })
+
     const formData = new FormData()
     formData.append("file", imageFile)
     formData.append("resource_type", "course_image")
@@ -213,6 +225,18 @@ export const uploadPoolImage = async (courseId: string, imageFile: File) => {
   try {
     const url = APIEndpoints.RESOURCE.CREATE.UPLOAD_POOL_IMAGE.replace("[courseId]", courseId)
     console.log(`Uploading pool image to ${url}`)
+
+    // Validate file before uploading
+    if (!imageFile) {
+      console.error("No image file provided for pool image upload")
+      throw new Error("Image file is required")
+    }
+
+    console.log("Pool image file details:", {
+      name: imageFile.name,
+      type: imageFile.type,
+      size: `${(imageFile.size / 1024).toFixed(2)} KB`,
+    })
 
     const formData = new FormData()
     formData.append("file", imageFile)

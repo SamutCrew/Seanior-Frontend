@@ -15,6 +15,49 @@ import { HiAcademicCap, HiOutlineAcademicCap } from "react-icons/hi"
 import { FaSwimmer } from "react-icons/fa"
 import { getAllCourses } from "@/api/course_api"
 
+/**
+ * Extract address from location data
+ */
+const extractAddress = (location: any): string => {
+  try {
+    // If it's a string that looks like JSON
+    if (typeof location === "string" && (location.includes('"lat"') || location.includes('"address"'))) {
+      try {
+        const parsed = JSON.parse(location)
+        return parsed.address || "Address not available"
+      } catch (e) {
+        // Try to extract address with regex if JSON parsing fails
+        const addressMatch = location.match(/"address":"([^"]+)"/)
+        if (addressMatch && addressMatch[1]) {
+          return addressMatch[1]
+        }
+        return "Location format error"
+      }
+    }
+
+    // If it's already an object
+    if (location && typeof location === "object") {
+      if (location.address) {
+        return location.address
+      }
+      // If it has lat/lng but no address
+      if (location.lat && location.lng) {
+        return "Map location available"
+      }
+    }
+
+    // If it's a simple string
+    if (typeof location === "string") {
+      return location
+    }
+
+    return "Location unavailable"
+  } catch (error) {
+    console.error("Error extracting address:", error)
+    return "Location error"
+  }
+}
+
 export default function AllCoursesPage() {
   const router = useRouter()
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
@@ -69,12 +112,22 @@ export default function AllCoursesPage() {
               instructorName = course.instructor
             }
 
-            // Create a location object if it doesn't exist
+            // Process location data to ensure it has a proper address
             let locationObj = { address: "No location specified" }
             if (typeof course.location === "object" && course.location !== null) {
-              locationObj = course.location
+              // If it's an object, ensure it has an address property
+              locationObj = {
+                ...course.location,
+                address: course.location.address || "Address not available",
+              }
             } else if (typeof course.location === "string") {
-              locationObj = { address: course.location }
+              // If it's a string, try to extract the address
+              const extractedAddress = extractAddress(course.location)
+              locationObj = {
+                address: extractedAddress,
+                // If the original was JSON with lat/lng, preserve those
+                ...(course.location.includes('"lat"') ? { hasCoordinates: true } : {}),
+              }
             }
 
             // Format schedule if it's an object
@@ -200,7 +253,9 @@ export default function AllCoursesPage() {
     if (courseFilters.location) {
       results = results.filter(
         (course) =>
-          course.location && course.location.address && course.location.address.includes(courseFilters.location),
+          course.location &&
+          course.location.address &&
+          course.location.address.toLowerCase().includes(courseFilters.location.toLowerCase()),
       )
     }
 

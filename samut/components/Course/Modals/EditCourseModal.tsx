@@ -1,166 +1,165 @@
 "use client"
+
 import { useState, useEffect } from "react"
-import EnhancedCourseForm from "../EnhancedCourseForm"
-import type { Course } from "@/types/course"
+import { useAppSelector } from "@/app/redux"
 import Modal from "@/components/UI/Modal"
+import EnhancedCourseForm from "../EnhancedCourseForm"
+import { updateCourse, uploadCourseImage, uploadPoolImage } from "@/api/course_api"
+import type { Course } from "@/types/course"
+import  AlertResponse  from "@/components/Responseback/AlertResponse"
 
 interface EditCourseModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (data: Partial<Course>) => void
+  onSubmit?: (data: Partial<Course>) => void
   course: Course | null
+  onCourseUpdated?: () => void
 }
 
-export default function EditCourseModal({ isOpen, onClose, onSubmit, course }: EditCourseModalProps) {
+export default function EditCourseModal({ isOpen, onClose, onSubmit, course, onCourseUpdated }: EditCourseModalProps) {
+  const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [processedCourse, setProcessedCourse] = useState<Course | null>(null)
+  const [alertState, setAlertState] = useState<{
+    show: boolean
+    message: string
+    type: "success" | "error" | "info"
+  }>({
+    show: false,
+    message: "",
+    type: "info",
+  })
 
-  // Process the course data when it changes
+  // Reset form state when modal opens with a new course
   useEffect(() => {
-    if (course) {
-      // Create a deep copy of the course to avoid reference issues
-      const courseCopy = JSON.parse(JSON.stringify(course))
-
-      console.log("Original course data:", course)
-
-      // Create a default schedule structure
-      const defaultSchedule = {
-        monday: { selected: false, ranges: [{ start: "10:00", end: "12:00" }] },
-        tuesday: { selected: false, ranges: [{ start: "10:00", end: "12:00" }] },
-        wednesday: { selected: false, ranges: [{ start: "10:00", end: "12:00" }] },
-        thursday: { selected: false, ranges: [{ start: "10:00", end: "12:00" }] },
-        friday: { selected: false, ranges: [{ start: "10:00", end: "12:00" }] },
-        saturday: { selected: false, ranges: [{ start: "10:00", end: "12:00" }] },
-        sunday: { selected: false, ranges: [{ start: "10:00", end: "12:00" }] },
-      }
-
-      // Process schedule data
-      if (typeof courseCopy.schedule === "string") {
-        try {
-          // Try to parse as JSON
-          courseCopy.schedule = JSON.parse(courseCopy.schedule)
-          console.log("Successfully parsed schedule string as JSON:", courseCopy.schedule)
-        } catch (e) {
-          console.error("Failed to parse schedule string as JSON:", e)
-
-          // If it's not valid JSON, try to parse it as a comma-separated list of days
-          try {
-            const scheduleStr = courseCopy.schedule as string
-            console.log("Trying to parse schedule string:", scheduleStr)
-
-            // Create a new schedule object
-            const newSchedule = { ...defaultSchedule }
-
-            // Check if it contains day names
-            const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-            const dayAbbreviations = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
-
-            days.forEach((day, index) => {
-              // Check for full day name or abbreviation (case insensitive)
-              const dayLower = day.toLowerCase()
-              const abbr = dayAbbreviations[index].toLowerCase()
-              const scheduleStrLower = scheduleStr.toLowerCase()
-
-              if (scheduleStrLower.includes(dayLower) || scheduleStrLower.includes(abbr)) {
-                newSchedule[day].selected = true
-
-                // Try to extract time if in format "Day: HH:MM"
-                const timeRegex = new RegExp(`${dayLower}[^\\d]*(\\d{1,2}:\\d{2})`, "i")
-                const abbrTimeRegex = new RegExp(`${abbr}[^\\d]*(\\d{1,2}:\\d{2})`, "i")
-
-                const timeMatch = scheduleStrLower.match(timeRegex) || scheduleStrLower.match(abbrTimeRegex)
-                if (timeMatch && timeMatch[1]) {
-                  const timeStr = timeMatch[1]
-                  const [hours, minutes] = timeStr.split(":").map(Number)
-                  const startTime = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`
-                  const endHours = (hours + 2) % 24
-                  const endTime = `${endHours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`
-
-                  newSchedule[day].ranges = [{ start: startTime, end: endTime }]
-                }
-              }
-            })
-
-            courseCopy.schedule = newSchedule
-            console.log("Parsed schedule from string:", newSchedule)
-          } catch (parseError) {
-            console.error("Failed to parse schedule as day list:", parseError)
-            courseCopy.schedule = defaultSchedule
-          }
-        }
-      } else if (!courseCopy.schedule || typeof courseCopy.schedule !== "object") {
-        console.log("Schedule is not an object, using default schedule")
-        courseCopy.schedule = defaultSchedule
-      }
-
-      // Ensure schedule has the correct structure
-      const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-      days.forEach((day) => {
-        if (!courseCopy.schedule[day]) {
-          courseCopy.schedule[day] = {
-            selected: false,
-            ranges: [{ start: "10:00", end: "12:00" }],
-          }
-        } else if (typeof courseCopy.schedule[day] === "boolean") {
-          // Handle old format where day was just a boolean
-          const isSelected = courseCopy.schedule[day]
-          courseCopy.schedule[day] = {
-            selected: isSelected,
-            ranges: [{ start: "10:00", end: "12:00" }],
-          }
-        } else if (courseCopy.schedule[day] && !courseCopy.schedule[day].ranges) {
-          // Handle case where ranges are missing
-          courseCopy.schedule[day].ranges = [{ start: "10:00", end: "12:00" }]
-        }
-      })
-
-      console.log("Processed course for editing:", courseCopy)
-      setProcessedCourse(courseCopy)
+    if (isOpen && course) {
+      setIsSubmitting(false)
+      setAlertState({ show: false, message: "", type: "info" })
     }
-  }, [course])
+  }, [isOpen, course])
 
-  if (!isOpen || !course) return null
+  const handleSubmit = async (formData: Partial<Course>) => {
+    if (!course?.course_id) {
+      setAlertState({
+        show: true,
+        message: "Course ID is missing. Cannot update course.",
+        type: "error",
+      })
+      return
+    }
 
-  const handleSubmit = async (data: Partial<Course>) => {
+    setIsSubmitting(true)
+    setAlertState({ show: false, message: "", type: "info" })
+
     try {
-      setIsSubmitting(true)
-      console.log("Submitting course data from modal:", data)
+      console.log("Submitting course update for:", course.course_id)
+      console.log("Form data:", formData)
 
-      // Make sure number_of_total_sessions is included
-      if (!data.number_of_total_sessions) {
-        data.number_of_total_sessions = course.number_of_total_sessions || 8
+      // Extract image files from form data
+      const courseImageFile = formData.courseImageFile
+      const poolImageFile = formData.poolImageFile
+
+      // Remove image files from data sent to update API
+      const { courseImageFile: _, poolImageFile: __, ...updateData } = formData
+
+      // Update course data
+      const updatedCourse = await updateCourse(course.course_id, updateData)
+      console.log("Course updated successfully:", updatedCourse)
+
+      // If onSubmit prop is provided, call it
+      if (typeof onSubmit === "function") {
+        await onSubmit(updateData)
       }
 
-      // Create a submission copy to avoid reference issues
-      const submissionData = JSON.parse(JSON.stringify(data))
-
-      // Log the schedule data specifically
-      if (submissionData.schedule) {
-        console.log("Schedule data before submission:", submissionData.schedule)
+      // Upload course image if provided
+      if (courseImageFile) {
+        try {
+          console.log("Uploading course image...")
+          await uploadCourseImage(course.course_id, courseImageFile)
+          console.log("Course image uploaded successfully")
+        } catch (imageError: any) {
+          console.error("Error uploading course image:", imageError)
+          setAlertState({
+            show: true,
+            message: `Course updated but course image upload failed: ${imageError.message}`,
+            type: "error",
+          })
+        }
       }
 
-      // Submit the data
-      await onSubmit(submissionData)
-    } catch (error) {
-      console.error("Error submitting course data:", error)
+      // Upload pool image if provided
+      if (poolImageFile) {
+        try {
+          console.log("Uploading pool image...")
+          await uploadPoolImage(course.course_id, poolImageFile)
+          console.log("Pool image uploaded successfully")
+        } catch (imageError: any) {
+          console.error("Error uploading pool image:", imageError)
+          setAlertState({
+            show: true,
+            message: `Course updated but pool image upload failed: ${imageError.message}`,
+            type: "error",
+          })
+          // Continue execution - we still want to show success for the course update
+        }
+      }
+
+      // If we got here without setting an error alert, show success
+      if (!alertState.show) {
+        setAlertState({
+          show: true,
+          message: "Course updated successfully!",
+          type: "success",
+        })
+      }
+
+      // Notify parent component that course was updated
+      if (typeof onCourseUpdated === "function") {
+        onCourseUpdated()
+      }
+
+      // Close modal after a short delay to show the success message
+      setTimeout(() => {
+        onClose()
+      }, 1500)
+    } catch (error: any) {
+      console.error("Error updating course:", error)
+      setAlertState({
+        show: true,
+        message: `Failed to update course: ${error.message}`,
+        type: "error",
+      })
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Edit Course: ${course.course_name}`} size="xl">
-      <div className="p-6">
-        {processedCourse && (
-          <EnhancedCourseForm
-            initialData={processedCourse}
-            onSubmit={handleSubmit}
-            onCancel={onClose}
-            isSubmitting={isSubmitting}
-            isEditing={true}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Edit Course: ${course?.course_name || ""}`}
+      size="2xl"
+      isDarkMode={isDarkMode}
+    >
+      {alertState.show && (
+        <div className="mb-4">
+          <AlertResponse
+            message={alertState.message}
+            type={alertState.type}
+            onClose={() => setAlertState({ ...alertState, show: false })}
           />
-        )}
-      </div>
+        </div>
+      )}
+
+      {course && (
+        <EnhancedCourseForm
+          initialData={course}
+          onSubmit={handleSubmit}
+          onCancel={onClose}
+          isSubmitting={isSubmitting}
+          isEditing={true}
+        />
+      )}
     </Modal>
   )
 }
