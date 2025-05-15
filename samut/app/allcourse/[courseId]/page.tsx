@@ -1,79 +1,156 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { useAppSelector } from "@/app/redux"
 import { SectionTitle } from "@/components/Common/SectionTitle"
 import { Button } from "@/components/Common/Button"
 import { motion } from "framer-motion"
-import { Calendar, Clock, MapPin, Users, Award, ChevronRight, Star, DollarSign } from "lucide-react"
-import type { Course } from "@/types/course"
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Users,
+  Award,
+  DollarSign,
+  AlertCircle,
+  Share2,
+  Info,
+  BookOpen,
+  CheckCircle,
+  XCircle,
+  User,
+  Mail,
+  Star,
+  ChevronRight,
+  ArrowLeft,
+  MessageCircle,
+  Heart,
+  CalendarDays,
+  Waves,
+  Timer,
+  Clipboard,
+  Shield,
+} from "lucide-react"
 import LoadingPage from "@/components/Common/LoadingPage"
+import { getCourseById } from "@/api/course_api"
 
 export default function CourseDetailsPage({ params }: { params: { courseId: string } }) {
   const router = useRouter()
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
-  const [course, setCourse] = useState<Course | null>(null)
+  const [course, setCourse] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState("overview")
+  const courseId = params.courseId
+  const [parsedLocation, setParsedLocation] = useState<any>(null)
+  const [parsedSchedule, setParsedSchedule] = useState<any>(null)
+  const [showFullDescription, setShowFullDescription] = useState(false)
 
   useEffect(() => {
-    const fetchCourse = async () => {
+    const fetchCourseData = async () => {
       try {
         setIsLoading(true)
         setError(null)
 
-        // In a real application, this would be an API call
-        // For now, we'll simulate fetching the course by ID
-        setTimeout(() => {
-          // Mock course data
-          const mockCourse: Course = {
-            id: Number.parseInt(params.courseId),
-            title: "Advanced Freestyle Technique",
-            focus: "Perfect your freestyle stroke for competitive swimming",
-            level: "Advanced",
-            duration: "6 weeks",
-            schedule: "Tue, Thu 6:30 PM - 8:00 PM",
-            instructor: "Michael Chen",
-            instructorId: "2",
-            rating: 4.9,
-            students: 8,
-            price: 249,
-            location: {
-              address: "Olympic Pool, 456 Sports Ave",
-            },
-            courseType: "public-pool",
-            description:
-              "Take your freestyle to the next level with advanced techniques and drills. This course is designed for swimmers who already have a solid foundation in freestyle and want to improve their efficiency, speed, and endurance. Through video analysis, targeted drills, and personalized feedback, you'll refine your stroke mechanics and develop a more powerful, efficient freestyle technique.",
-            curriculum: [
-              "Stroke Analysis and Biomechanics",
-              "Efficiency Drills and Technique Refinement",
-              "Breathing Patterns and Rhythm",
-              "Race Strategy and Pacing",
-              "Advanced Turns and Underwater Work",
-              "Sprint and Distance Variations",
-            ],
-            requirements: [
-              "Comfortable swimming at least 200m freestyle without stopping",
-              "Basic understanding of freestyle technique",
-              "Ability to perform flip turns",
-              "Own swimming equipment (fins, paddles, snorkel recommended)",
-            ],
-            maxStudents: 10,
-          }
+        console.log(`Fetching course with ID: ${courseId}`)
+        const courseData = await getCourseById(courseId)
 
-          setCourse(mockCourse)
+        if (!courseData) {
+          setError("Course not found. It may have been removed or is unavailable.")
           setIsLoading(false)
-        }, 1000)
-      } catch (err) {
+          return
+        }
+
+        // Log the entire course data for debugging
+        console.log("Course data received:", JSON.stringify(courseData, null, 2))
+
+        setCourse(courseData)
+
+        // Parse location JSON string if it exists
+        if (courseData.location && typeof courseData.location === "string") {
+          try {
+            const locationObj = JSON.parse(courseData.location)
+            console.log("Parsed location:", locationObj)
+            setParsedLocation(locationObj)
+          } catch (e) {
+            console.error("Error parsing location:", e)
+          }
+        }
+
+        // Parse schedule JSON string if it exists
+        if (courseData.schedule && typeof courseData.schedule === "string") {
+          try {
+            const scheduleObj = JSON.parse(courseData.schedule)
+            console.log("Parsed schedule:", scheduleObj)
+            setParsedSchedule(scheduleObj)
+          } catch (e) {
+            console.error("Error parsing schedule:", e)
+          }
+        }
+
+        setIsLoading(false)
+      } catch (err: any) {
         console.error("Error fetching course:", err)
-        setError("Failed to load course details. Please try again later.")
+        setError(err.message || "Failed to load course details. Please try again later.")
         setIsLoading(false)
       }
     }
 
-    fetchCourse()
-  }, [params.courseId])
+    fetchCourseData()
+  }, [courseId])
+
+  // Format price (convert from cents/satang to dollars/baht)
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("th-TH", {
+      style: "currency",
+      currency: "THB",
+      minimumFractionDigits: 2,
+    }).format(price / 100)
+  }
+
+  // Format date to local date string
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  }
+
+  // Format pool type for display
+  const formatPoolType = (poolType: string) => {
+    if (!poolType) return "Not specified"
+    return poolType
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ")
+  }
+
+  // Get selected days from schedule
+  const selectedDays = useMemo(() => {
+    if (!parsedSchedule) return []
+    return Object.keys(parsedSchedule).filter((day) => parsedSchedule[day].selected)
+  }, [parsedSchedule])
+
+  // Function to handle sharing the course
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator
+        .share({
+          title: course?.course_name || "Swimming Course",
+          text: `Check out this swimming course: ${course?.course_name}`,
+          url: window.location.href,
+        })
+        .catch((err) => console.error("Error sharing:", err))
+    } else {
+      // Fallback for browsers that don't support the Web Share API
+      navigator.clipboard
+        .writeText(window.location.href)
+        .then(() => alert("Link copied to clipboard!"))
+        .catch((err) => console.error("Error copying link:", err))
+    }
+  }
 
   if (isLoading) {
     return <LoadingPage />
@@ -89,7 +166,8 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
             animate={{ opacity: 1, y: 0 }}
             className={`p-8 rounded-xl shadow-md ${isDarkMode ? "bg-slate-800 text-white" : "bg-white text-red-600"}`}
           >
-            <p className="text-xl">{error || "Course not found"}</p>
+            <AlertCircle className="w-16 h-16 mx-auto mb-4" />
+            <p className="text-xl mb-4">{error || "Course not found"}</p>
             <Button
               variant={isDarkMode ? "gradient" : "primary"}
               className="mt-4"
@@ -105,9 +183,22 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
 
   return (
     <div className={`min-h-screen ${isDarkMode ? "bg-slate-900" : "bg-gradient-to-b from-blue-50 to-white"}`}>
+      {/* Back Button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <button
+          onClick={() => router.push("/allcourse")}
+          className={`flex items-center text-sm font-medium ${
+            isDarkMode ? "text-gray-300 hover:text-white" : "text-gray-600 hover:text-gray-900"
+          } transition-colors`}
+        >
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back to All Courses
+        </button>
+      </div>
+
       {/* Hero Section */}
       <div
-        className={`relative overflow-hidden ${
+        className={`relative overflow-hidden mt-4 ${
           isDarkMode ? "bg-gradient-to-r from-blue-900 to-cyan-900" : "bg-gradient-to-r from-blue-600 to-cyan-500"
         }`}
       >
@@ -117,8 +208,8 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-              <div>
-                <div className="inline-block mb-4">
+              <div className="md:max-w-2xl">
+                <div className="flex flex-wrap gap-2 mb-4">
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                       isDarkMode ? "bg-slate-800/50 text-cyan-300" : "bg-white/20 text-white"
@@ -126,49 +217,96 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   >
                     {course.level} Level
                   </span>
+                  <span
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                      isDarkMode ? "bg-slate-800/50 text-emerald-300" : "bg-white/20 text-white"
+                    } backdrop-blur-sm`}
+                  >
+                    {formatPoolType(course.pool_type)}
+                  </span>
+                  <span
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                      isDarkMode ? "bg-slate-800/50 text-amber-300" : "bg-white/20 text-white"
+                    } backdrop-blur-sm`}
+                  >
+                    {course.number_of_total_sessions} Sessions
+                  </span>
                 </div>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 leading-tight">
-                  {course.title}
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+                  {course.course_name}
                 </h1>
-                <p className="text-lg md:text-xl text-white/80 mb-4">{course.focus}</p>
-                <div className="flex items-center gap-3 text-white/90 mb-6">
+                <p className="text-lg md:text-xl text-white/80 mb-6">
+                  {course.description && course.description.length > 150 && !showFullDescription
+                    ? `${course.description.substring(0, 150)}...`
+                    : course.description}
+                  {course.description && course.description.length > 150 && (
+                    <button
+                      onClick={() => setShowFullDescription(!showFullDescription)}
+                      className="ml-2 text-cyan-300 hover:text-cyan-100 font-medium"
+                    >
+                      {showFullDescription ? "Show less" : "Read more"}
+                    </button>
+                  )}
+                </p>
+                <div className="flex items-center flex-wrap gap-4 text-white/90 mb-6">
                   <div className="flex items-center">
                     <Star className="w-5 h-5 text-yellow-400 mr-1" />
-                    <span className="font-medium">{course.rating.toFixed(1)}</span>
+                    <span className="font-medium">{course.rating > 0 ? course.rating.toFixed(1) : "New"}</span>
                   </div>
-                  <div className="w-1 h-1 rounded-full bg-white/40"></div>
                   <div className="flex items-center">
                     <Users className="w-5 h-5 text-cyan-300 mr-1" />
-                    <span>{course.students} students</span>
+                    <span>
+                      {course.students || 0} / {course.max_students || "∞"} students
+                    </span>
                   </div>
-                  <div className="w-1 h-1 rounded-full bg-white/40"></div>
                   <div className="flex items-center">
                     <Clock className="w-5 h-5 text-cyan-300 mr-1" />
-                    <span>{course.duration}</span>
+                    <span>
+                      {course.course_duration} {course.course_duration === 1 ? "week" : "weeks"}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <CalendarDays className="w-5 h-5 text-cyan-300 mr-1" />
+                    <span>
+                      {course.study_frequency} {Number.parseInt(course.study_frequency) === 1 ? "day" : "days"}/week
+                    </span>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                <Button
+                  <Button
                     variant={isDarkMode ? "gradient" : "primary"}
                     size="lg"
                     className={`${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
                   >
                     Enroll Now
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="border-white/30 text-white hover:bg-white/10"
+                    onClick={handleShare}
+                  >
+                    <Share2 className="mr-2 h-4 w-4" /> Share Course
+                  </Button>
                   <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10">
-                    Contact Instructor
+                    <Heart className="mr-2 h-4 w-4" /> Save
                   </Button>
                 </div>
               </div>
-              <div className="hidden md:block relative mt-8 md:mt-0">
+              <div className="hidden lg:block relative mt-8 md:mt-0">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-cyan-500/20 rounded-xl"></div>
                 <img
-                  src="/breaststroke-swimming.png"
-                  alt={course.title}
+                  src={
+                    course.course_image ||
+                    course.pool_image ||
+                    "/placeholder.svg?height=300&width=400&query=swimming course" ||
+                    "/placeholder.svg"
+                  }
+                  alt={course.course_name}
                   className="rounded-xl shadow-lg w-[400px] h-[300px] object-cover"
                 />
                 <div className="absolute bottom-4 right-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-2 rounded-lg font-bold">
-                  ${course.price}
+                  {formatPrice(course.price)}
                 </div>
               </div>
             </div>
@@ -191,104 +329,819 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
         </div>
       </div>
 
-      {/* Course Details */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Mobile Image (visible only on mobile) */}
+      <div className="lg:hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
+        <div className="relative rounded-xl overflow-hidden shadow-lg">
+          <img
+            src={
+              course.course_image || course.pool_image || "/placeholder.svg?height=300&width=600&query=swimming course"
+            }
+            alt={course.course_name}
+            className="w-full h-48 sm:h-64 object-cover"
+          />
+          <div className="absolute bottom-4 right-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-2 rounded-lg font-bold">
+            {formatPrice(course.price)}
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div
+          className={`flex overflow-x-auto space-x-4 pb-2 ${
+            isDarkMode ? "border-b border-slate-700" : "border-b border-gray-200"
+          }`}
+        >
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`px-4 py-2 font-medium whitespace-nowrap ${
+              activeTab === "overview"
+                ? isDarkMode
+                  ? "text-cyan-400 border-b-2 border-cyan-400"
+                  : "text-blue-600 border-b-2 border-blue-600"
+                : isDarkMode
+                  ? "text-gray-400 hover:text-white"
+                  : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab("schedule")}
+            className={`px-4 py-2 font-medium whitespace-nowrap ${
+              activeTab === "schedule"
+                ? isDarkMode
+                  ? "text-cyan-400 border-b-2 border-cyan-400"
+                  : "text-blue-600 border-b-2 border-blue-600"
+                : isDarkMode
+                  ? "text-gray-400 hover:text-white"
+                  : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Schedule
+          </button>
+          <button
+            onClick={() => setActiveTab("location")}
+            className={`px-4 py-2 font-medium whitespace-nowrap ${
+              activeTab === "location"
+                ? isDarkMode
+                  ? "text-cyan-400 border-b-2 border-cyan-400"
+                  : "text-blue-600 border-b-2 border-blue-600"
+                : isDarkMode
+                  ? "text-gray-400 hover:text-white"
+                  : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Location
+          </button>
+          <button
+            onClick={() => setActiveTab("instructor")}
+            className={`px-4 py-2 font-medium whitespace-nowrap ${
+              activeTab === "instructor"
+                ? isDarkMode
+                  ? "text-cyan-400 border-b-2 border-cyan-400"
+                  : "text-blue-600 border-b-2 border-blue-600"
+                : isDarkMode
+                  ? "text-gray-400 hover:text-white"
+                  : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Instructor
+          </button>
+          <button
+            onClick={() => setActiveTab("details")}
+            className={`px-4 py-2 font-medium whitespace-nowrap ${
+              activeTab === "details"
+                ? isDarkMode
+                  ? "text-cyan-400 border-b-2 border-cyan-400"
+                  : "text-blue-600 border-b-2 border-blue-600"
+                : isDarkMode
+                  ? "text-gray-400 hover:text-white"
+                  : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Details
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
+          {/* Left Column - Main Content */}
           <div className="lg:col-span-2">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className={`p-8 rounded-xl shadow-lg mb-8 ${
-                isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white"
-              }`}
-            >
-              <h2 className={`text-2xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                Course Description
-              </h2>
-              <p className={`mb-6 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>{course.description}</p>
+            {/* Overview Tab */}
+            {activeTab === "overview" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className={`p-6 rounded-xl shadow-lg mb-8 ${
+                  isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white"
+                }`}
+              >
+                <h2 className={`text-2xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                  Course Overview
+                </h2>
+                <p className={`mb-6 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                  {course.description || "No description available"}
+                </p>
 
-              <h3 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                What You'll Learn
-              </h3>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-                {course.curriculum?.map((item, index) => (
-                  <li key={index} className={`flex items-start ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                    <ChevronRight
-                      className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
-                    />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {course.requirements && (
-                <>
-                  <h3 className={`text-xl font-bold mb-3 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                    Requirements
-                  </h3>
-                  <ul className="mb-6">
-                    {course.requirements.map((item, index) => (
-                      <li
-                        key={index}
-                        className={`flex items-start mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}
-                      >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div
+                    className={`p-4 rounded-lg ${
+                      isDarkMode ? "bg-slate-700/50 border border-slate-600" : "bg-blue-50"
+                    }`}
+                  >
+                    <h3
+                      className={`text-lg font-semibold mb-3 flex items-center ${
+                        isDarkMode ? "text-white" : "text-gray-800"
+                      }`}
+                    >
+                      <Clock className={`w-5 h-5 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                      Course Duration
+                    </h3>
+                    <ul className={`space-y-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                      <li className="flex items-start">
                         <ChevronRight
                           className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
                         />
-                        <span>{item}</span>
+                        <span>
+                          {course.course_duration} {course.course_duration === 1 ? "week" : "weeks"}
+                        </span>
                       </li>
-                    ))}
-                  </ul>
-                </>
-              )}
+                      <li className="flex items-start">
+                        <ChevronRight
+                          className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                        />
+                        <span>
+                          {course.number_of_total_sessions} total{" "}
+                          {course.number_of_total_sessions === 1 ? "session" : "sessions"}
+                        </span>
+                      </li>
+                      <li className="flex items-start">
+                        <ChevronRight
+                          className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                        />
+                        <span>
+                          {course.study_frequency} {Number.parseInt(course.study_frequency) === 1 ? "day" : "days"} per
+                          week
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
 
-              <Button
-                variant={isDarkMode ? "gradient" : "primary"}
-                className={`w-full ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
-              >
-                Enroll in This Course
-              </Button>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className={`p-8 rounded-xl shadow-lg ${isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white"}`}
-            >
-              <h2 className={`text-2xl font-bold mb-6 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                About the Instructor
-              </h2>
-              <div className="flex items-center mb-6">
-                <img
-                  src="/Teacher2.jpg"
-                  alt={course.instructor}
-                  className="w-16 h-16 rounded-full object-cover mr-4"
-                />
-                <div>
-                  <h3 className={`text-lg font-bold ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                    {course.instructor}
-                  </h3>
-                  <p className={isDarkMode ? "text-cyan-400" : "text-blue-600"}>Swimming Instructor</p>
+                  <div
+                    className={`p-4 rounded-lg ${
+                      isDarkMode ? "bg-slate-700/50 border border-slate-600" : "bg-blue-50"
+                    }`}
+                  >
+                    <h3
+                      className={`text-lg font-semibold mb-3 flex items-center ${
+                        isDarkMode ? "text-white" : "text-gray-800"
+                      }`}
+                    >
+                      <Waves className={`w-5 h-5 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                      Pool Information
+                    </h3>
+                    <ul className={`space-y-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                      <li className="flex items-start">
+                        <ChevronRight
+                          className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                        />
+                        <span>Type: {formatPoolType(course.pool_type)}</span>
+                      </li>
+                      {parsedLocation && (
+                        <li className="flex items-start">
+                          <ChevronRight
+                            className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                          />
+                          <span>Location: {parsedLocation.address}</span>
+                        </li>
+                      )}
+                      {course.pool_image && (
+                        <li className="flex items-start">
+                          <ChevronRight
+                            className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                          />
+                          <span>Pool image available</span>
+                        </li>
+                      )}
+                    </ul>
+                  </div>
                 </div>
-              </div>
-              <p className={`mb-4 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                Professional swimming instructor with over 10 years of experience training competitive swimmers.
-                Specialized in advanced technique development and race strategy.
-              </p>
-              <Button
-                variant="outline"
-                className={isDarkMode ? "border-slate-700 text-white" : ""}
-                onClick={() => router.push(`/instructor/${course.instructorId}`)}
+
+                <div
+                  className={`p-4 rounded-lg mb-6 ${
+                    isDarkMode ? "bg-slate-700/50 border border-slate-600" : "bg-blue-50"
+                  }`}
+                >
+                  <h3
+                    className={`text-lg font-semibold mb-3 flex items-center ${
+                      isDarkMode ? "text-white" : "text-gray-800"
+                    }`}
+                  >
+                    <Info className={`w-5 h-5 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                    Course Details
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                      <p className="flex items-center mb-2">
+                        <Users className={`w-4 h-4 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                        <span className="font-medium mr-2">Students:</span> {course.students || 0} enrolled
+                      </p>
+                      <p className="flex items-center mb-2">
+                        <Users className={`w-4 h-4 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                        <span className="font-medium mr-2">Max Students:</span> {course.max_students || "Unlimited"}
+                      </p>
+                      <p className="flex items-center mb-2">
+                        <Award className={`w-4 h-4 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                        <span className="font-medium mr-2">Level:</span> {course.level || "Not specified"}
+                      </p>
+                    </div>
+                    <div className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                      <p className="flex items-center mb-2">
+                        <Shield className={`w-4 h-4 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                        <span className="font-medium mr-2">Allowed Absences:</span>{" "}
+                        {course.allowed_absence_buffer || "Not specified"}
+                      </p>
+                      <p className="flex items-center mb-2">
+                        <DollarSign className={`w-4 h-4 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                        <span className="font-medium mr-2">Price:</span> {formatPrice(course.price)}
+                      </p>
+                      <p className="flex items-center mb-2">
+                        <Star className={`w-4 h-4 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                        <span className="font-medium mr-2">Rating:</span>{" "}
+                        {course.rating > 0 ? course.rating.toFixed(1) : "New"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  variant={isDarkMode ? "gradient" : "primary"}
+                  className={`w-full ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
+                >
+                  Enroll in This Course
+                </Button>
+              </motion.div>
+            )}
+
+            {/* Schedule Tab */}
+            {activeTab === "schedule" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className={`p-6 rounded-xl shadow-lg mb-8 ${
+                  isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white"
+                }`}
               >
-                View Instructor Profile
-              </Button>
-            </motion.div>
+                <h2 className={`text-2xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                  Course Schedule
+                </h2>
+
+                <div className="mb-6">
+                  <div
+                    className={`p-4 rounded-lg ${
+                      isDarkMode ? "bg-slate-700/50 border border-slate-600" : "bg-blue-50"
+                    }`}
+                  >
+                    <h3
+                      className={`text-lg font-semibold mb-3 flex items-center ${
+                        isDarkMode ? "text-white" : "text-gray-800"
+                      }`}
+                    >
+                      <Calendar className={`w-5 h-5 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                      Weekly Schedule
+                    </h3>
+
+                    <div className="grid grid-cols-7 gap-2 mb-4">
+                      {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => {
+                        const dayLower = day.toLowerCase()
+                        const isSelected = parsedSchedule && parsedSchedule[dayLower]?.selected
+
+                        return (
+                          <div
+                            key={day}
+                            className={`text-center p-2 rounded-lg ${
+                              isSelected
+                                ? isDarkMode
+                                  ? "bg-cyan-900/50 border border-cyan-800"
+                                  : "bg-blue-100 border border-blue-200"
+                                : isDarkMode
+                                  ? "bg-slate-700/30 border border-slate-700"
+                                  : "bg-gray-100 border border-gray-200"
+                            }`}
+                          >
+                            <p
+                              className={`text-sm font-medium ${
+                                isSelected
+                                  ? isDarkMode
+                                    ? "text-cyan-300"
+                                    : "text-blue-700"
+                                  : isDarkMode
+                                    ? "text-gray-400"
+                                    : "text-gray-500"
+                              }`}
+                            >
+                              {day.substring(0, 3)}
+                            </p>
+                            <div className="mt-1">
+                              {isSelected ? (
+                                <CheckCircle
+                                  className={`w-5 h-5 mx-auto ${isDarkMode ? "text-cyan-400" : "text-blue-600"}`}
+                                />
+                              ) : (
+                                <XCircle
+                                  className={`w-5 h-5 mx-auto ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    <h4 className={`text-md font-semibold mb-2 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                      Class Times
+                    </h4>
+                    <ul className={`space-y-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                      {selectedDays.length > 0 ? (
+                        selectedDays.map((day) => {
+                          const ranges = parsedSchedule[day].ranges || []
+                          return (
+                            <li key={day} className="flex items-start">
+                              <ChevronRight
+                                className={`w-5 h-5 mr-2 flex-shrink-0 ${
+                                  isDarkMode ? "text-cyan-400" : "text-blue-500"
+                                }`}
+                              />
+                              <div>
+                                <span className="font-medium capitalize">{day}: </span>
+                                {ranges.map((range, index) => (
+                                  <span key={index}>
+                                    {range.start} - {range.end}
+                                    {index < ranges.length - 1 ? ", " : ""}
+                                  </span>
+                                ))}
+                              </div>
+                            </li>
+                          )
+                        })
+                      ) : (
+                        <li className="text-center italic">No scheduled days available</li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+
+                <div
+                  className={`p-4 rounded-lg mb-6 ${
+                    isDarkMode ? "bg-slate-700/50 border border-slate-600" : "bg-blue-50"
+                  }`}
+                >
+                  <h3
+                    className={`text-lg font-semibold mb-3 flex items-center ${
+                      isDarkMode ? "text-white" : "text-gray-800"
+                    }`}
+                  >
+                    <Timer className={`w-5 h-5 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                    Course Timeline
+                  </h3>
+                  <ul className={`space-y-3 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                    <li className="flex items-start">
+                      <ChevronRight
+                        className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                      />
+                      <div>
+                        <span className="font-medium">Total Duration: </span>
+                        {course.course_duration} {course.course_duration === 1 ? "week" : "weeks"}
+                      </div>
+                    </li>
+                    <li className="flex items-start">
+                      <ChevronRight
+                        className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                      />
+                      <div>
+                        <span className="font-medium">Total Sessions: </span>
+                        {course.number_of_total_sessions}
+                      </div>
+                    </li>
+                    <li className="flex items-start">
+                      <ChevronRight
+                        className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                      />
+                      <div>
+                        <span className="font-medium">Sessions Per Week: </span>
+                        {course.study_frequency}
+                      </div>
+                    </li>
+                    <li className="flex items-start">
+                      <ChevronRight
+                        className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                      />
+                      <div>
+                        <span className="font-medium">Allowed Absences: </span>
+                        {course.allowed_absence_buffer}
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+
+                <Button
+                  variant={isDarkMode ? "gradient" : "primary"}
+                  className={`w-full ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
+                >
+                  Enroll in This Course
+                </Button>
+              </motion.div>
+            )}
+
+            {/* Location Tab */}
+            {activeTab === "location" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className={`p-6 rounded-xl shadow-lg mb-8 ${
+                  isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white"
+                }`}
+              >
+                <h2 className={`text-2xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                  Course Location
+                </h2>
+
+                {parsedLocation ? (
+                  <div className="mb-6">
+                    <div
+                      className={`p-4 rounded-lg mb-6 ${
+                        isDarkMode ? "bg-slate-700/50 border border-slate-600" : "bg-blue-50"
+                      }`}
+                    >
+                      <h3
+                        className={`text-lg font-semibold mb-3 flex items-center ${
+                          isDarkMode ? "text-white" : "text-gray-800"
+                        }`}
+                      >
+                        <MapPin className={`w-5 h-5 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                        Address
+                      </h3>
+                      <p className={`mb-4 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                        {parsedLocation.address}
+                      </p>
+
+                      <div className="aspect-video rounded-lg overflow-hidden bg-gray-200">
+                        {/* Map placeholder - in a real app, you would use a map component here */}
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                          <div className="text-center p-4">
+                            <MapPin className="w-8 h-8 mx-auto mb-2 text-gray-500" />
+                            <p className="text-gray-600">
+                              Map would be displayed here with coordinates: {parsedLocation.lat}, {parsedLocation.lng}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`p-4 rounded-lg mb-6 ${
+                        isDarkMode ? "bg-slate-700/50 border border-slate-600" : "bg-blue-50"
+                      }`}
+                    >
+                      <h3
+                        className={`text-lg font-semibold mb-3 flex items-center ${
+                          isDarkMode ? "text-white" : "text-gray-800"
+                        }`}
+                      >
+                        <Waves className={`w-5 h-5 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                        Pool Information
+                      </h3>
+                      <p className={`mb-4 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                        <span className="font-medium">Pool Type: </span>
+                        {formatPoolType(course.pool_type)}
+                      </p>
+
+                      {course.pool_image ? (
+                        <img
+                          src={course.pool_image || "/placeholder.svg"}
+                          alt="Pool"
+                          className="w-full h-48 object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <p className="text-gray-500">No pool image available</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className={`p-8 rounded-lg text-center ${
+                      isDarkMode ? "bg-slate-700/50 border border-slate-600" : "bg-gray-100"
+                    }`}
+                  >
+                    <MapPin className={`w-12 h-12 mx-auto mb-4 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
+                    <p className={`${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                      Location information not available
+                    </p>
+                  </div>
+                )}
+
+                <Button
+                  variant={isDarkMode ? "gradient" : "primary"}
+                  className={`w-full ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
+                >
+                  Enroll in This Course
+                </Button>
+              </motion.div>
+            )}
+
+            {/* Instructor Tab */}
+            {activeTab === "instructor" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className={`p-6 rounded-xl shadow-lg mb-8 ${
+                  isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white"
+                }`}
+              >
+                <h2 className={`text-2xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                  About the Instructor
+                </h2>
+
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-6">
+                  <img
+                    src={
+                      course.instructor?.profile_img ||
+                      "/placeholder.svg?height=128&width=128&query=swimming instructor" ||
+                      "/placeholder.svg"
+                    }
+                    alt={course.instructor?.name}
+                    className="w-24 h-24 rounded-full object-cover"
+                  />
+                  <div>
+                    <h3 className={`text-xl font-bold mb-1 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                      {course.instructor?.name || "Instructor information not available"}
+                    </h3>
+                    <p className={`mb-2 ${isDarkMode ? "text-cyan-400" : "text-blue-600"}`}>Swimming Instructor</p>
+                    <div className="flex flex-wrap gap-2">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          isDarkMode ? "bg-slate-700 text-cyan-300" : "bg-blue-100 text-blue-800"
+                        }`}
+                      >
+                        {course.instructor?.user_type || "Instructor"}
+                      </span>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          isDarkMode ? "bg-slate-700 text-emerald-300" : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        Verified
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className={`p-4 rounded-lg mb-6 ${
+                    isDarkMode ? "bg-slate-700/50 border border-slate-600" : "bg-blue-50"
+                  }`}
+                >
+                  <h3
+                    className={`text-lg font-semibold mb-3 flex items-center ${
+                      isDarkMode ? "text-white" : "text-gray-800"
+                    }`}
+                  >
+                    <User className={`w-5 h-5 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                    Instructor Bio
+                  </h3>
+                  <p className={`mb-4 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                    {course.instructor?.description ||
+                      "No instructor biography available. This instructor has not provided a bio yet."}
+                  </p>
+                </div>
+
+                <div
+                  className={`p-4 rounded-lg mb-6 ${
+                    isDarkMode ? "bg-slate-700/50 border border-slate-600" : "bg-blue-50"
+                  }`}
+                >
+                  <h3
+                    className={`text-lg font-semibold mb-3 flex items-center ${
+                      isDarkMode ? "text-white" : "text-gray-800"
+                    }`}
+                  >
+                    <Mail className={`w-5 h-5 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                    Contact Information
+                  </h3>
+                  <ul className={`space-y-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                    {course.instructor?.email && (
+                      <li className="flex items-start">
+                        <ChevronRight
+                          className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                        />
+                        <div>
+                          <span className="font-medium">Email: </span>
+                          {course.instructor.email}
+                        </div>
+                      </li>
+                    )}
+                    {course.instructor?.phone_number && (
+                      <li className="flex items-start">
+                        <ChevronRight
+                          className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                        />
+                        <div>
+                          <span className="font-medium">Phone: </span>
+                          {course.instructor.phone_number}
+                        </div>
+                      </li>
+                    )}
+                    {!course.instructor?.email && !course.instructor?.phone_number && (
+                      <li className="text-center italic">No contact information available</li>
+                    )}
+                  </ul>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button
+                    variant={isDarkMode ? "gradient" : "primary"}
+                    className={`flex-1 ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
+                  >
+                    Enroll in This Course
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className={`flex-1 ${isDarkMode ? "border-slate-700 text-white" : ""}`}
+                    onClick={() => router.push(`/allinstructor/${course.instructor_id}`)}
+                  >
+                    View Instructor Profile
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Details Tab */}
+            {activeTab === "details" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className={`p-6 rounded-xl shadow-lg mb-8 ${
+                  isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white"
+                }`}
+              >
+                <h2 className={`text-2xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                  Course Details
+                </h2>
+
+                <div
+                  className={`p-4 rounded-lg mb-6 ${
+                    isDarkMode ? "bg-slate-700/50 border border-slate-600" : "bg-blue-50"
+                  }`}
+                >
+                  <h3
+                    className={`text-lg font-semibold mb-3 flex items-center ${
+                      isDarkMode ? "text-white" : "text-gray-800"
+                    }`}
+                  >
+                    <Clipboard className={`w-5 h-5 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                    Course Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className={`mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                        <span className="font-medium">Course ID: </span>
+                        {course.course_id}
+                      </p>
+                      <p className={`mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                        <span className="font-medium">Course Name: </span>
+                        {course.course_name}
+                      </p>
+                      <p className={`mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                        <span className="font-medium">Level: </span>
+                        {course.level}
+                      </p>
+                      <p className={`mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                        <span className="font-medium">Pool Type: </span>
+                        {formatPoolType(course.pool_type)}
+                      </p>
+                      <p className={`mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                        <span className="font-medium">Price: </span>
+                        {formatPrice(course.price)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                        <span className="font-medium">Created: </span>
+                        {formatDate(course.created_at)}
+                      </p>
+                      <p className={`mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                        <span className="font-medium">Last Updated: </span>
+                        {formatDate(course.updated_at)}
+                      </p>
+                      <p className={`mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                        <span className="font-medium">Instructor ID: </span>
+                        {course.instructor_id}
+                      </p>
+                      <p className={`mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                        <span className="font-medium">Rating: </span>
+                        {course.rating > 0 ? course.rating.toFixed(1) : "New"}
+                      </p>
+                      <p className={`mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                        <span className="font-medium">Students: </span>
+                        {course.students} / {course.max_students}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className={`p-4 rounded-lg mb-6 ${
+                    isDarkMode ? "bg-slate-700/50 border border-slate-600" : "bg-blue-50"
+                  }`}
+                >
+                  <h3
+                    className={`text-lg font-semibold mb-3 flex items-center ${
+                      isDarkMode ? "text-white" : "text-gray-800"
+                    }`}
+                  >
+                    <BookOpen className={`w-5 h-5 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
+                    Course Structure
+                  </h3>
+                  <ul className={`space-y-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                    <li className="flex items-start">
+                      <ChevronRight
+                        className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                      />
+                      <div>
+                        <span className="font-medium">Duration: </span>
+                        {course.course_duration} {course.course_duration === 1 ? "week" : "weeks"}
+                      </div>
+                    </li>
+                    <li className="flex items-start">
+                      <ChevronRight
+                        className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                      />
+                      <div>
+                        <span className="font-medium">Study Frequency: </span>
+                        {course.study_frequency} {Number.parseInt(course.study_frequency) === 1 ? "day" : "days"} per
+                        week
+                      </div>
+                    </li>
+                    <li className="flex items-start">
+                      <ChevronRight
+                        className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                      />
+                      <div>
+                        <span className="font-medium">Days of Study: </span>
+                        {course.days_study} {course.days_study === 1 ? "day" : "days"}
+                      </div>
+                    </li>
+                    <li className="flex items-start">
+                      <ChevronRight
+                        className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                      />
+                      <div>
+                        <span className="font-medium">Total Sessions: </span>
+                        {course.number_of_total_sessions}
+                      </div>
+                    </li>
+                    <li className="flex items-start">
+                      <ChevronRight
+                        className={`w-5 h-5 mr-2 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                      />
+                      <div>
+                        <span className="font-medium">Allowed Absences: </span>
+                        {course.allowed_absence_buffer}
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button
+                    variant={isDarkMode ? "gradient" : "primary"}
+                    className={`flex-1 ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
+                  >
+                    Enroll in This Course
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className={`flex-1 ${isDarkMode ? "border-slate-700 text-white" : ""}`}
+                    onClick={handleShare}
+                  >
+                    <Share2 className="mr-2 h-4 w-4" /> Share Course
+                  </Button>
+                </div>
+              </motion.div>
+            )}
           </div>
 
-          {/* Sidebar */}
+          {/* Right Column - Sidebar */}
           <div className="lg:col-span-1">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -298,31 +1151,32 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white"
               }`}
             >
-              <div className="md:hidden mb-6">
-                <div className="relative">
-                  <img
-                    src="/placeholder.svg?key=gig3h"
-                    alt={course.title}
-                    className="w-full h-48 object-cover rounded-lg"
-                  />
-                  <div className="absolute bottom-3 right-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-3 py-1 rounded-lg font-bold">
-                    ${course.price}
-                  </div>
-                </div>
-              </div>
-
               <h3 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                Course Details
+                Course Summary
               </h3>
 
               <div className="space-y-4 mb-6">
+                <div className={`flex items-start ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                  <DollarSign
+                    className={`w-5 h-5 mr-3 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                  />
+                  <div>
+                    <p className="font-medium">Price</p>
+                    <p className="text-lg font-bold">{formatPrice(course.price)}</p>
+                  </div>
+                </div>
+
                 <div className={`flex items-start ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
                   <Calendar
                     className={`w-5 h-5 mr-3 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
                   />
                   <div>
                     <p className="font-medium">Schedule</p>
-                    <p>{course.schedule}</p>
+                    <p>
+                      {selectedDays.length > 0
+                        ? selectedDays.map((day) => day.charAt(0).toUpperCase() + day.slice(1)).join(", ")
+                        : "No scheduled days"}
+                    </p>
                   </div>
                 </div>
 
@@ -330,24 +1184,31 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   <Clock className={`w-5 h-5 mr-3 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
                   <div>
                     <p className="font-medium">Duration</p>
-                    <p>{course.duration}</p>
+                    <p>
+                      {course.course_duration} {course.course_duration === 1 ? "week" : "weeks"} (
+                      {course.number_of_total_sessions} sessions)
+                    </p>
                   </div>
                 </div>
 
-                <div className={`flex items-start ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                  <MapPin className={`w-5 h-5 mr-3 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
-                  <div>
-                    <p className="font-medium">Location</p>
-                    <p>{course.location.address}</p>
+                {parsedLocation && (
+                  <div className={`flex items-start ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                    <MapPin
+                      className={`w-5 h-5 mr-3 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
+                    />
+                    <div>
+                      <p className="font-medium">Location</p>
+                      <p>{parsedLocation.address}</p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className={`flex items-start ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
                   <Users className={`w-5 h-5 mr-3 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
                   <div>
                     <p className="font-medium">Class Size</p>
                     <p>
-                      {course.students} enrolled (max {course.maxStudents})
+                      {course.students || 0} enrolled {course.max_students ? `(max ${course.max_students})` : ""}
                     </p>
                   </div>
                 </div>
@@ -356,17 +1217,15 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   <Award className={`w-5 h-5 mr-3 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
                   <div>
                     <p className="font-medium">Level</p>
-                    <p>{course.level}</p>
+                    <p>{course.level || "All levels"}</p>
                   </div>
                 </div>
 
                 <div className={`flex items-start ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                  <DollarSign
-                    className={`w-5 h-5 mr-3 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`}
-                  />
+                  <User className={`w-5 h-5 mr-3 flex-shrink-0 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
                   <div>
-                    <p className="font-medium">Price</p>
-                    <p className="text-lg font-bold">${course.price}</p>
+                    <p className="font-medium">Instructor</p>
+                    <p>{course.instructor?.name || "Not specified"}</p>
                   </div>
                 </div>
               </div>
@@ -379,14 +1238,26 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
               </Button>
 
               <Button variant="outline" className={`w-full ${isDarkMode ? "border-slate-700 text-white" : ""}`}>
-                Add to Wishlist
+                <Heart className="mr-2 h-4 w-4" /> Add to Wishlist
               </Button>
+
+              <div className="mt-6">
+                <button
+                  className={`w-full flex items-center justify-center py-2 px-4 rounded-lg ${
+                    isDarkMode
+                      ? "bg-slate-700 hover:bg-slate-600 text-white"
+                      : "bg-gray-100 hover:bg-gray-200 text-gray-800"
+                  } transition-colors`}
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" /> Contact Instructor
+                </button>
+              </div>
             </motion.div>
           </div>
         </div>
 
         {/* Related Courses */}
-        <div className="mt-16">
+        <div className="mt-8">
           <h2 className={`text-2xl font-bold mb-8 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
             Similar Courses You Might Like
           </h2>
@@ -408,7 +1279,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 >
                   <div className="relative">
                     <img
-                      src="/Teacher2.jpg"
+                      src={`/placeholder-jf7aj.png?height=192&width=384&query=swimming course ${i}`}
                       alt="Related Course"
                       className="w-full h-48 object-cover"
                     />
@@ -439,11 +1310,11 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                       <div className="flex items-center">
                         <Star className="w-4 h-4 text-yellow-400 mr-1" />
                         <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                          {4.5 + (i * 0.1).toFixed(1)}
+                          {(4.5 + i * 0.1).toFixed(1)}
                         </span>
                       </div>
                       <span className={`font-bold ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                        ${149 + i * 50}
+                        ฿{(3500 + i * 500).toLocaleString()}
                       </span>
                     </div>
                   </div>

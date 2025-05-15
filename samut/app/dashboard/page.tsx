@@ -20,7 +20,7 @@ import type { Course } from "@/types/course"
 import { useAppSelector } from "@/app/redux"
 import { useAuth } from "@/context/AuthContext"
 import {
-  getAllCourses,
+  getCoursesByInstructorId,
   createCourse,
   updateCourse,
   deleteCourse,
@@ -153,9 +153,9 @@ export default function TeacherDashboard() {
     }
   }, [user])
 
-  // Fetch courses
+  // Fetch courses by instructor ID
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchInstructorCourses = async () => {
       if (!user || !user.user_id) {
         setError("User not authenticated")
         setIsLoading(false)
@@ -166,12 +166,12 @@ export default function TeacherDashboard() {
         setIsLoading(true)
         setError(null)
 
-        // Get all courses
-        console.log("Fetching all courses for user:", user.user_id)
-        const allCoursesResponse = await getAllCourses()
+        // Get courses by instructor ID using the new API endpoint
+        console.log("Fetching courses for instructor:", user.user_id)
+        const instructorCoursesResponse = await getCoursesByInstructorId(user.user_id)
 
         // Safety check for API response
-        if (!allCoursesResponse) {
+        if (!instructorCoursesResponse) {
           console.warn("API returned null or undefined response")
           setCourses([])
           setAvailableCourses([])
@@ -179,31 +179,19 @@ export default function TeacherDashboard() {
           return
         }
 
-        console.log("All courses response:", allCoursesResponse)
+        console.log("Instructor courses response:", instructorCoursesResponse)
 
-        // Filter courses by instructor ID - handle different API response formats
+        // Process the courses data
         let instructorCourses = []
 
-        if (Array.isArray(allCoursesResponse)) {
-          instructorCourses = allCoursesResponse.filter(
-            (course) =>
-              course &&
-              (course.instructor_id === user.user_id ||
-                (course.instructor && course.instructor.user_id === user.user_id)),
-          )
-        } else if (allCoursesResponse && Array.isArray(allCoursesResponse.data)) {
-          instructorCourses = allCoursesResponse.data.filter(
-            (course) =>
-              course &&
-              (course.instructor_id === user.user_id ||
-                (course.instructor && course.instructor.user_id === user.user_id)),
-          )
+        if (Array.isArray(instructorCoursesResponse)) {
+          instructorCourses = instructorCoursesResponse
+        } else if (instructorCoursesResponse && Array.isArray(instructorCoursesResponse.data)) {
+          instructorCourses = instructorCoursesResponse.data
         } else {
-          console.warn("Unexpected response format from courses API:", allCoursesResponse)
+          console.warn("Unexpected response format from courses API:", instructorCoursesResponse)
           instructorCourses = []
         }
-
-        console.log("Filtered instructor courses:", instructorCourses)
 
         // Map API data to the format expected by the UI components
         const mappedCourses = instructorCourses
@@ -226,7 +214,7 @@ export default function TeacherDashboard() {
         const availableMappedCourses = mappedCourses.filter((course) => course.students === 0)
         setAvailableCourses(availableMappedCourses)
       } catch (err: any) {
-        console.error("Error in fetchCourses:", err)
+        console.error("Error in fetchInstructorCourses:", err)
         setError(`Failed to fetch courses: ${err?.message || "Unknown error"}`)
 
         // Set empty arrays on error to prevent UI issues
@@ -239,7 +227,7 @@ export default function TeacherDashboard() {
 
     // Only fetch courses if user is authenticated
     if (user?.user_id) {
-      fetchCourses()
+      fetchInstructorCourses()
     }
   }, [user, resources])
 
@@ -249,11 +237,28 @@ export default function TeacherDashboard() {
       // Format schedule if it's an object
       let scheduleStr = apiCourse.schedule || "Flexible schedule"
       if (typeof apiCourse.schedule === "object" && apiCourse.schedule !== null) {
-        // Convert schedule object to string (e.g., "Monday, Wednesday, Friday")
-        scheduleStr = Object.keys(apiCourse.schedule)
-          .filter((day) => apiCourse.schedule[day])
-          .map((day) => day.charAt(0).toUpperCase() + day.slice(1))
-          .join(", ")
+        // Convert schedule object to string representation
+        if (Array.isArray(Object.keys(apiCourse.schedule))) {
+          // Handle the new schedule format: { "monday": ["19:00-20:00"], "wednesday": ["19:00-20:00"] }
+          const days = Object.keys(apiCourse.schedule).filter(
+            (day) => Array.isArray(apiCourse.schedule[day]) && apiCourse.schedule[day].length > 0,
+          )
+
+          if (days.length > 0) {
+            scheduleStr = days
+              .map((day) => {
+                const times = apiCourse.schedule[day].join(", ")
+                return `${day.charAt(0).toUpperCase() + day.slice(1)}: ${times}`
+              })
+              .join(" | ")
+          }
+        } else {
+          // Fallback for other schedule formats
+          scheduleStr = Object.keys(apiCourse.schedule)
+            .filter((day) => apiCourse.schedule[day])
+            .map((day) => day.charAt(0).toUpperCase() + day.slice(1))
+            .join(", ")
+        }
 
         if (scheduleStr === "") {
           scheduleStr = "Flexible schedule"

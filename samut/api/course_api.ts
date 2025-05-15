@@ -23,34 +23,66 @@ export const getAllCourses = async () => {
 }
 
 // Get course by ID
+// Get course by ID
 export const getCourseById = async (courseId: string) => {
   try {
-    // Replace the placeholder in the URL with the actual courseId
-    const url = APIEndpoints.COURSE.RETRIEVE.BY_ID.replace("[courseId]", courseId)
-    console.log(`Fetching course details from: ${url}`)
+    console.log(`Fetching course with ID: ${courseId}`)
+    const response = await apiClient.get(`/courses/byCourse/${courseId}`)
 
-    const response = await apiClient.get(url)
-    console.log("API Response for course details:", response)
+    // Log the raw response for debugging
+    console.log("Raw API response:", response)
+
+    // Log the parsed course data
+    console.log("Course data received:", response.data)
+
     return response.data
   } catch (error: any) {
+    console.error("Error fetching course:", error)
+
+    // Provide more detailed error information
+    if (error.response) {
+      console.error(`Server responded with status: ${error.response.status}`)
+      console.error("Response data:", error.response.data)
+
+      if (error.response.status === 404) {
+        throw new Error("Course not found. It may have been removed or is unavailable.")
+      }
+    } else if (error.request) {
+      console.error("No response received from server")
+      throw new Error("No response from server. Please check your connection and try again.")
+    }
+
+    throw error
+  }
+}
+
+// New function to get courses by instructor ID
+export const getCoursesByInstructorId = async (instructorId: string) => {
+  try {
+    // Use the endpoint from the documentation
+    const url = `/courses/byInstructor/${instructorId}`
+    console.log(`Fetching courses for instructor ${instructorId} from: ${url}`)
+
+    const response = await apiClient.get(url)
+    console.log("API Response for instructor courses:", response)
+    
+    // Return the data array or an empty array if the response is invalid
+    return response.data || []
+  } catch (error: any) {
     // More detailed error logging
-    console.error("Error fetching course details:", {
-      courseId,
+    console.error("Error fetching instructor courses:", {
+      instructorId,
       message: error?.message || "Unknown error",
       status: error?.response?.status,
       data: error?.response?.data,
       stack: error?.stack,
     })
 
-    // For 404 errors, log a more specific message
-    if (error?.response?.status === 404) {
-      console.warn(`Course with ID ${courseId} not found. This is likely because the course doesn't exist.`)
-    }
-
-    // Return null instead of throwing to prevent cascading errors
-    return null
+    // Return empty array instead of throwing to prevent cascading errors
+    return []
   }
 }
+
 
 // Create a new course
 export const createCourse = async (courseData: any) => {
