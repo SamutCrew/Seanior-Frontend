@@ -1,11 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { FaPlus, FaCalendarAlt, FaChalkboardTeacher } from "react-icons/fa"
+import { FaPlus, FaCalendarAlt, FaChalkboardTeacher, FaUserGraduate } from "react-icons/fa"
 import TeacherHeader from "@/components/Partial/PageDashboard/TeacherHeader"
 import TeacherStats from "@/components/Partial/PageDashboard/TeacherStats"
 import CalendarView from "@/components/Partial/PageDashboard/CalendarView"
 import RequestsPanel from "@/components/Partial/PageDashboard/RequestsPanel"
+import StudentRequestsPanel from "@/components/Partial/PageDashboard/StudentRequestsPanel"
 import TeachingSchedule from "@/components/Partial/PageDashboard/TeachingSchedule"
 import AvailableCourses from "@/components/Partial/PageDashboard/AvailableCourses"
 import CourseGrid from "@/components/Course/CourseGrid"
@@ -17,6 +18,7 @@ import EditCourseModal from "@/components/Course/Modals/EditCourseModal"
 import DeleteCourseModal from "@/components/Course/Modals/DeleteCourseModal"
 import type { ScheduleItem } from "@/types/schedule"
 import type { Course } from "@/types/course"
+import type { CourseRequest } from "@/types/request"
 import { useAppSelector } from "@/app/redux"
 import { useAuth } from "@/context/AuthContext"
 import {
@@ -27,9 +29,11 @@ import {
   uploadCourseImage,
   uploadPoolImage,
 } from "@/api/course_api"
+import { getPendingCourseRequests, approveCourseRequest, rejectCourseRequest } from "@/api/course_request_api"
 import { getUserResources } from "@/api/resource_api"
 import LoadingPage from "@/components/Common/LoadingPage"
 import AlertResponse from "@/components/Responseback/AlertResponse"
+import { Toast } from "@/components/Responseback/Toast"
 
 export default function TeacherDashboard() {
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
@@ -37,9 +41,13 @@ export default function TeacherDashboard() {
 
   // Data fetching state
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingRequests, setIsLoadingRequests] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [resources, setResources] = useState<any[]>([])
+
+  // Student course requests
+  const [studentRequests, setStudentRequests] = useState<CourseRequest[]>([])
 
   // Schedule data
   const [schedule, setSchedule] = useState<ScheduleItem[]>([
@@ -127,6 +135,49 @@ export default function TeacherDashboard() {
     { id: 2, name: "Jane Smith", type: "Schedule Change Request", date: "2023-06-02" },
   ])
 
+  // Fetch student course requests
+  const fetchStudentRequests = async () => {
+    if (!user || !user.user_id) return
+
+    try {
+      setIsLoadingRequests(true)
+      const response = await getPendingCourseRequests()
+      console.log("Student course requests:", response)
+
+      if (Array.isArray(response)) {
+        setStudentRequests(response)
+      } else {
+        console.warn("Unexpected response format from course requests API:", response)
+        setStudentRequests([])
+      }
+    } catch (err) {
+      console.error("Error fetching student course requests:", err)
+      setStudentRequests([])
+      Toast.error("Failed to load student requests")
+    } finally {
+      setIsLoadingRequests(false)
+    }
+  }
+
+  // Handle course request actions (approve/reject)
+  const handleRequestAction = async (requestId: string, action: "approve" | "reject") => {
+    try {
+      if (action === "approve") {
+        await approveCourseRequest(requestId)
+        Toast.success("Course request approved successfully")
+      } else {
+        await rejectCourseRequest(requestId)
+        Toast.success("Course request rejected successfully")
+      }
+
+      // Remove the request from the list
+      setStudentRequests((prevRequests) => prevRequests.filter((request) => request.request_id !== requestId))
+    } catch (err: any) {
+      console.error(`Error ${action}ing course request:`, err)
+      Toast.error(`Failed to ${action} course request: ${err.message || "Unknown error"}`)
+    }
+  }
+
   // Fetch user resources
   useEffect(() => {
     const fetchUserResources = async () => {
@@ -213,6 +264,9 @@ export default function TeacherDashboard() {
         // Set available courses (courses with no students yet)
         const availableMappedCourses = mappedCourses.filter((course) => course.students === 0)
         setAvailableCourses(availableMappedCourses)
+
+        // Fetch student course requests after courses are loaded
+        fetchStudentRequests()
       } catch (err: any) {
         console.error("Error in fetchInstructorCourses:", err)
         setError(`Failed to fetch courses: ${err?.message || "Unknown error"}`)
@@ -452,11 +506,10 @@ export default function TeacherDashboard() {
       setIsCreateModalOpen(false)
 
       // Show success message
-      setSuccess("Course created successfully!")
-      setTimeout(() => setSuccess(null), 3000)
+      Toast.success("Course created successfully!")
     } catch (err: any) {
       console.error("Error creating course:", err)
-      setError(`Failed to create course: ${err.message || "Unknown error"}`)
+      Toast.error(`Failed to create course: ${err.message || "Unknown error"}`)
     } finally {
       setIsLoading(false)
     }
@@ -464,19 +517,18 @@ export default function TeacherDashboard() {
 
   const handleEditCourse = async (editedCourseData: Partial<Course>) => {
     if (!currentCourse) {
-      setError("No course selected for editing")
+      Toast.error("No course selected for editing")
       return
     }
 
     const courseId = currentCourse.course_id || currentCourse.id
     if (!courseId) {
-      setError("Course ID is missing")
+      Toast.error("Course ID is missing")
       return
     }
 
     try {
       setIsLoading(true)
-      setError(null)
 
       // Extract image files from the form data
       const courseImageFile = editedCourseData.courseImageFile as File | undefined
@@ -582,14 +634,12 @@ export default function TeacherDashboard() {
       )
 
       setIsEditModalOpen(false)
-      setError(null) // Clear any previous errors
 
       // Show success message
-      setSuccess("Course updated successfully!")
-      setTimeout(() => setSuccess(null), 3000)
+      Toast.success("Course updated successfully!")
     } catch (err: any) {
       console.error("Error updating course:", err)
-      setError(`Failed to update course: ${err.response?.data?.message || err.message || "Unknown error"}`)
+      Toast.error(`Failed to update course: ${err.response?.data?.message || err.message || "Unknown error"}`)
     } finally {
       setIsLoading(false)
     }
@@ -597,13 +647,13 @@ export default function TeacherDashboard() {
 
   const handleDeleteCourse = async () => {
     if (!currentCourse) {
-      setError("No course selected for deletion")
+      Toast.error("No course selected for deletion")
       return
     }
 
     const courseId = currentCourse.course_id || currentCourse.id
     if (!courseId) {
-      setError("Course ID is missing")
+      Toast.error("Course ID is missing")
       return
     }
 
@@ -621,11 +671,10 @@ export default function TeacherDashboard() {
       setIsDeleteModalOpen(false)
 
       // Show success message
-      setSuccess("Course deleted successfully!")
-      setTimeout(() => setSuccess(null), 3000)
+      Toast.success("Course deleted successfully!")
     } catch (err: any) {
       console.error("Error deleting course:", err)
-      setError(`Failed to delete course: ${err.message || "Unknown error"}`)
+      Toast.error(`Failed to delete course: ${err.message || "Unknown error"}`)
     } finally {
       setIsLoading(false)
     }
@@ -661,6 +710,20 @@ export default function TeacherDashboard() {
 
         {/* Stats Cards */}
         <TeacherStats schedule={schedule} availableCourses={availableCourses} />
+
+        {/* Student Course Requests Section */}
+        {studentRequests.length > 0 && (
+          <div className="mb-8">
+            <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-slate-800"}`}>
+              Pending Student Requests
+            </h2>
+            <StudentRequestsPanel
+              requests={studentRequests}
+              onRequestAction={handleRequestAction}
+              isLoading={isLoadingRequests}
+            />
+          </div>
+        )}
 
         {/* Main Content Tabs */}
         <div className="mb-8">
@@ -706,6 +769,25 @@ export default function TeacherDashboard() {
               onClick={() => setActiveTab("available")}
             >
               <FaPlus /> Available Courses
+            </button>
+            <button
+              className={`px-4 py-2 font-medium flex items-center gap-2 ${
+                activeTab === "requests"
+                  ? isDarkMode
+                    ? "text-cyan-400 border-b-2 border-cyan-400"
+                    : "text-cyan-600 border-b-2 border-cyan-600"
+                  : isDarkMode
+                    ? "text-gray-400"
+                    : "text-slate-600"
+              }`}
+              onClick={() => setActiveTab("requests")}
+            >
+              <FaUserGraduate /> Student Requests
+              {studentRequests.length > 0 && (
+                <span className="ml-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {studentRequests.length}
+                </span>
+              )}
             </button>
           </div>
 
@@ -799,6 +881,31 @@ export default function TeacherDashboard() {
 
           {/* Available Courses Tab */}
           {activeTab === "available" && <AvailableCourses availableCourses={availableCourses} />}
+
+          {/* Student Requests Tab */}
+          {activeTab === "requests" && (
+            <div>
+              <StudentRequestsPanel
+                requests={studentRequests}
+                onRequestAction={handleRequestAction}
+                isLoading={isLoadingRequests}
+              />
+
+              {!isLoadingRequests && studentRequests.length === 0 && (
+                <div className="text-center py-12">
+                  <FaUserGraduate
+                    className={`mx-auto h-12 w-12 mb-4 ${isDarkMode ? "text-gray-600" : "text-gray-300"}`}
+                  />
+                  <h3 className={`text-xl font-medium mb-2 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+                    No pending student requests
+                  </h3>
+                  <p className={`${isDarkMode ? "text-gray-400" : "text-gray-500"} max-w-md mx-auto`}>
+                    When students request to join your courses, they will appear here for your approval.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
