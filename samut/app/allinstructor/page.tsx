@@ -815,23 +815,6 @@ export default function InstructorsDirectoryPage() {
           </div>
         </div>
 
-        {/* Debug Info */}
-        <div className="mb-4 p-4 bg-yellow-100 border border-yellow-300 rounded-md">
-          <h3 className="font-bold text-yellow-800 mb-2">Debug Information</h3>
-          <p className="text-yellow-800">Instructors found: {filteredInstructors.length}</p>
-          <p className="text-yellow-800">View mode: {viewMode}</p>
-          <p className="text-yellow-800">Active category: {activeCategory}</p>
-          <p className="text-yellow-800">Active filters: {activeFilterCount}</p>
-          <div className="mt-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => console.log("FILTERED INSTRUCTORS:", filteredInstructors)}
-            >
-              Log Instructors to Console
-            </Button>
-          </div>
-        </div>
 
         {/* Filters Panel */}
         <div ref={scrollRef}></div>

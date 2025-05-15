@@ -2,20 +2,29 @@
 
 import type React from "react"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { FaTimes } from "react-icons/fa"
+import { useAppSelector } from "@/app/redux"
 
 interface ModalProps {
   isOpen: boolean
   onClose: () => void
-  title: string
+  title?: string
   children: React.ReactNode
-  size?: "sm" | "md" | "lg" | "xl" | "full" | string
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "full"
 }
 
 export default function Modal({ isOpen, onClose, title, children, size = "md" }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
+  const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
+  const [mounted, setMounted] = useState(false)
+
+  // Handle mounting for client-side rendering
+  useEffect(() => {
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
 
   // Close modal when clicking outside
   useEffect(() => {
@@ -56,7 +65,7 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" }:
   }, [isOpen, onClose])
 
   // Get modal size classes
-  const getModalSize = () => {
+  const getSizeClass = () => {
     switch (size) {
       case "sm":
         return "max-w-md" // Small - 28rem
@@ -66,6 +75,8 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" }:
         return "max-w-4xl" // Large - 56rem
       case "xl":
         return "max-w-6xl" // Extra large - 72rem
+      case "2xl":
+        return "max-w-7xl" // 2X large - 80rem
       case "full":
         return "max-w-[95vw] max-h-[95vh]" // Almost full screen
       default:
@@ -73,24 +84,38 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" }:
     }
   }
 
-  if (!isOpen) return null
+  if (!isOpen || !mounted) return null
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
       <div
         ref={modalRef}
-        className={`bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full ${getModalSize()} overflow-hidden transition-transform`}
+        className={`${
+          isDarkMode ? "bg-slate-900 text-white" : "bg-white text-gray-900"
+        } rounded-lg shadow-xl w-full ${getSizeClass()} overflow-hidden transition-transform`}
       >
-        <div className="flex justify-between items-center p-4 border-b dark:border-slate-700">
-          <h2 className="text-lg font-medium dark:text-white">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white transition-colors"
+        {title && (
+          <div
+            className={`flex justify-between items-center px-6 py-4 border-b ${
+              isDarkMode ? "border-slate-700" : "border-gray-200"
+            }`}
           >
-            <FaTimes />
-          </button>
-        </div>
-        <div className="overflow-y-auto max-h-[calc(95vh-8rem)]">{children}</div>
+            <h3 className="text-lg leading-6 font-medium">{title}</h3>
+            <button
+              type="button"
+              className={`rounded-md ${
+                isDarkMode
+                  ? "text-gray-400 hover:text-white hover:bg-slate-800"
+                  : "text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+              } focus:outline-none p-2`}
+              onClick={onClose}
+            >
+              <span className="sr-only">Close</span>
+              <FaTimes className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+        <div className="overflow-y-auto max-h-[calc(100vh-200px)] px-6 py-4">{children}</div>
       </div>
     </div>,
     document.body,

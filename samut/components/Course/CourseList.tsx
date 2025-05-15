@@ -1,109 +1,136 @@
 "use client"
-
-import { FaEdit, FaTrash, FaCalendarAlt, FaClock, FaUsers, FaDollarSign, FaStar } from "react-icons/fa"
-import type { Course } from "@/types/course"
-import { getLevelColor } from "@/utils/courseHelpers"
+import { useState } from "react"
+import { FaPlus, FaSearch, FaThLarge, FaList } from "react-icons/fa"
 import { useAppSelector } from "@/app/redux"
+import type { Course } from "@/types/course"
+import CourseListItem from "./CourseListItem"
+import CourseGrid from "./CourseGrid"
 
 interface CourseListProps {
   courses: Course[]
-  onEdit: (course: Course) => void
-  onDelete: (course: Course) => void
+  onCreateCourse?: () => void
+  onEditCourse?: (course: Course) => void
+  onDeleteCourse?: (course: Course) => void
 }
 
-export default function CourseList({ courses, onEdit, onDelete }: CourseListProps) {
+export default function CourseList({ courses, onCreateCourse, onEditCourse, onDeleteCourse }: CourseListProps) {
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [levelFilter, setLevelFilter] = useState("All Levels")
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list")
+
+  // Filter courses based on search term and level filter
+  const filteredCourses = courses.filter((course) => {
+    const title = course.title || course.course_name || ""
+    const matchesSearch = searchTerm === "" || title.toLowerCase().includes(searchTerm.toLowerCase())
+
+    const matchesLevel = levelFilter === "All Levels" || course.level?.toLowerCase() === levelFilter.toLowerCase()
+
+    return matchesSearch && matchesLevel
+  })
 
   return (
-    <div className="mb-8 space-y-4">
-      {courses.map((course) => (
-        <div
-          key={course.id}
-          className={`${
-            isDarkMode ? "bg-slate-800 border-slate-700 hover:bg-slate-700" : "bg-white border-gray-100 hover:shadow-md"
-          } rounded-xl shadow-sm overflow-hidden transition-all duration-200 border`}
-        >
-          <div className="p-5">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <span
-                    className={`text-xs font-medium px-2.5 py-1 rounded-full border ${getLevelColor(course.level)}`}
-                  >
-                    {course.level}
-                  </span>
-                  <div className="flex items-center gap-1 text-amber-500">
-                    <FaStar />
-                    <span className="font-medium">{course.rating.toFixed(1)}</span>
-                  </div>
-                </div>
-                <h3 className={`text-xl font-bold mb-1 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                  {course.title}
-                </h3>
-                <p className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>{course.focus}</p>
-              </div>
+    <div className={`${isDarkMode ? "bg-slate-900 text-white" : "bg-gray-50 text-gray-900"} min-h-screen p-4`}>
+      <div className="max-w-7xl mx-auto">
+        {/* Header with Create Course Button */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+          {onCreateCourse && (
+            <button
+              onClick={onCreateCourse}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition-colors"
+            >
+              <FaPlus /> Create New Course
+            </button>
+          )}
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Duration</p>
-                  <p
-                    className={`text-sm font-medium flex items-center gap-1 ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}
-                  >
-                    <FaCalendarAlt className={isDarkMode ? "text-cyan-400" : "text-sky-600"} /> {course.duration}
-                  </p>
-                </div>
-                <div>
-                  <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Schedule</p>
-                  <p
-                    className={`text-sm font-medium flex items-center gap-1 ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}
-                  >
-                    <FaClock className={isDarkMode ? "text-cyan-400" : "text-sky-600"} /> {course.schedule}
-                  </p>
-                </div>
-                <div>
-                  <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Students</p>
-                  <p
-                    className={`text-sm font-medium flex items-center gap-1 ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}
-                  >
-                    <FaUsers className={isDarkMode ? "text-cyan-400" : "text-sky-600"} /> {course.students}
-                  </p>
-                </div>
-                <div>
-                  <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Price</p>
-                  <p
-                    className={`text-sm font-medium flex items-center gap-1 ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}
-                  >
-                    <FaDollarSign className={isDarkMode ? "text-cyan-400" : "text-sky-600"} /> {course.price}
-                  </p>
-                </div>
-              </div>
+          {/* Filters and Search */}
+          <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+            <div className="relative">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search courses..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={`pl-10 pr-4 py-2 rounded-lg w-full md:w-64 ${
+                  isDarkMode
+                    ? "bg-slate-800 border-slate-700 text-white placeholder-gray-400"
+                    : "bg-white border-gray-200 text-gray-900 placeholder-gray-500"
+                } border focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+              />
+            </div>
 
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onEdit(course)}
-                  className={`${
-                    isDarkMode
-                      ? "bg-slate-700 hover:bg-slate-600 text-cyan-400"
-                      : "bg-sky-100 hover:bg-sky-200 text-sky-700"
-                  } px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200`}
-                >
-                  <FaEdit /> Edit
-                </button>
-                <button
-                  onClick={() => onDelete(course)}
-                  className={`${
-                    isDarkMode
-                      ? "bg-slate-700 hover:bg-slate-600 text-red-400"
-                      : "bg-red-100 hover:bg-red-200 text-red-700"
-                  } px-4 py-2 rounded-lg flex items-center gap-2 transition-colors duration-200`}
-                >
-                  <FaTrash />
-                </button>
-              </div>
+            <select
+              value={levelFilter}
+              onChange={(e) => setLevelFilter(e.target.value)}
+              className={`px-4 py-2 rounded-lg ${
+                isDarkMode ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-gray-200 text-gray-900"
+              } border focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+            >
+              <option>All Levels</option>
+              <option>Beginner</option>
+              <option>Intermediate</option>
+              <option>Advanced</option>
+              <option>Expert</option>
+            </select>
+
+            <div
+              className={`flex rounded-lg overflow-hidden border ${
+                isDarkMode ? "border-slate-700" : "border-gray-200"
+              }`}
+            >
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2 ${
+                  viewMode === "list"
+                    ? isDarkMode
+                      ? "bg-slate-700 text-white"
+                      : "bg-gray-200 text-gray-800"
+                    : isDarkMode
+                      ? "bg-slate-800 text-gray-400"
+                      : "bg-white text-gray-500"
+                }`}
+              >
+                <FaList />
+              </button>
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2 ${
+                  viewMode === "grid"
+                    ? isDarkMode
+                      ? "bg-slate-700 text-white"
+                      : "bg-gray-200 text-gray-800"
+                    : isDarkMode
+                      ? "bg-slate-800 text-gray-400"
+                      : "bg-white text-gray-500"
+                }`}
+              >
+                <FaThLarge />
+              </button>
             </div>
           </div>
         </div>
-      ))}
+
+        {/* Course List */}
+        {filteredCourses.length === 0 ? (
+          <div className={`text-center py-12 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+            No courses found. Try adjusting your filters or create a new course.
+          </div>
+        ) : viewMode === "list" ? (
+          <div>
+            {filteredCourses.map((course) => (
+              <CourseListItem
+                key={course.id || course.course_id}
+                course={course}
+                onEdit={onEditCourse}
+                onDelete={onDeleteCourse}
+              />
+            ))}
+          </div>
+        ) : (
+          <CourseGrid courses={filteredCourses} onEdit={onEditCourse} onDelete={onDeleteCourse} />
+        )}
+      </div>
     </div>
   )
 }

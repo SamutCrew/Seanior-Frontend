@@ -23,6 +23,8 @@ import {
   FaCrosshairs,
   FaSync,
 } from "react-icons/fa"
+import { MdPublic, MdPool } from "react-icons/md"
+import { HiHome } from "react-icons/hi"
 import OSMMapSelector from "@/components/Searchpage/OSMMAPSelector"
 
 interface EnhancedCourseFormProps {
@@ -215,11 +217,11 @@ export default function EnhancedCourseForm({
   // Styling
   const inputClasses = `mt-1 block w-full rounded-md text-base py-3 ${
     isDarkMode
-      ? "bg-slate-700 border-slate-600 text-white focus:border-cyan-500 focus:ring-cyan-500"
+      ? "bg-slate-800 border-slate-600 text-slate-100 focus:border-cyan-500 focus:ring-cyan-500 placeholder-slate-400"
       : "border-gray-300 focus:border-sky-500 focus:ring-sky-500"
   } shadow-sm`
 
-  const labelClasses = `block text-base font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`
+  const labelClasses = `block text-base font-medium mb-2 ${isDarkMode ? "text-slate-200" : "text-gray-700"}`
 
   const buttonClasses = {
     primary: `${
@@ -627,26 +629,31 @@ export default function EnhancedCourseForm({
     }
   }
 
-  // Get step title with appropriate styling
-  const getStepTitle = (step: number, title: string) => {
-    return (
-      <div className="flex items-center">
-        <span
-          className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-2 ${
-            isDarkMode
-              ? currentStep === step
-                ? "bg-cyan-600 text-white"
-                : "bg-slate-700 text-gray-300"
-              : currentStep === step
-                ? "bg-sky-500 text-white"
-                : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          {step}
-        </span>
-        <h3 className={`text-xl font-medium ${isDarkMode ? "text-white" : "text-gray-900"}`}>{title}</h3>
-      </div>
-    )
+  // Get pool type icon and label
+  const getPoolTypeIcon = () => {
+    switch (formData.pool_type) {
+      case "public-pool":
+        return <MdPublic className="text-blue-500" size={20} />
+      case "private-location":
+        return <HiHome className="text-amber-500" size={20} />
+      case "teacher-pool":
+        return <MdPool className="text-purple-500" size={20} />
+      default:
+        return <FaSwimmer className="text-blue-500" size={20} />
+    }
+  }
+
+  const getPoolTypeLabel = () => {
+    switch (formData.pool_type) {
+      case "public-pool":
+        return "Public Pool"
+      case "private-location":
+        return "Private Location"
+      case "teacher-pool":
+        return "Teacher's Pool"
+      default:
+        return formData.pool_type
+    }
   }
 
   // Format time for display
@@ -658,11 +665,38 @@ export default function EnhancedCourseForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-0">
+      {/* Progress indicator */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-slate-700">
+        <div className="flex-1 h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+          <div
+            className={`h-full ${isDarkMode ? "bg-cyan-600" : "bg-sky-500"}`}
+            style={{ width: `${(currentStep / 3) * 100}%` }}
+          ></div>
+        </div>
+        <div className="flex justify-between w-full absolute top-[72px] px-4">
+          <div
+            className={`text-sm font-medium ${currentStep >= 1 ? (isDarkMode ? "text-cyan-400" : "text-sky-600") : isDarkMode ? "text-gray-500" : "text-gray-400"}`}
+          >
+            {currentStep === 1 && "•"} Basic Info
+          </div>
+          <div
+            className={`text-sm font-medium ${currentStep >= 2 ? (isDarkMode ? "text-cyan-400" : "text-sky-600") : isDarkMode ? "text-gray-500" : "text-gray-400"}`}
+          >
+            {currentStep === 2 && "•"} Schedule & Details
+          </div>
+          <div
+            className={`text-sm font-medium ${currentStep >= 3 ? (isDarkMode ? "text-cyan-400" : "text-sky-600") : isDarkMode ? "text-gray-500" : "text-gray-400"}`}
+          >
+            {currentStep === 3 && "•"} Images & Review
+          </div>
+        </div>
+      </div>
+
       {/* Keyboard shortcuts help */}
       {showKeyboardShortcuts && (
         <div
-          className={`${isDarkMode ? "bg-slate-700" : "bg-gray-100"} p-4 rounded-lg mb-4 border ${isDarkMode ? "border-slate-600" : "border-gray-200"}`}
+          className={`${isDarkMode ? "bg-slate-700" : "bg-gray-100"} p-4 rounded-lg mb-4 border ${isDarkMode ? "border-slate-600" : "border-gray-200"} mx-6 mt-6`}
         >
           <div className="flex justify-between items-center mb-2">
             <h3 className="font-medium">Keyboard Shortcuts</h3>
@@ -691,83 +725,25 @@ export default function EnhancedCourseForm({
         </div>
       )}
 
-      {/* Progress indicator */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div
-            className={`flex-1 h-3 rounded-full ${
-              currentStep >= 1
-                ? isDarkMode
-                  ? "bg-gradient-to-r from-cyan-600 to-blue-700"
-                  : "bg-gradient-to-r from-sky-500 to-blue-600"
-                : isDarkMode
-                  ? "bg-slate-700"
-                  : "bg-gray-200"
-            }`}
-          />
-          <div className="mx-2" />
-          <div
-            className={`flex-1 h-3 rounded-full ${
-              currentStep >= 2
-                ? isDarkMode
-                  ? "bg-gradient-to-r from-cyan-600 to-blue-700"
-                  : "bg-gradient-to-r from-sky-500 to-blue-600"
-                : isDarkMode
-                  ? "bg-slate-700"
-                  : "bg-gray-200"
-            }`}
-          />
-          <div className="mx-2" />
-          <div
-            className={`flex-1 h-3 rounded-full ${
-              currentStep >= 3
-                ? isDarkMode
-                  ? "bg-gradient-to-r from-cyan-600 to-blue-700"
-                  : "bg-gradient-to-r from-sky-500 to-blue-600"
-                : isDarkMode
-                  ? "bg-slate-700"
-                  : "bg-gray-200"
-            }`}
-          />
-        </div>
-        <div className="flex justify-between mt-2 text-base">
-          <span
-            className={`flex items-center ${currentStep === 1 ? (isDarkMode ? "text-cyan-400" : "text-sky-600") : ""}`}
-          >
-            {currentStep === 1 && (
-              <span className={`w-2 h-2 rounded-full mr-1 ${isDarkMode ? "bg-cyan-400" : "bg-sky-600"}`}></span>
-            )}
-            Basic Info
-          </span>
-          <span
-            className={`flex items-center ${currentStep === 2 ? (isDarkMode ? "text-cyan-400" : "text-sky-600") : ""}`}
-          >
-            {currentStep === 2 && (
-              <span className={`w-2 h-2 rounded-full mr-1 ${isDarkMode ? "bg-cyan-400" : "bg-sky-600"}`}></span>
-            )}
-            Schedule & Details
-          </span>
-          <span
-            className={`flex items-center ${currentStep === 3 ? (isDarkMode ? "text-cyan-400" : "text-sky-600") : ""}`}
-          >
-            {currentStep === 3 && (
-              <span className={`w-2 h-2 rounded-full mr-1 ${isDarkMode ? "bg-cyan-400" : "bg-sky-600"}`}></span>
-            )}
-            Images & Review
-          </span>
-        </div>
-      </div>
-
       {/* Step 1: Basic Information */}
       {currentStep === 1 && (
-        <div
-          className={`${sectionClasses} ${isDarkMode ? "bg-gradient-to-br from-slate-800 to-slate-900" : "bg-gradient-to-br from-white to-gray-50"}`}
-        >
+        <div className={`${isDarkMode ? "bg-slate-900" : "bg-white"} p-6`}>
           <div className="flex justify-between items-center mb-6">
-            {getStepTitle(1, "Basic Course Information")}
+            <div className="flex items-center">
+              <span
+                className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-3 ${
+                  isDarkMode ? "bg-cyan-600 text-white" : "bg-sky-500 text-white"
+                }`}
+              >
+                1
+              </span>
+              <h3 className={`text-xl font-medium ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+                Basic Course Information
+              </h3>
+            </div>
             <button
               type="button"
-              className={`${buttonClasses.icon} ${isDarkMode ? "bg-slate-700" : "bg-gray-100"} rounded-full p-2`}
+              className={`${buttonClasses.icon} ${isDarkMode ? "bg-slate-800" : "bg-gray-100"} rounded-full p-2`}
               onClick={() => setShowKeyboardShortcuts(true)}
               title="Keyboard shortcuts"
             >
@@ -827,10 +803,7 @@ export default function EnhancedCourseForm({
                 Pool Type <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <FaSwimmer
-                  className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDarkMode ? "text-blue-400" : "text-blue-500"}`}
-                  size={18}
-                />
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">{getPoolTypeIcon()}</div>
                 <select
                   id="pool_type"
                   name="pool_type"
@@ -908,7 +881,7 @@ export default function EnhancedCourseForm({
               )}
 
               {/* Map container */}
-              <div className="mt-3 rounded-lg overflow-hidden border border-gray-300">
+              <div className="mt-3 rounded-lg overflow-hidden border border-gray-300 h-[300px]">
                 <OSMMapSelector
                   center={mapCenter}
                   onLocationSelect={handleLocationSelect}
@@ -933,7 +906,7 @@ export default function EnhancedCourseForm({
                 id="description"
                 name="description"
                 rows={5}
-                className={inputClasses}
+                className={`${inputClasses} px-4 py-4`}
                 value={formData.description}
                 onChange={handleChange}
                 placeholder="Describe what students will learn in this course..."
@@ -947,14 +920,23 @@ export default function EnhancedCourseForm({
 
       {/* Step 2: Schedule & Details */}
       {currentStep === 2 && (
-        <div
-          className={`${sectionClasses} ${isDarkMode ? "bg-gradient-to-br from-slate-800 to-slate-900" : "bg-gradient-to-br from-white to-gray-50"}`}
-        >
+        <div className={`${isDarkMode ? "bg-slate-900" : "bg-white"} p-6`}>
           <div className="flex justify-between items-center mb-6">
-            {getStepTitle(2, "Schedule & Course Details")}
+            <div className="flex items-center">
+              <span
+                className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-3 ${
+                  isDarkMode ? "bg-cyan-600 text-white" : "bg-sky-500 text-white"
+                }`}
+              >
+                2
+              </span>
+              <h3 className={`text-xl font-medium ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+                Schedule & Course Details
+              </h3>
+            </div>
             <button
               type="button"
-              className={`${buttonClasses.icon} ${isDarkMode ? "bg-slate-700" : "bg-gray-100"} rounded-full p-2`}
+              className={`${buttonClasses.icon} ${isDarkMode ? "bg-slate-800" : "bg-gray-100"} rounded-full p-2`}
               onClick={() => setShowKeyboardShortcuts(true)}
               title="Keyboard shortcuts"
             >
@@ -1098,7 +1080,7 @@ export default function EnhancedCourseForm({
                 Weekly Schedule <span className="text-red-500">*</span>
               </label>
               <div
-                className={`${isDarkMode ? "bg-slate-900 border border-slate-700" : "bg-white border border-gray-200"} rounded-lg p-4`}
+                className={`${isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white border border-gray-200"} rounded-lg p-4`}
               >
                 <ScheduleSelector value={formData.schedule} onChange={handleScheduleChange} isDarkMode={isDarkMode} />
               </div>
@@ -1110,14 +1092,23 @@ export default function EnhancedCourseForm({
 
       {/* Step 3: Images & Review */}
       {currentStep === 3 && (
-        <div
-          className={`${sectionClasses} ${isDarkMode ? "bg-gradient-to-br from-slate-800 to-slate-900" : "bg-gradient-to-br from-white to-gray-50"}`}
-        >
+        <div className={`${isDarkMode ? "bg-slate-900" : "bg-white"} p-6`}>
           <div className="flex justify-between items-center mb-6">
-            {getStepTitle(3, "Course Images & Final Review")}
+            <div className="flex items-center">
+              <span
+                className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-3 ${
+                  isDarkMode ? "bg-cyan-600 text-white" : "bg-sky-500 text-white"
+                }`}
+              >
+                3
+              </span>
+              <h3 className={`text-xl font-medium ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+                Course Images & Final Review
+              </h3>
+            </div>
             <button
               type="button"
-              className={`${buttonClasses.icon} ${isDarkMode ? "bg-slate-700" : "bg-gray-100"} rounded-full p-2`}
+              className={`${buttonClasses.icon} ${isDarkMode ? "bg-slate-800" : "bg-gray-100"} rounded-full p-2`}
               onClick={() => setShowKeyboardShortcuts(true)}
               title="Keyboard shortcuts"
             >
@@ -1151,35 +1142,38 @@ export default function EnhancedCourseForm({
             </div>
 
             <div
-              className={`${isDarkMode ? "bg-slate-700 border border-slate-600" : "bg-gray-50 border border-gray-200"} p-5 rounded-lg`}
+              className={`${isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-gray-50 border border-gray-200"} p-5 rounded-lg`}
             >
               <h4 className={`font-medium mb-3 text-lg ${isDarkMode ? "text-white" : "text-gray-900"}`}>
                 Course Summary
               </h4>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
-                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-800" : "bg-white"}`}>
+                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-700" : "bg-white"}`}>
                   <span className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Course Name:</span>
                   <div className={`text-base font-medium mt-1 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
                     {formData.course_name}
                   </div>
                 </div>
 
-                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-800" : "bg-white"}`}>
+                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-700" : "bg-white"}`}>
                   <span className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Price:</span>
                   <div className={`text-base font-medium mt-1 ${isDarkMode ? "text-green-400" : "text-green-500"}`}>
                     {formData.price}
                   </div>
                 </div>
 
-                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-800" : "bg-white"}`}>
+                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-700" : "bg-white"}`}>
                   <span className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Pool Type:</span>
-                  <div className={`text-base font-medium mt-1 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
-                    {formData.pool_type}
+                  <div
+                    className={`text-base font-medium mt-1 flex items-center ${isDarkMode ? "text-white" : "text-gray-900"}`}
+                  >
+                    {getPoolTypeIcon()}
+                    <span className="ml-2">{getPoolTypeLabel()}</span>
                   </div>
                 </div>
 
-                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-800" : "bg-white"}`}>
+                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-700" : "bg-white"}`}>
                   <span className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Location:</span>
                   <div className={`text-base font-medium mt-1 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
                     {formData.location?.address}
@@ -1191,35 +1185,35 @@ export default function EnhancedCourseForm({
                   </div>
                 </div>
 
-                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-800" : "bg-white"}`}>
+                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-700" : "bg-white"}`}>
                   <span className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Duration:</span>
                   <div className={`text-base font-medium mt-1 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
                     {formData.course_duration} weeks
                   </div>
                 </div>
 
-                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-800" : "bg-white"}`}>
+                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-700" : "bg-white"}`}>
                   <span className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Classes per Week:</span>
                   <div className={`text-base font-medium mt-1 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
                     {formData.study_frequency}
                   </div>
                 </div>
 
-                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-800" : "bg-white"}`}>
+                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-700" : "bg-white"}`}>
                   <span className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Total Sessions:</span>
                   <div className={`text-base font-medium mt-1 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
                     {formData.number_of_total_sessions}
                   </div>
                 </div>
 
-                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-800" : "bg-white"}`}>
+                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-700" : "bg-white"}`}>
                   <span className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Level:</span>
                   <div className={`text-base font-medium mt-1 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
                     {formData.level}
                   </div>
                 </div>
 
-                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-800" : "bg-white"}`}>
+                <div className={`p-2 rounded ${isDarkMode ? "bg-slate-700" : "bg-white"}`}>
                   <span className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Max Students:</span>
                   <div className={`text-base font-medium mt-1 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
                     {formData.max_students}
@@ -1227,14 +1221,14 @@ export default function EnhancedCourseForm({
                 </div>
               </div>
 
-              <div className={`mt-4 p-3 rounded ${isDarkMode ? "bg-slate-800" : "bg-white"}`}>
+              <div className={`mt-4 p-3 rounded ${isDarkMode ? "bg-slate-700" : "bg-white"}`}>
                 <span className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Description:</span>
                 <p className={`text-base mt-1 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
                   {formData.description}
                 </p>
               </div>
 
-              <div className={`mt-4 p-3 rounded ${isDarkMode ? "bg-slate-800" : "bg-white"}`}>
+              <div className={`mt-4 p-3 rounded ${isDarkMode ? "bg-slate-700" : "bg-white"}`}>
                 <span className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Schedule:</span>
                 <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
                   {Object.keys(formData.schedule).map((day) => {
@@ -1244,7 +1238,7 @@ export default function EnhancedCourseForm({
                         <div
                           key={day}
                           className={`p-2 rounded ${
-                            isDarkMode ? "bg-slate-700 border border-slate-600" : "bg-gray-50 border border-gray-200"
+                            isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-gray-50 border border-gray-200"
                           }`}
                         >
                           <span className={`font-medium ${isDarkMode ? "text-cyan-300" : "text-sky-600"}`}>
@@ -1272,7 +1266,7 @@ export default function EnhancedCourseForm({
       )}
 
       {/* Navigation buttons */}
-      <div className="flex justify-between">
+      <div className="flex justify-between p-6 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800">
         {currentStep > 1 ? (
           <button type="button" onClick={handlePrevStep} className={buttonClasses.secondary} disabled={isSubmitting}>
             <FaArrowLeft /> Previous
