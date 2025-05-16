@@ -473,7 +473,6 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
             <PoolTypeIcon className="text-lg" />
             <span className="text-sm font-medium">{poolTypeInfo.label}</span>
           </div>
-
         </div>
       </div>
 

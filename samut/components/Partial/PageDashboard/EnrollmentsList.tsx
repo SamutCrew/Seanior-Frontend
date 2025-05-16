@@ -140,7 +140,7 @@ export default function EnrollmentsList({ enrollments = [] }: EnrollmentsListPro
 
                       <div className="flex items-center space-x-3">
                         <Link
-                          href={`/dashboard/courses/manage/${enrollment.request?.Course?.course_id}`}
+                          href={`/dashboard/enrollments/${enrollment.enrollment_id}`}
                           className={`px-4 py-2 rounded-lg ${
                             isDarkMode
                               ? "bg-cyan-600 hover:bg-cyan-700 text-white"
