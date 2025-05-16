@@ -4,20 +4,22 @@ import { Input } from "@heroui/react";
 
 interface ProfileHeaderProps {
   description: InstructorDescription | null;
-  userAddress: string; // Added to pass User's address
   isEditing: boolean;
   formData: Partial<InstructorDescription>;
   setFormData: (data: Partial<InstructorDescription>) => void;
   isDarkMode: boolean;
+  address: string;
+  setAddress: (address: string) => void;
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   description,
-  userAddress,
   isEditing,
   formData,
   setFormData,
   isDarkMode,
+  address,
+  setAddress,
 }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -83,7 +85,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
           <div className="flex items-center gap-2">
             <FaMapMarkerAlt className="text-blue-500" />
             <p className={`${isDarkMode ? "text-gray-200" : "text-gray-900"}`}>
-              {userAddress || "No address specified"}
+              {address || "No address specified"}
             </p>
           </div>
           <div className="flex items-center gap-2">
