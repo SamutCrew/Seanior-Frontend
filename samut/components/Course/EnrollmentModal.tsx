@@ -7,6 +7,8 @@ import { Calendar, Clock, CalendarDays, FileText, Check, AlertCircle, Loader2, I
 import { createCourseRequest } from "@/api/course_api"
 import { useAppSelector } from "@/app/redux"
 import { format, addDays, startOfWeek } from "date-fns"
+import { useAuth } from "@/context/AuthContext"
+import { useRouter } from "next/navigation"
 
 interface TimeSlot {
   dayOfWeek: string
@@ -36,6 +38,8 @@ interface EnrollmentModalProps {
 
 export default function EnrollmentModal({ isOpen, onClose, courseId, courseName, schedule }: EnrollmentModalProps) {
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
+  const { isAuthenticated } = useAuth()
+  const router = useRouter()
   const [startDate, setStartDate] = useState<string>("")
   const [selectedSlots, setSelectedSlots] = useState<Array<TimeSlot>>([])
   const [notes, setNotes] = useState<string>("")
@@ -50,6 +54,14 @@ export default function EnrollmentModal({ isOpen, onClose, courseId, courseName,
   const MAX_TOTAL_SLOTS = 4
   // Maximum slots per day
   const MAX_SLOTS_PER_DAY = 2
+
+  // Check if user is authenticated
+  useEffect(() => {
+    if (isOpen && !isAuthenticated) {
+      onClose()
+      router.push("/auth/Login?returnUrl=" + encodeURIComponent(window.location.pathname))
+    }
+  }, [isOpen, isAuthenticated, onClose, router])
 
   // Parse the schedule to get available slots
   useEffect(() => {
@@ -160,6 +172,12 @@ export default function EnrollmentModal({ isOpen, onClose, courseId, courseName,
 
   // Handle form submission
   const handleSubmit = async () => {
+    if (!isAuthenticated) {
+      onClose()
+      router.push("/auth/Login?returnUrl=" + encodeURIComponent(window.location.pathname))
+      return
+    }
+
     if (selectedSlots.length === 0) {
       setError("Please select at least one time slot")
       return
@@ -222,6 +240,11 @@ export default function EnrollmentModal({ isOpen, onClose, courseId, courseName,
   const clearSelections = () => {
     setSelectedSlots([])
     setError(null)
+  }
+
+  // If not authenticated, don't render the modal
+  if (!isAuthenticated) {
+    return null
   }
 
   return (

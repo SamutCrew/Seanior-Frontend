@@ -232,6 +232,8 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const isAuthenticated = !!user
+
   return (
     <AuthContext.Provider
       value={{
@@ -244,6 +246,7 @@ export function AuthProvider({ children }) {
         loading,
         resetPassword,
         refreshUser,
+        isAuthenticated,
       }}
     >
       {children}

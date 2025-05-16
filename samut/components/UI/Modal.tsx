@@ -19,12 +19,26 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" }:
   const modalRef = useRef<HTMLDivElement>(null)
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
   const [mounted, setMounted] = useState(false)
+  const [isAnimating, setIsAnimating] = useState(false)
 
   // Handle mounting for client-side rendering
   useEffect(() => {
     setMounted(true)
     return () => setMounted(false)
   }, [])
+
+  // Handle animation when modal opens or closes
+  useEffect(() => {
+    if (isOpen) {
+      setIsAnimating(true)
+    } else {
+      // Keep component mounted during exit animation
+      const timer = setTimeout(() => {
+        setIsAnimating(false)
+      }, 300) // Match this with CSS transition duration
+      return () => clearTimeout(timer)
+    }
+  }, [isOpen])
 
   // Close modal when clicking outside
   useEffect(() => {
@@ -84,15 +98,25 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" }:
     }
   }
 
-  if (!isOpen || !mounted) return null
+  if (!mounted || (!isOpen && !isAnimating)) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300 ease-in-out ${
+        isOpen ? "opacity-100 backdrop-enter" : "opacity-0"
+      }`}
+      style={{
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        backdropFilter: "blur(4px)",
+      }}
+    >
       <div
         ref={modalRef}
         className={`${
           isDarkMode ? "bg-slate-900 text-white" : "bg-white text-gray-900"
-        } rounded-lg shadow-xl w-full ${getSizeClass()} overflow-hidden transition-transform`}
+        } rounded-lg shadow-xl w-full ${getSizeClass()} overflow-hidden transition-all duration-300 ease-in-out ${
+          isOpen ? "opacity-100 scale-100 translate-y-0 modal-enter" : "opacity-0 scale-95 translate-y-4"
+        }`}
       >
         {title && (
           <div
@@ -107,7 +131,7 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" }:
                 isDarkMode
                   ? "text-gray-400 hover:text-white hover:bg-slate-800"
                   : "text-gray-400 hover:text-gray-500 hover:bg-gray-100"
-              } focus:outline-none p-2`}
+              } focus:outline-none p-2 transition-colors duration-200`}
               onClick={onClose}
             >
               <span className="sr-only">Close</span>

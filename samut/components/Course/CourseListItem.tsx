@@ -5,6 +5,7 @@ import { MdPublic, MdPool, MdHome } from "react-icons/md"
 import type { Course } from "@/types/course"
 import { useAppSelector } from "@/app/redux"
 import { motion } from "framer-motion"
+import { formatDbPrice } from "@/utils/moneyUtils"
 
 interface CourseListItemProps {
   course: Course
@@ -189,6 +190,9 @@ export default function CourseListItem({ course, onEdit, onDelete }: CourseListI
   // Get level badge style
   const levelBadgeStyle = getLevelBadgeStyle(course.level, isDarkMode)
 
+  // Format price using the utility function
+  const formattedPrice = formatDbPrice(course.price)
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -252,7 +256,7 @@ export default function CourseListItem({ course, onEdit, onDelete }: CourseListI
           <p className={`text-xs mb-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Price</p>
           <div className="flex items-center">
             <HiCurrencyDollar className={`mr-1 text-lg ${isDarkMode ? "text-indigo-400" : "text-indigo-600"}`} />
-            <span className={`${isDarkMode ? "text-white" : "text-gray-800"} font-bold`}>{course.price}</span>
+            <span className={`${isDarkMode ? "text-white" : "text-gray-800"} font-bold`}>{formattedPrice}</span>
           </div>
         </div>
 

@@ -35,6 +35,18 @@ interface EnhancedCourseFormProps {
   isEditing?: boolean
 }
 
+// Add this function near the top of the file, with the other utility functions
+function formatCurrency(value: number | string): string {
+  // Convert to number if it's a string
+  const numValue = typeof value === "string" ? Number.parseFloat(value) : value
+
+  // Return empty string if NaN
+  if (isNaN(numValue)) return ""
+
+  // Format with thousand separators
+  return numValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+}
+
 // Function to convert coordinates to address using Nominatim (OpenStreetMap)
 async function reverseGeocode(lat: number, lng: number): Promise<string> {
   try {
@@ -146,6 +158,11 @@ export default function EnhancedCourseForm({
   const processedLocationData = parseLocationData(initialData?.location)
   console.log("Initial location data:", initialData?.location)
   console.log("Processed location data:", processedLocationData)
+
+  // Add this state for formatted price display
+  const [formattedPrice, setFormattedPrice] = useState<string>(() => {
+    return formatCurrency(initialData?.price || 0)
+  })
 
   // Form state
   const [currentStep, setCurrentStep] = useState(1)
@@ -667,29 +684,29 @@ export default function EnhancedCourseForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-0">
       {/* Progress indicator */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-slate-700">
+      <div className="flex flex-col px-4 py-3 border-b border-gray-200 dark:border-slate-700">
+        <div className="flex items-center justify-between mb-2">
+          <div
+            className={`text-sm font-medium ${currentStep >= 1 ? (isDarkMode ? "text-cyan-400" : "text-sky-600") : isDarkMode ? "text-gray-500" : "text-gray-400"}`}
+          >
+            {currentStep === 1 ? "• " : ""}Basic Info
+          </div>
+          <div
+            className={`text-sm font-medium ${currentStep >= 2 ? (isDarkMode ? "text-cyan-400" : "text-sky-600") : isDarkMode ? "text-gray-500" : "text-gray-400"}`}
+          >
+            {currentStep === 2 ? "• " : ""}Schedule & Details
+          </div>
+          <div
+            className={`text-sm font-medium ${currentStep >= 3 ? (isDarkMode ? "text-cyan-400" : "text-sky-600") : isDarkMode ? "text-gray-500" : "text-gray-400"}`}
+          >
+            {currentStep === 3 ? "• " : ""}Images & Review
+          </div>
+        </div>
         <div className="flex-1 h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
           <div
             className={`h-full ${isDarkMode ? "bg-cyan-600" : "bg-sky-500"}`}
             style={{ width: `${(currentStep / 3) * 100}%` }}
           ></div>
-        </div>
-        <div className="flex justify-between w-full absolute top-[72px] px-4">
-          <div
-            className={`text-sm font-medium ${currentStep >= 1 ? (isDarkMode ? "text-cyan-400" : "text-sky-600") : isDarkMode ? "text-gray-500" : "text-gray-400"}`}
-          >
-            {currentStep === 1 && "•"} Basic Info
-          </div>
-          <div
-            className={`text-sm font-medium ${currentStep >= 2 ? (isDarkMode ? "text-cyan-400" : "text-sky-600") : isDarkMode ? "text-gray-500" : "text-gray-400"}`}
-          >
-            {currentStep === 2 && "•"} Schedule & Details
-          </div>
-          <div
-            className={`text-sm font-medium ${currentStep >= 3 ? (isDarkMode ? "text-cyan-400" : "text-sky-600") : isDarkMode ? "text-gray-500" : "text-gray-400"}`}
-          >
-            {currentStep === 3 && "•"} Images & Review
-          </div>
         </div>
       </div>
 
@@ -777,7 +794,7 @@ export default function EnhancedCourseForm({
 
             <div>
               <label htmlFor="price" className={labelClasses}>
-                Price (in currency) <span className="text-red-500">*</span>
+                Price (Bath) <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <FaMoneyBillWave
@@ -785,17 +802,44 @@ export default function EnhancedCourseForm({
                   size={18}
                 />
                 <input
-                  type="number"
+                  type="text"
                   id="price"
                   name="price"
-                  className={`${inputClasses} pl-10 ${isDarkMode ? "focus:border-green-500 focus:ring-green-500" : "focus:border-green-500 focus:ring-green-500"}`}
-                  value={formData.price}
-                  onChange={handleChange}
-                  min="0"
+                  className={`${inputClasses} pl-10 pr-16 ${isDarkMode ? "focus:border-green-500 focus:ring-green-500" : "focus:border-green-500 focus:ring-green-500"}`}
+                  value={formattedPrice}
+                  onChange={(e) => {
+                    // Allow only digits and commas
+                    const value = e.target.value.replace(/[^\d,]/g, "")
+
+                    // Update the formatted display
+                    setFormattedPrice(value)
+
+                    // Update the actual form data with numeric value (remove commas)
+                    const numericValue = Number.parseInt(value.replace(/,/g, ""), 10) || 0
+                    setFormData({
+                      ...formData,
+                      price: numericValue,
+                    })
+
+                    // Clear error when field is edited
+                    if (errors.price) {
+                      setErrors({
+                        ...errors,
+                        price: "",
+                      })
+                    }
+                  }}
+                  placeholder="0"
                   ref={priceRef}
                 />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center">
+                  <span className={`${isDarkMode ? "text-gray-400" : "text-gray-500"} font-medium`}>฿</span>
+                </div>
               </div>
               {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
+              <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                Enter the price in whole bath (e.g. 1,000). You can type directly with commas for better readability.
+              </p>
             </div>
 
             <div>

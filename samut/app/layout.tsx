@@ -5,6 +5,8 @@ import "./globals.css"
 import { AuthProvider } from "@/context/AuthContext"
 import DashboardWrapper from "./dashboardWrapper"
 import "leaflet/dist/leaflet.css"
+import RouteGuard from "@/components/Auth/RouteGuard"
+import StoreProvider from "./redux"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,9 +36,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>
-          <DashboardWrapper>{children}</DashboardWrapper>
-        </AuthProvider>
+        <StoreProvider>
+          <AuthProvider>
+            <RouteGuard>
+              <DashboardWrapper>{children}</DashboardWrapper>
+            </RouteGuard>
+          </AuthProvider>
+        </StoreProvider>
       </body>
     </html>
   )

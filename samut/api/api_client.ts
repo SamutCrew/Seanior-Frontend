@@ -10,6 +10,14 @@ const apiClient = axios.create({
   },
 })
 
+// Add a list of public endpoints that don't require authentication
+const publicEndpoints = [
+  "/instructors", // Instructor endpoints
+  "/courses", // Course endpoints
+  "/instructors/all",
+  "/courses/all",
+]
+
 // Add request interceptor for logging
 apiClient.interceptors.request.use(
   async (config) => {
@@ -19,9 +27,13 @@ apiClient.interceptors.request.use(
         data: config.data,
       })
 
-      const token = await getAuthToken()
-      if (token) {
-        config.headers["Authorization"] = `Bearer ${token}`
+      const isPublicEndpoint = publicEndpoints.some((endpoint) => config.url && config.url.includes(endpoint))
+      if (!isPublicEndpoint) {
+        // Only add the authorization header for non-public endpoints
+        const token = await getAuthToken()
+        if (token) {
+          config.headers["Authorization"] = `Bearer ${token}`
+        }
       }
 
       return config

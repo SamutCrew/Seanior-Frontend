@@ -11,12 +11,10 @@ import {
   BookOpen,
   Settings,
   User,
-  Calendar,
   Users,
   GraduationCap,
   BarChart3,
   Search,
-  Clock,
   Compass,
   Award,
   Menu,
@@ -50,6 +48,8 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
   const isMobileSidebarOpen = useAppSelector((state) => state.global.isMobileSidebarOpen)
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
+  const handleResize = useRef<() => void>(() => {})
+
   // Check if we're on an auth page
   const isAuthPage = pathname.startsWith("/auth/")
 
@@ -57,8 +57,6 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
   if (isAuthPage) {
     return null
   }
-
-  const handleResize = useRef<() => void>(() => {})
 
   handleResize.current = () => {
     setWindowWidth(window.innerWidth)

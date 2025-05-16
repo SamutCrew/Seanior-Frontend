@@ -102,6 +102,21 @@ export default function CreateCourseModal({ isOpen, onClose, onSubmit, stats }: 
           </div>
         </div>
 
+        {/* คำแนะนำการกรอกฟอร์ม */}
+        <div
+          className={`mb-6 p-4 rounded-lg ${isDarkMode ? "bg-slate-700/50 border border-slate-600" : "bg-blue-50 border border-blue-100"}`}
+        >
+          <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+            คำแนะนำการกรอกข้อมูล
+          </h3>
+          <ul className={`list-disc pl-5 space-y-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+            <li>กรอกชื่อคอร์สและรายละเอียดให้ครบถ้วน</li>
+            <li>ราคาให้กรอกเป็นบาท เช่น 10.00 สำหรับ 10 บาท (ระบบจะแปลงเป็นสตางค์อัตโนมัติ)</li>
+            <li>เลือกสถานที่และประเภทสระว่ายน้ำให้ถูกต้อง</li>
+            <li>กำหนดตารางเวลาเรียนโดยเลือกวันและช่วงเวลา</li>
+          </ul>
+        </div>
+
         <EnhancedCourseForm onSubmit={handleSubmit} onCancel={onClose} isSubmitting={isSubmitting} />
       </div>
     </Modal>
