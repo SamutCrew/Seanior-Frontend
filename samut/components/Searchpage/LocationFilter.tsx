@@ -2,7 +2,7 @@
 
 import { FaCrosshairs, FaMapMarkerAlt } from "react-icons/fa"
 import type { Location } from "../../types/instructor"
-import OSMMapSelector from "./OSMMAPSelector"
+import OSMMapSelector from "../Map/OSMMAPSelector"
 import { useAppSelector } from "@/app/redux"
 
 interface LocationItem {
@@ -67,26 +67,26 @@ export const LocationFilter = ({
   // ✅ ฟิลเตอร์รายการตามระยะทาง
   const filteredInstructors = referenceLocation
     ? instructorLocations.filter((t) => {
-        if (!t.location || t.location.lat === undefined || t.location.lng === undefined) {
-          return false
-        }
-        return (
-          getDistance(referenceLocation.lat, referenceLocation.lng, t.location.lat, t.location.lng) <= maxDistance ||
-          maxDistance === 0
-        )
-      })
+      if (!t.location || t.location.lat === undefined || t.location.lng === undefined) {
+        return false
+      }
+      return (
+        getDistance(referenceLocation.lat, referenceLocation.lng, t.location.lat, t.location.lng) <= maxDistance ||
+        maxDistance === 0
+      )
+    })
     : instructorLocations
 
   const filteredCourses = referenceLocation
     ? courseLocations.filter((c) => {
-        if (!c.location || c.location.lat === undefined || c.location.lng === undefined) {
-          return false
-        }
-        return (
-          getDistance(referenceLocation.lat, referenceLocation.lng, c.location.lat, c.location.lng) <= maxDistance ||
-          maxDistance === 0
-        )
-      })
+      if (!c.location || c.location.lat === undefined || c.location.lng === undefined) {
+        return false
+      }
+      return (
+        getDistance(referenceLocation.lat, referenceLocation.lng, c.location.lat, c.location.lng) <= maxDistance ||
+        maxDistance === 0
+      )
+    })
     : courseLocations
 
   return (
@@ -96,9 +96,8 @@ export const LocationFilter = ({
       </label>
       <div className="flex">
         <select
-          className={`flex-1 border rounded-l-md p-2 ${
-            isDarkMode ? "bg-slate-700 border-slate-600 text-white" : "bg-white text-black border-gray-300"
-          }`}
+          className={`flex-1 border rounded-l-md p-2 ${isDarkMode ? "bg-slate-700 border-slate-600 text-white" : "bg-white text-black border-gray-300"
+            }`}
           value={maxDistance}
           onChange={(e) => setMaxDistance(Number(e.target.value))}
         >
@@ -111,9 +110,8 @@ export const LocationFilter = ({
         <button
           onClick={getCurrentLocation}
           disabled={isLoadingLocation}
-          className={`flex items-center justify-center px-3 rounded-r-md hover:bg-blue-700 disabled:bg-blue-400 ${
-            isDarkMode ? "bg-blue-700 text-white" : "bg-blue-600 text-white"
-          }`}
+          className={`flex items-center justify-center px-3 rounded-r-md hover:bg-blue-700 disabled:bg-blue-400 ${isDarkMode ? "bg-blue-700 text-white" : "bg-blue-600 text-white"
+            }`}
         >
           {isLoadingLocation ? (
             "Locating..."
@@ -127,9 +125,8 @@ export const LocationFilter = ({
 
       <button
         onClick={toggleMap}
-        className={`mt-2 w-full text-sm flex items-center justify-center ${
-          isDarkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-800"
-        }`}
+        className={`mt-2 w-full text-sm flex items-center justify-center ${isDarkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-800"
+          }`}
       >
         <FaMapMarkerAlt className="mr-1" />
         {showMap ? "Hide Map" : "Show Map to Select Location"}
@@ -144,19 +141,19 @@ export const LocationFilter = ({
             instructorLocations={
               searchType === "instructor"
                 ? filteredInstructors.map((t) => ({
-                    id: t.id,
-                    name: t.name,
-                    location: t.location,
-                  }))
+                  id: t.id,
+                  name: t.name,
+                  location: t.location,
+                }))
                 : undefined
             }
             courseLocations={
               searchType === "course"
                 ? filteredCourses.map((c) => ({
-                    id: c.id,
-                    name: c.name,
-                    location: c.location,
-                  }))
+                  id: c.id,
+                  name: c.name,
+                  location: c.location,
+                }))
                 : undefined
             }
             onLocationSelect={handleMapClick}

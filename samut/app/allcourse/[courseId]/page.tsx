@@ -15,7 +15,6 @@ import {
   Award,
   DollarSign,
   AlertCircle,
-  Share2,
   Info,
   BookOpen,
   CheckCircle,
@@ -26,7 +25,6 @@ import {
   ChevronRight,
   ArrowLeft,
   MessageCircle,
-  Heart,
   CalendarDays,
   Waves,
   Timer,
@@ -39,6 +37,7 @@ import EnrollmentModal from "@/components/Course/EnrollmentModal"
 import { formatDbPrice } from "@/utils/moneyUtils"
 import LoginRequiredButton from "@/components/Auth/LoginRequiredButton"
 import { useAuth } from "@/context/AuthContext"
+import CourseLocationMap from "@/components/Map/CourseLocationMap"
 
 export default function CourseDetailsPage({ params }: { params: { courseId: string } }) {
   // Use React.use to unwrap the params Promise (for future Next.js compatibility)
@@ -189,8 +188,21 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
     )
   }
 
-  // Create a custom button component that uses LoginRequiredButton
-  const EnrollButton = ({ className = "", size = "default", children }: any) => {
+  // Create a button component that conditionally renders based on authentication
+  const EnrollButtonWrapper = ({ className = "", size = "default", children }: any) => {
+    if (isAuthenticated) {
+      return (
+        <Button
+          variant={isDarkMode ? "gradient" : "primary"}
+          size={size === "lg" ? "lg" : "default"}
+          className={`${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"} ${className}`}
+          onClick={handleEnrollClick}
+        >
+          {children}
+        </Button>
+      )
+    }
+
     return (
       <LoginRequiredButton
         onClick={handleEnrollClick}
@@ -300,15 +312,12 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  <EnrollButton size="lg">Enroll Now</EnrollButton>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="border-white/30 text-white hover:bg-white/10"
-                    onClick={handleShare}
-                  >
-                    <Share2 className="mr-2 h-4 w-4" /> You Need to Login to Enroll
-                  </Button>
+                  <EnrollButtonWrapper size="lg">Enroll Now</EnrollButtonWrapper>
+                  {!isAuthenticated && (
+                    <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10">
+                      <AlertCircle className="mr-2 h-4 w-4" /> You Need to Login before enroll
+                    </Button>
+                  )}
                 </div>
               </div>
               <div className="hidden lg:block relative mt-8 md:mt-0">
@@ -318,6 +327,8 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                     course.course_image ||
                     course.pool_image ||
                     "/placeholder.svg?height=300&width=400&query=swimming course" ||
+                    "/placeholder.svg" ||
+                    "/placeholder.svg" ||
                     "/placeholder.svg"
                   }
                   alt={course.course_name}
@@ -595,8 +606,6 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                     </div>
                   </div>
                 </div>
-
-                <EnrollButton className="w-full">Enroll in This Course</EnrollButton>
               </motion.div>
             )}
 
@@ -762,7 +771,6 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   </ul>
                 </div>
 
-                <EnrollButton className="w-full">Enroll in This Course</EnrollButton>
               </motion.div>
             )}
 
@@ -799,16 +807,17 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                         {parsedLocation.address}
                       </p>
 
-                      <div className="aspect-video rounded-lg overflow-hidden bg-gray-200">
-                        {/* Map placeholder - in a real app, you would use a map component here */}
-                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                          <div className="text-center p-4">
-                            <MapPin className="w-8 h-8 mx-auto mb-2 text-gray-500" />
-                            <p className="text-gray-600">
-                              Map would be displayed here with coordinates: {parsedLocation.lat}, {parsedLocation.lng}
-                            </p>
+                      <div className="aspect-video rounded-lg overflow-hidden">
+                        {parsedLocation.lat && parsedLocation.lng ? (
+                          <CourseLocationMap location={parsedLocation} className="w-full h-full" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-200 rounded-lg">
+                            <div className="text-center p-4">
+                              <MapPin className="w-8 h-8 mx-auto mb-2 text-gray-500" />
+                              <p className="text-gray-600">Map coordinates not available</p>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
 
@@ -856,7 +865,6 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   </div>
                 )}
 
-                <EnrollButton className="w-full">Enroll in This Course</EnrollButton>
               </motion.div>
             )}
 
@@ -879,6 +887,8 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                     src={
                       course.instructor?.profile_img ||
                       "/placeholder.svg?height=128&width=128&query=swimming instructor" ||
+                      "/placeholder.svg" ||
+                      "/placeholder.svg" ||
                       "/placeholder.svg"
                     }
                     alt={course.instructor?.name}
@@ -970,7 +980,6 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <EnrollButton className="flex-1">Enroll in This Course</EnrollButton>
                   <Button
                     variant="outline"
                     className={`flex-1 ${isDarkMode ? "border-slate-700 text-white" : ""}`}
@@ -1119,10 +1128,6 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                     </li>
                   </ul>
                 </div>
-
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <EnrollButton className="flex-1">Enroll in This Course</EnrollButton>
-                </div>
               </motion.div>
             )}
           </div>
@@ -1216,45 +1221,24 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 </div>
               </div>
 
-              <EnrollButton className="w-full mb-3">Enroll Now</EnrollButton>
-
-              <LoginRequiredButton
-                className={`w-full ${isDarkMode ? "border-slate-700 text-white" : ""}`}
-                onClick={() => {}}
-                warningMessage="You need to be logged in to save this course"
-              >
-                <Heart className="mr-2 h-4 w-4" /> Add to Wishlist
-              </LoginRequiredButton>
 
               <div className="mt-6">
-                <LoginRequiredButton
-                  className={`w-full flex items-center justify-center py-2 px-4 rounded-lg ${
-                    isDarkMode
-                      ? "bg-slate-700 hover:bg-slate-600 text-white"
-                      : "bg-gray-100 hover:bg-gray-200 text-gray-800"
-                  } transition-colors`}
-                  warningMessage="You need to be logged in to contact the instructor"
-                >
-                  <MessageCircle className="mr-2 h-4 w-4" /> Contact Instructor
-                </LoginRequiredButton>
               </div>
             </motion.div>
           </div>
         </div>
 
-
+        
       </div>
 
       {/* Enrollment Modal */}
-      {isAuthenticated && (
-        <EnrollmentModal
-          isOpen={isEnrollModalOpen}
-          onClose={() => setIsEnrollModalOpen(false)}
-          courseId={courseId}
-          courseName={course.course_name}
-          schedule={parsedSchedule}
-        />
-      )}
+      <EnrollmentModal
+        isOpen={isEnrollModalOpen && isAuthenticated}
+        onClose={() => setIsEnrollModalOpen(false)}
+        courseId={courseId}
+        courseName={course.course_name}
+        schedule={parsedSchedule}
+      />
     </div>
   )
 }

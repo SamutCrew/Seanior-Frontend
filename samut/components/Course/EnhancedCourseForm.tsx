@@ -25,7 +25,7 @@ import {
 } from "react-icons/fa"
 import { MdPublic, MdPool } from "react-icons/md"
 import { HiHome } from "react-icons/hi"
-import OSMMapSelector from "@/components/Searchpage/OSMMAPSelector"
+import OSMMapSelector from "@/components/Map/OSMMAPSelector"
 
 interface EnhancedCourseFormProps {
   initialData?: Partial<Course>
@@ -232,33 +232,28 @@ export default function EnhancedCourseForm({
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Styling
-  const inputClasses = `mt-1 block w-full rounded-md text-base py-3 ${
-    isDarkMode
+  const inputClasses = `mt-1 block w-full rounded-md text-base py-3 ${isDarkMode
       ? "bg-slate-800 border-slate-600 text-slate-100 focus:border-cyan-500 focus:ring-cyan-500 placeholder-slate-400"
       : "border-gray-300 focus:border-sky-500 focus:ring-sky-500"
-  } shadow-sm`
+    } shadow-sm`
 
   const labelClasses = `block text-base font-medium mb-2 ${isDarkMode ? "text-slate-200" : "text-gray-700"}`
 
   const buttonClasses = {
-    primary: `${
-      isDarkMode
+    primary: `${isDarkMode
         ? "bg-gradient-to-r from-cyan-800 to-blue-900 hover:from-cyan-700 hover:to-blue-800 border border-cyan-700"
         : "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500"
-    } text-white px-5 py-3 rounded-lg transition-colors duration-200 disabled:opacity-50 flex items-center justify-center gap-2 text-base`,
-    secondary: `${
-      isDarkMode
+      } text-white px-5 py-3 rounded-lg transition-colors duration-200 disabled:opacity-50 flex items-center justify-center gap-2 text-base`,
+    secondary: `${isDarkMode
         ? "bg-slate-700 hover:bg-slate-600 text-white border border-slate-600"
         : "bg-gray-100 hover:bg-gray-200 text-gray-800"
-    } px-5 py-3 rounded-lg transition-colors duration-200 disabled:opacity-50 flex items-center justify-center gap-2 text-base`,
-    icon: `${
-      isDarkMode ? "text-gray-400 hover:text-white" : "text-gray-500 hover:text-gray-700"
-    } p-2 rounded-full hover:bg-opacity-10 hover:bg-gray-500`,
+      } px-5 py-3 rounded-lg transition-colors duration-200 disabled:opacity-50 flex items-center justify-center gap-2 text-base`,
+    icon: `${isDarkMode ? "text-gray-400 hover:text-white" : "text-gray-500 hover:text-gray-700"
+      } p-2 rounded-full hover:bg-opacity-10 hover:bg-gray-500`,
   }
 
-  const sectionClasses = `${
-    isDarkMode ? "bg-slate-800 border-slate-700 shadow-lg shadow-slate-900/50" : "bg-white border-gray-200 shadow-sm"
-  } p-6 rounded-lg border mb-6`
+  const sectionClasses = `${isDarkMode ? "bg-slate-800 border-slate-700 shadow-lg shadow-slate-900/50" : "bg-white border-gray-200 shadow-sm"
+    } p-6 rounded-lg border mb-6`
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -748,9 +743,8 @@ export default function EnhancedCourseForm({
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center">
               <span
-                className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-3 ${
-                  isDarkMode ? "bg-cyan-600 text-white" : "bg-sky-500 text-white"
-                }`}
+                className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-3 ${isDarkMode ? "bg-cyan-600 text-white" : "bg-sky-500 text-white"
+                  }`}
               >
                 1
               </span>
@@ -896,9 +890,8 @@ export default function EnhancedCourseForm({
                 <button
                   type="button"
                   onClick={useCurrentLocation}
-                  className={`text-sm flex items-center gap-1 ${
-                    isDarkMode ? "text-cyan-400 hover:text-cyan-300" : "text-sky-600 hover:text-sky-700"
-                  }`}
+                  className={`text-sm flex items-center gap-1 ${isDarkMode ? "text-cyan-400 hover:text-cyan-300" : "text-sky-600 hover:text-sky-700"
+                    }`}
                   disabled={isGeocodingLoading}
                 >
                   <FaCrosshairs size={14} />
@@ -908,9 +901,8 @@ export default function EnhancedCourseForm({
                 <button
                   type="button"
                   onClick={toggleCoordinates}
-                  className={`text-sm flex items-center gap-1 ${
-                    isDarkMode ? "text-cyan-400 hover:text-cyan-300" : "text-sky-600 hover:text-sky-700"
-                  }`}
+                  className={`text-sm flex items-center gap-1 ${isDarkMode ? "text-cyan-400 hover:text-cyan-300" : "text-sky-600 hover:text-sky-700"
+                    }`}
                 >
                   <FaMapMarkerAlt size={14} />
                   {showCoordinates ? "Hide Coordinates" : "Show Coordinates"}
@@ -933,9 +925,9 @@ export default function EnhancedCourseForm({
                   initialMarker={
                     formData.location?.lat && formData.location?.lng
                       ? {
-                          lat: formData.location.lat,
-                          lng: formData.location.lng,
-                        }
+                        lat: formData.location.lat,
+                        lng: formData.location.lng,
+                      }
                       : undefined
                   }
                 />
@@ -968,9 +960,8 @@ export default function EnhancedCourseForm({
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center">
               <span
-                className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-3 ${
-                  isDarkMode ? "bg-cyan-600 text-white" : "bg-sky-500 text-white"
-                }`}
+                className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-3 ${isDarkMode ? "bg-cyan-600 text-white" : "bg-sky-500 text-white"
+                  }`}
               >
                 2
               </span>
@@ -1140,9 +1131,8 @@ export default function EnhancedCourseForm({
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center">
               <span
-                className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-3 ${
-                  isDarkMode ? "bg-cyan-600 text-white" : "bg-sky-500 text-white"
-                }`}
+                className={`inline-flex items-center justify-center w-8 h-8 rounded-full mr-3 ${isDarkMode ? "bg-cyan-600 text-white" : "bg-sky-500 text-white"
+                  }`}
               >
                 3
               </span>
@@ -1281,9 +1271,8 @@ export default function EnhancedCourseForm({
                       return (
                         <div
                           key={day}
-                          className={`p-2 rounded ${
-                            isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-gray-50 border border-gray-200"
-                          }`}
+                          className={`p-2 rounded ${isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-gray-50 border border-gray-200"
+                            }`}
                         >
                           <span className={`font-medium ${isDarkMode ? "text-cyan-300" : "text-sky-600"}`}>
                             {day.charAt(0).toUpperCase() + day.slice(1)}:
