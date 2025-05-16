@@ -6,6 +6,7 @@ import { useAppSelector } from "@/app/redux"
 import { SectionTitle } from "@/components/Common/SectionTitle"
 import { Button } from "@/components/Common/Button"
 import { motion } from "framer-motion"
+import { use } from "react"
 import {
   Calendar,
   Clock,
@@ -34,18 +35,22 @@ import {
 } from "lucide-react"
 import LoadingPage from "@/components/Common/LoadingPage"
 import { getCourseById } from "@/api/course_api"
+import EnrollmentModal from "@/components/Course/EnrollmentModal"
 
 export default function CourseDetailsPage({ params }: { params: { courseId: string } }) {
+  // Use React.use to unwrap the params Promise (for future Next.js compatibility)
+  const unwrappedParams = use(params)
   const router = useRouter()
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
   const [course, setCourse] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("overview")
-  const courseId = params.courseId
+  const courseId = unwrappedParams.courseId
   const [parsedLocation, setParsedLocation] = useState<any>(null)
   const [parsedSchedule, setParsedSchedule] = useState<any>(null)
   const [showFullDescription, setShowFullDescription] = useState(false)
+  const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false)
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -150,6 +155,11 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
         .then(() => alert("Link copied to clipboard!"))
         .catch((err) => console.error("Error copying link:", err))
     }
+  }
+
+  // Open enrollment modal
+  const handleEnrollClick = () => {
+    setIsEnrollModalOpen(true)
   }
 
   if (isLoading) {
@@ -277,6 +287,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                     variant={isDarkMode ? "gradient" : "primary"}
                     size="lg"
                     className={`${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
+                    onClick={handleEnrollClick}
                   >
                     Enroll Now
                   </Button>
@@ -300,6 +311,8 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                     course.course_image ||
                     course.pool_image ||
                     "/placeholder.svg?height=300&width=400&query=swimming course" ||
+                    "/placeholder.svg" ||
+                    "/placeholder.svg" ||
                     "/placeholder.svg"
                   }
                   alt={course.course_name}
@@ -581,6 +594,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 <Button
                   variant={isDarkMode ? "gradient" : "primary"}
                   className={`w-full ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
+                  onClick={handleEnrollClick}
                 >
                   Enroll in This Course
                 </Button>
@@ -752,6 +766,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 <Button
                   variant={isDarkMode ? "gradient" : "primary"}
                   className={`w-full ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
+                  onClick={handleEnrollClick}
                 >
                   Enroll in This Course
                 </Button>
@@ -851,6 +866,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 <Button
                   variant={isDarkMode ? "gradient" : "primary"}
                   className={`w-full ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
+                  onClick={handleEnrollClick}
                 >
                   Enroll in This Course
                 </Button>
@@ -876,6 +892,8 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                     src={
                       course.instructor?.profile_img ||
                       "/placeholder.svg?height=128&width=128&query=swimming instructor" ||
+                      "/placeholder.svg" ||
+                      "/placeholder.svg" ||
                       "/placeholder.svg"
                     }
                     alt={course.instructor?.name}
@@ -970,6 +988,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   <Button
                     variant={isDarkMode ? "gradient" : "primary"}
                     className={`flex-1 ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
+                    onClick={handleEnrollClick}
                   >
                     Enroll in This Course
                   </Button>
@@ -1126,6 +1145,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   <Button
                     variant={isDarkMode ? "gradient" : "primary"}
                     className={`flex-1 ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
+                    onClick={handleEnrollClick}
                   >
                     Enroll in This Course
                   </Button>
@@ -1233,6 +1253,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
               <Button
                 variant={isDarkMode ? "gradient" : "primary"}
                 className={`w-full mb-3 ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
+                onClick={handleEnrollClick}
               >
                 Enroll Now
               </Button>
@@ -1324,6 +1345,15 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
           </div>
         </div>
       </div>
+
+      {/* Enrollment Modal */}
+      <EnrollmentModal
+        isOpen={isEnrollModalOpen}
+        onClose={() => setIsEnrollModalOpen(false)}
+        courseId={courseId}
+        courseName={course.course_name}
+        schedule={parsedSchedule}
+      />
     </div>
   )
 }

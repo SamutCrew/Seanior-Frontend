@@ -320,3 +320,22 @@ export const deleteCourse = async (courseId: string) => {
     throw error
   }
 }
+
+export const createCourseRequest = async (requestData: {
+  courseId: string
+  startDateForFirstWeek: string
+  selectedSlots: Array<{
+    dayOfWeek: string
+    startTime: string
+    endTime: string
+  }>
+  notes?: string
+}) => {
+  try {
+    const response = await apiClient.post("/course-requests", requestData)
+    return response.data
+  } catch (error) {
+    console.error("Error creating course request:", error)
+    throw error
+  }
+}

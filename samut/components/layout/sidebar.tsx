@@ -122,17 +122,13 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
     { icon: Home, label: "Dashboard", href: "/dashboard" },
     { icon: BookOpen, label: "My Courses", href: "/dashboard/courses/manage/1" },
     { icon: User, label: "Profile", href: "/teacher/1" },
-    { icon: Calendar, label: "Schedule", href: "/Teacher/schedule" },
     { icon: MessageCircle, label: "Support", href: "/support" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ]
 
   const studentNavItems = [
-    { icon: Home, label: "Dashboard", href: "/student/dashboard" },
-    { icon: Search, label: "Find Instructors", href: "/teacher" },
-    { icon: BookOpen, label: "My Courses", href: "/student/courses" },
-    { icon: Calendar, label: "My Schedule", href: "/student/schedule" },
-    { icon: Clock, label: "Booking History", href: "/student/bookings" },
+    { icon: Search, label: "Find Instructors", href: "/allinstructor" },
+    { icon: BookOpen, label: "My Courses", href: "/my-courses" },
     { icon: User, label: "Profile", href: user?.user_id ? `/profile/${user.user_id}` : "/profile" },
   ]
 

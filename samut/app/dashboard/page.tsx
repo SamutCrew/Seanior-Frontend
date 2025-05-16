@@ -712,18 +712,7 @@ export default function TeacherDashboard() {
         <TeacherStats schedule={schedule} availableCourses={availableCourses} />
 
         {/* Student Course Requests Section */}
-        {studentRequests.length > 0 && (
-          <div className="mb-8">
-            <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-slate-800"}`}>
-              Pending Student Requests
-            </h2>
-            <StudentRequestsPanel
-              requests={studentRequests}
-              onRequestAction={handleRequestAction}
-              isLoading={isLoadingRequests}
-            />
-          </div>
-        )}
+
 
         {/* Main Content Tabs */}
         <div className="mb-8">

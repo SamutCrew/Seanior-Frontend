@@ -43,6 +43,7 @@ export default function StudentRequestsPanel({ requests, onRequestAction, isLoad
   }
 
   const formatTime = (timeString: string) => {
+    if (!timeString) return "N/A"
     // Convert 24-hour format to 12-hour format
     const [hours, minutes] = timeString.split(":")
     const hour = Number.parseInt(hours, 10)
@@ -60,8 +61,9 @@ export default function StudentRequestsPanel({ requests, onRequestAction, isLoad
     }).format(price)
   }
 
-  const capitalizeFirstLetter = (string: string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase()
+  const capitalizeFirstLetter = (string) => {
+    if (!string) return "" // Return empty string if input is null or undefined
+    return string.charAt(0).toUpperCase() + string.slice(1)
   }
 
   return (
@@ -104,7 +106,7 @@ export default function StudentRequestsPanel({ requests, onRequestAction, isLoad
                       </div>
                       <div className="mt-1 sm:mt-0">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          {request.status.replace("_", " ")}
+                          {capitalizeFirstLetter(request?.status || "").replace("_", " ")}
                         </span>
                       </div>
                     </div>
@@ -121,7 +123,9 @@ export default function StudentRequestsPanel({ requests, onRequestAction, isLoad
                       >
                         <FaClock className="h-3.5 w-3.5" />
                         <span>
-                          {capitalizeFirstLetter(request.requestDayOfWeek)}, {formatTime(request.requestTimeSlot)}
+                          {request.requestDayOfWeek ? capitalizeFirstLetter(request.requestDayOfWeek) : "N/A"}
+                          {request.requestDayOfWeek && request.requestTimeSlot ? ", " : ""}
+                          {request.requestTimeSlot ? formatTime(request.requestTimeSlot) : ""}
                         </span>
                       </div>
                       <div
