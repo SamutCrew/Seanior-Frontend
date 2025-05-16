@@ -9,30 +9,35 @@ import { Input } from "@heroui/react"
 import { getUserData, updateUserData } from "@/api/user_api"
 import { uploadProfileImage } from "@/api"
 import type { User } from "@/types/model/user"
+import type { InstructorDescription } from "@/types/instructor"
 import { motion } from "framer-motion"
-import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaInfoCircle, FaEdit, FaSave, FaCheck } from "react-icons/fa"
+import { FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaEdit, FaSave, FaCheck, FaInfoCircle } from "react-icons/fa"
 import Image from "next/image"
 import { useAppSelector } from "@/app/redux"
+import ProfileHeader from "@/components/Partial/InstructorProfile/ProfileHeader"
+import AboutSection from "@/components/Partial/InstructorProfile/AboutSection"
+import CertificateSection from "@/components/Partial/InstructorProfile/CertificateSection"
+import ScheduleSection from "@/components/Partial/InstructorProfile/ScheduleSection"
 
 const Profile = () => {
   const { user, refreshUser } = useAuth()
-  console.log(user)
   const { user_id } = useParams()
   const router = useRouter()
 
   const [userData, setUserData] = useState<User | null>(null)
   const [isEditing, setIsEditing] = useState(false)
-  const [formData, setFormData] = useState<Partial<User>>({})
+  const [formData, setFormData] = useState<Partial<User & { description: InstructorDescription }>>({})
+  const [instructorFormData, setInstructorFormData] = useState<Partial<InstructorDescription>>({})
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null) // For image preview
-  const [selectedImage, setSelectedImage] = useState<File | null>(null) // For the selected image file
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
 
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
-
   const isOwnProfile = user?.user_id && user.user_id === user_id
+  const isInstructor = userData?.user_type === "instructor"
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -41,7 +46,21 @@ const Profile = () => {
         const data = await getUserData(user_id as string)
         setUserData(data)
         setFormData(data)
-        setImagePreview(data.profile_img || null) // Set initial image preview
+        setImagePreview(data.profile_img || null)
+        setInstructorFormData(
+          typeof data.description === "object" && data.description
+            ? data.description
+            : {
+                specialty: "",
+                styles: "",
+                certification: "",
+                experience: 0,
+                bio: "",
+                contactHours: "",
+                specializations: [],
+                schedule: {},
+              }
+        )
         setError(null)
       } catch (err: any) {
         if (err.response?.status === 404) {
@@ -91,23 +110,22 @@ const Profile = () => {
 
       let updatedProfileImg = userData?.profile_img
 
-      // Upload new profile image if selected
       if (selectedImage) {
         const uploadResult = await uploadProfileImage(user_id as string, selectedImage)
         updatedProfileImg = uploadResult.resource_url
       }
 
-      // Update user profile with new data and profile image URL
       const updatedData = await updateUserData(user_id as string, {
         ...formData,
         profile_img: updatedProfileImg,
+        description: isInstructor ? instructorFormData : formData.description,
       })
 
       setUserData(updatedData)
       await refreshUser()
       setIsEditing(false)
       setSuccessMessage("Profile updated successfully!")
-      setSelectedImage(null) // Reset selected image
+      setSelectedImage(null)
       setSelectedFileName(null)
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to update profile")
@@ -118,14 +136,27 @@ const Profile = () => {
   const toggleEditMode = () => {
     setIsEditing(!isEditing)
     setFormData(userData || {})
-    setImagePreview(userData?.profile_img || null) // Reset image preview
-    setSelectedImage(null) // Reset selected image
+    setInstructorFormData(
+      typeof userData?.description === "object" && userData?.description
+        ? userData.description
+        : {
+            specialty: "",
+            styles: "",
+            certification: "",
+            experience: 0,
+            bio: "",
+            contactHours: "",
+            specializations: [],
+            schedule: {},
+          }
+    )
+    setImagePreview(userData?.profile_img || null)
+    setSelectedImage(null)
     setSelectedFileName(null)
     setError(null)
     setSuccessMessage(null)
   }
 
-  // Function to safely render profile image with fallback
   const renderProfileImage = (imageUrl: string | null | undefined) => {
     if (!imageUrl) {
       return (
@@ -135,7 +166,6 @@ const Profile = () => {
       )
     }
 
-    // Handle the image with error catching
     return (
       <Image
         src={imageUrl || "/placeholder.svg"}
@@ -144,7 +174,6 @@ const Profile = () => {
         height={96}
         className="w-full h-full object-cover"
         onError={(e) => {
-          // If image fails to load, replace with user icon
           e.currentTarget.style.display = "none"
           const parent = e.currentTarget.parentElement
           if (parent) {
@@ -179,7 +208,6 @@ const Profile = () => {
     )
   }
 
-  // Render edit form with conditional styling based on dark/light mode
   if (isEditing && isOwnProfile) {
     return (
       <div className={`min-h-screen ${isDarkMode ? "bg-[#1a2642] text-white" : "bg-white text-gray-800"} p-6 md:p-8`}>
@@ -238,7 +266,6 @@ const Profile = () => {
                   } rounded-md`}
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-2">Name</label>
                 <Input
@@ -250,7 +277,6 @@ const Profile = () => {
                   } rounded-md`}
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-2">Gender</label>
                 <Input
@@ -262,7 +288,6 @@ const Profile = () => {
                   } rounded-md`}
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-2">Address</label>
                 <Input
@@ -274,7 +299,6 @@ const Profile = () => {
                   } rounded-md`}
                 />
               </div>
-
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-2">Phone Number</label>
                 <Input
@@ -286,7 +310,44 @@ const Profile = () => {
                   } rounded-md`}
                 />
               </div>
+            </div>
 
+            {isInstructor && (
+              <>
+                <ProfileHeader
+                  description={typeof userData.description === "object" ? userData.description : null}
+                  isEditing={isEditing}
+                  formData={instructorFormData}
+                  setFormData={setInstructorFormData}
+                  isDarkMode={isDarkMode}
+                  address={formData.address || ""}
+                  setAddress={(address) => setFormData((prev) => ({ ...prev, address }))}
+                />
+                <AboutSection
+                  description={typeof userData.description === "object" ? userData.description : null}
+                  isEditing={isEditing}
+                  formData={instructorFormData}
+                  setFormData={setInstructorFormData}
+                  isDarkMode={isDarkMode}
+                />
+                <CertificateSection
+                  description={typeof userData.description === "object" ? userData.description : null}
+                  isEditing={isEditing}
+                  formData={instructorFormData}
+                  setFormData={setInstructorFormData}
+                  isDarkMode={isDarkMode}
+                />
+                <ScheduleSection
+                  description={typeof userData.description === "object" ? userData.description : null}
+                  isEditing={isEditing}
+                  formData={instructorFormData}
+                  setFormData={setInstructorFormData}
+                  isDarkMode={isDarkMode}
+                />
+              </>
+            )}
+
+            {!isInstructor && (
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium mb-2">Description</label>
                 <div className="relative">
@@ -295,7 +356,7 @@ const Profile = () => {
                   </div>
                   <textarea
                     name="description"
-                    value={formData.description || ""}
+                    value={typeof formData.description === "string" ? formData.description : ""}
                     onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
                     rows={4}
                     className={`pl-10 w-full ${
@@ -305,7 +366,7 @@ const Profile = () => {
                   />
                 </div>
               </div>
-            </div>
+            )}
 
             {error && (
               <div
@@ -358,17 +419,12 @@ const Profile = () => {
     )
   }
 
-  // Regular profile view - respects dark/light mode
   return (
     <div className={`min-h-screen ${isDarkMode ? "bg-slate-900" : "bg-gray-50"}`}>
-      {/* Header Section with Gradient Background */}
       <div className="relative bg-gradient-to-r from-blue-600 to-cyan-500 text-white">
-        {/* Background water pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="w-full h-full bg-[url('/cerulean-flow.png')] bg-cover bg-center"></div>
         </div>
-
-        {/* Animated water ripples */}
         <div className="absolute inset-0 overflow-hidden">
           {[...Array(3)].map((_, i) => (
             <motion.div
@@ -456,7 +512,6 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -mt-8">
         <div className={`${isDarkMode ? "bg-slate-800" : "bg-white"} rounded-xl shadow-md overflow-hidden`}>
           {successMessage && (
@@ -489,94 +544,124 @@ const Profile = () => {
             </motion.div>
           )}
 
-          <div className="p-6">
-            <h2
-              className={`text-xl font-bold ${isDarkMode ? "text-white" : "text-gray-800"} mb-6 flex items-center gap-2`}
-            >
-              <FaUser className="text-blue-500" /> Profile Information
-            </h2>
+          {isInstructor ? (
+            <>
+              <ProfileHeader
+                description={typeof userData.description === "object" ? userData.description : null}
+                isEditing={false}
+                formData={instructorFormData}
+                setFormData={setInstructorFormData}
+                isDarkMode={isDarkMode}
+                address={userData.address || ""}
+                setAddress={(address) => setFormData((prev) => ({ ...prev, address }))}
+              />
+              <AboutSection
+                description={typeof userData.description === "object" ? userData.description : null}
+                isEditing={false}
+                formData={instructorFormData}
+                setFormData={setInstructorFormData}
+                isDarkMode={isDarkMode}
+              />
+              <CertificateSection
+                description={typeof userData.description === "object" ? userData.description : null}
+                isEditing={false}
+                formData={instructorFormData}
+                setFormData={setInstructorFormData}
+                isDarkMode={isDarkMode}
+              />
+              <ScheduleSection
+                description={typeof userData.description === "object" ? userData.description : null}
+                isEditing={false}
+                formData={instructorFormData}
+                setFormData={setInstructorFormData}
+                isDarkMode={isDarkMode}
+              />
+            </>
+          ) : (
+            <div className="p-6">
+              <h2
+                className={`text-xl font-bold ${isDarkMode ? "text-white" : "text-gray-800"} mb-6 flex items-center gap-2`}
+              >
+                <FaUser className="text-blue-500" /> Profile Information
+              </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <h3
-                    className={`text-sm font-medium ${isDarkMode ? "text-gray-400" : "text-gray-500"} flex items-center gap-2`}
-                  >
-                    <FaEnvelope className="text-blue-500" /> Email
-                  </h3>
-                  <p className={`mt-1 ${isDarkMode ? "text-gray-200" : "text-gray-900"}`}>{userData.email}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <h3
+                      className={`text-sm font-medium ${isDarkMode ? "text-gray-400" : "text-gray-500"} flex items-center gap-2`}
+                    >
+                      <FaEnvelope className="text-blue-500" /> Email
+                    </h3>
+                    <p className={`mt-1 ${isDarkMode ? "text-gray-200" : "text-gray-900"}`}>{userData.email}</p>
+                  </div>
+                  <div>
+                    <h3
+                      className={`text-sm font-medium ${isDarkMode ? "text-gray-400" : "text-gray-500"} flex items-center gap-2`}
+                    >
+                      <FaUser className="text-blue-500" /> Name
+                    </h3>
+                    <p className={`mt-1 ${isDarkMode ? "text-gray-200" : "text-gray-900"}`}>
+                      {userData.name || "Not specified"}
+                    </p>
+                  </div>
+                  <div>
+                    <h3
+                      className={`text-sm font-medium ${isDarkMode ? "text-gray-400" : "text-gray-500"} flex items-center gap-2`}
+                    >
+                      <FaUser className="text-blue-500" /> Gender
+                    </h3>
+                    <p className={`mt-1 ${isDarkMode ? "text-gray-200" : "text-gray-900"}`}>
+                      {userData.gender || "Not specified"}
+                    </p>
+                  </div>
                 </div>
-
-                <div>
+                <div className="space-y-4">
+                  <div>
+                    <h3
+                      className={`text-sm font-medium ${isDarkMode ? "text-gray-400" : "text-gray-500"} flex items-center gap-2`}
+                    >
+                      <FaMapMarkerAlt className="text-blue-500" /> Address
+                    </h3>
+                    <p className={`mt-1 ${isDarkMode ? "text-gray-200" : "text-gray-900"}`}>
+                      {userData.address || "Not specified"}
+                    </p>
+                  </div>
+                  <div>
+                    <h3
+                      className={`text-sm font-medium ${isDarkMode ? "text-gray-400" : "text-gray-500"} flex items-center gap-2`}
+                    >
+                      <FaPhone className="text-blue-500" /> Phone Number
+                    </h3>
+                    <p className={`mt-1 ${isDarkMode ? "text-gray-200" : "text-gray-900"}`}>
+                      {userData.phone_number || "Not specified"}
+                    </p>
+                  </div>
+                </div>
+                <div className="md:col-span-2">
                   <h3
                     className={`text-sm font-medium ${isDarkMode ? "text-gray-400" : "text-gray-500"} flex items-center gap-2`}
                   >
-                    <FaUser className="text-blue-500" /> Name
+                    <FaInfoCircle className="text-blue-500" /> Description
                   </h3>
                   <p className={`mt-1 ${isDarkMode ? "text-gray-200" : "text-gray-900"}`}>
-                    {userData.name || "Not specified"}
-                  </p>
-                </div>
-
-                <div>
-                  <h3
-                    className={`text-sm font-medium ${isDarkMode ? "text-gray-400" : "text-gray-500"} flex items-center gap-2`}
-                  >
-                    <FaUser className="text-blue-500" /> Gender
-                  </h3>
-                  <p className={`mt-1 ${isDarkMode ? "text-gray-200" : "text-gray-900"}`}>
-                    {userData.gender || "Not specified"}
+                    {typeof userData.description === "string" ? userData.description || "No description provided." : "No description provided."}
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <h3
-                    className={`text-sm font-medium ${isDarkMode ? "text-gray-400" : "text-gray-500"} flex items-center gap-2`}
+              {isOwnProfile && (
+                <div className={`mt-8 pt-6 border-t ${isDarkMode ? "border-gray-700" : "border-gray-200"}`}>
+                  <button
+                    onClick={toggleEditMode}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
                   >
-                    <FaMapMarkerAlt className="text-blue-500" /> Address
-                  </h3>
-                  <p className={`mt-1 ${isDarkMode ? "text-gray-200" : "text-gray-900"}`}>
-                    {userData.address || "Not specified"}
-                  </p>
+                    <FaEdit /> Edit Profile
+                  </button>
                 </div>
-
-                <div>
-                  <h3
-                    className={`text-sm font-medium ${isDarkMode ? "text-gray-400" : "text-gray-500"} flex items-center gap-2`}
-                  >
-                    <FaPhone className="text-blue-500" /> Phone Number
-                  </h3>
-                  <p className={`mt-1 ${isDarkMode ? "text-gray-200" : "text-gray-900"}`}>
-                    {userData.phone_number || "Not specified"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="md:col-span-2">
-                <h3
-                  className={`text-sm font-medium ${isDarkMode ? "text-gray-400" : "text-gray-500"} flex items-center gap-2`}
-                >
-                  <FaInfoCircle className="text-blue-500" /> Description
-                </h3>
-                <p className={`mt-1 ${isDarkMode ? "text-gray-200" : "text-gray-900"}`}>
-                  {userData.description || "No description provided."}
-                </p>
-              </div>
+              )}
             </div>
-
-            {isOwnProfile && (
-              <div className={`mt-8 pt-6 border-t ${isDarkMode ? "border-gray-700" : "border-gray-200"}`}>
-                <button
-                  onClick={toggleEditMode}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
-                >
-                  <FaEdit /> Edit Profile
-                </button>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </div>

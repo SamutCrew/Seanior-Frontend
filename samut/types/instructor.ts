@@ -1,3 +1,4 @@
+// instructor.ts
 export interface Location {
   lat: number;
   lng: number;
@@ -5,28 +6,14 @@ export interface Location {
 }
 
 export interface InstructorDescription {
-  id: string
-  name: string
-  profileImage: string
   specialty: string;
-  styles: string[];
-  levels: string[];
-  certification: string[];
-  rating: number;
+  styles: string;
+  certification: string;
   experience: number;
-  lessonType: string;
-  price: number;
-  location: Location;
-  bio: string
-  teachingPhilosophy: string
-  image: string;
-  email: string
-  phone: string
-  contactHours: string
-  specializations: Specialization[]
-  certifications: Certification[]
-  testimonials: Testimonial[]
-  availability: Availability
+  bio: string;
+  contactHours: string;
+  specializations: Specialization[];
+  schedule: Availability;
 }
 
 export interface Instructor {
