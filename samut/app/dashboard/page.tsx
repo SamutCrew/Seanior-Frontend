@@ -1,5 +1,6 @@
 "use client"
 
+// Import the enrollment API and types
 import { useState, useEffect } from "react"
 import { FaPlus, FaCalendarAlt, FaChalkboardTeacher, FaUserGraduate } from "react-icons/fa"
 import TeacherHeader from "@/components/Partial/PageDashboard/TeacherHeader"
@@ -8,7 +9,7 @@ import CalendarView from "@/components/Partial/PageDashboard/CalendarView"
 import RequestsPanel from "@/components/Partial/PageDashboard/RequestsPanel"
 import StudentRequestsPanel from "@/components/Partial/PageDashboard/StudentRequestsPanel"
 import TeachingSchedule from "@/components/Partial/PageDashboard/TeachingSchedule"
-import AvailableCourses from "@/components/Partial/PageDashboard/AvailableCourses"
+import EnrollmentsList from "@/components/Partial/PageDashboard/EnrollmentsList"
 import CourseGrid from "@/components/Course/CourseGrid"
 import CourseList from "@/components/Course/CourseList"
 import CourseFilters from "@/components/Course/CourseFilters"
@@ -19,6 +20,7 @@ import DeleteCourseModal from "@/components/Course/Modals/DeleteCourseModal"
 import type { ScheduleItem } from "@/types/schedule"
 import type { Course } from "@/types/course"
 import type { CourseRequest } from "@/types/request"
+import type { EnrollmentWithDetails } from "@/types/enrollment"
 import { useAppSelector } from "@/app/redux"
 import { useAuth } from "@/context/AuthContext"
 import {
@@ -31,6 +33,7 @@ import {
 } from "@/api/course_api"
 import { getPendingCourseRequests, approveCourseRequest, rejectCourseRequest } from "@/api/course_request_api"
 import { getUserResources } from "@/api/resource_api"
+import { getInstructorEnrollments } from "@/api/enrollment_api"
 import LoadingPage from "@/components/Common/LoadingPage"
 import AlertResponse from "@/components/Responseback/AlertResponse"
 import { Toast } from "@/components/Responseback/Toast"
@@ -39,12 +42,15 @@ export default function TeacherDashboard() {
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
   const { user } = useAuth()
 
+  // Add enrollments state and fetch function
   // Data fetching state
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingRequests, setIsLoadingRequests] = useState(true)
+  const [isLoadingEnrollments, setIsLoadingEnrollments] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [resources, setResources] = useState<any[]>([])
+  const [enrollments, setEnrollments] = useState<EnrollmentWithDetails[]>([])
 
   // Student course requests
   const [studentRequests, setStudentRequests] = useState<CourseRequest[]>([])
@@ -125,7 +131,7 @@ export default function TeacherDashboard() {
 
   // Modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditCourseModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [currentCourse, setCurrentCourse] = useState<Course | null>(null)
 
@@ -146,6 +152,8 @@ export default function TeacherDashboard() {
 
       if (Array.isArray(response)) {
         setStudentRequests(response)
+      } else if (response && Array.isArray(response.data)) {
+        setStudentRequests(response.data)
       } else {
         console.warn("Unexpected response format from course requests API:", response)
         setStudentRequests([])
@@ -156,6 +164,32 @@ export default function TeacherDashboard() {
       Toast.error("Failed to load student requests")
     } finally {
       setIsLoadingRequests(false)
+    }
+  }
+
+  // Fetch instructor enrollments
+  const fetchEnrollments = async () => {
+    if (!user || !user.user_id) return
+
+    try {
+      setIsLoadingEnrollments(true)
+      const response = await getInstructorEnrollments()
+      console.log("Instructor enrollments:", response)
+
+      if (Array.isArray(response)) {
+        setEnrollments(response)
+      } else if (response && Array.isArray(response.data)) {
+        setEnrollments(response.data)
+      } else {
+        console.warn("Unexpected response format from enrollments API:", response)
+        setEnrollments([])
+      }
+    } catch (err) {
+      console.error("Error fetching instructor enrollments:", err)
+      setEnrollments([])
+      Toast.error("Failed to load enrollments")
+    } finally {
+      setIsLoadingEnrollments(false)
     }
   }
 
@@ -267,6 +301,9 @@ export default function TeacherDashboard() {
 
         // Fetch student course requests after courses are loaded
         fetchStudentRequests()
+
+        // Fetch enrollments after courses are loaded
+        fetchEnrollments()
       } catch (err: any) {
         console.error("Error in fetchInstructorCourses:", err)
         setError(`Failed to fetch courses: ${err?.message || "Unknown error"}`)
@@ -633,7 +670,7 @@ export default function TeacherDashboard() {
         ),
       )
 
-      setIsEditModalOpen(false)
+      setIsEditCourseModalOpen(false)
 
       // Show success message
       Toast.success("Course updated successfully!")
@@ -713,7 +750,6 @@ export default function TeacherDashboard() {
 
         {/* Student Course Requests Section */}
 
-
         {/* Main Content Tabs */}
         <div className="mb-8">
           <div className={`flex border-b mb-6 ${isDarkMode ? "border-slate-700" : "border-gray-200"}`}>
@@ -747,7 +783,7 @@ export default function TeacherDashboard() {
             </button>
             <button
               className={`px-4 py-2 font-medium flex items-center gap-2 ${
-                activeTab === "available"
+                activeTab === "enrollments"
                   ? isDarkMode
                     ? "text-cyan-400 border-b-2 border-cyan-400"
                     : "text-cyan-600 border-b-2 border-cyan-600"
@@ -755,9 +791,9 @@ export default function TeacherDashboard() {
                     ? "text-gray-400"
                     : "text-slate-600"
               }`}
-              onClick={() => setActiveTab("available")}
+              onClick={() => setActiveTab("enrollments")}
             >
-              <FaPlus /> Available Courses
+              <FaUserGraduate /> Enrollments
             </button>
             <button
               className={`px-4 py-2 font-medium flex items-center gap-2 ${
@@ -816,7 +852,7 @@ export default function TeacherDashboard() {
                     onEdit={(course) => {
                       console.log("Setting current course for edit:", course)
                       setCurrentCourse(course)
-                      setIsEditModalOpen(true)
+                      setIsEditCourseModalOpen(true)
                     }}
                     onDelete={(course) => {
                       setCurrentCourse(course)
@@ -829,7 +865,7 @@ export default function TeacherDashboard() {
                     onEdit={(course) => {
                       console.log("Setting current course for edit:", course)
                       setCurrentCourse(course)
-                      setIsEditModalOpen(true)
+                      setIsEditCourseModalOpen(true)
                     }}
                     onDelete={(course) => {
                       setCurrentCourse(course)
@@ -869,7 +905,7 @@ export default function TeacherDashboard() {
           )}
 
           {/* Available Courses Tab */}
-          {activeTab === "available" && <AvailableCourses availableCourses={availableCourses} />}
+          {activeTab === "enrollments" && <EnrollmentsList enrollments={enrollments} />}
 
           {/* Student Requests Tab */}
           {activeTab === "requests" && (
@@ -908,7 +944,7 @@ export default function TeacherDashboard() {
 
       <EditCourseModal
         isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
+        onClose={() => setIsEditCourseModalOpen(false)}
         onSubmit={handleEditCourse}
         course={currentCourse}
       />
