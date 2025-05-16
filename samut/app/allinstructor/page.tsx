@@ -81,6 +81,16 @@ export default function InstructorsDirectoryPage() {
         console.log("FETCHED INSTRUCTORS DATA:", instructorData)
         console.log("INSTRUCTOR COUNT:", instructorData.length)
 
+        // Handle empty response
+        if (!instructorData || instructorData.length === 0) {
+          console.warn("No instructor data received")
+          setInstructors([])
+          setFilteredInstructors([])
+          setFeaturedInstructors([])
+          setIsLoading(false)
+          return
+        }
+
         // Log the first instructor to check its structure
         if (instructorData.length > 0) {
           console.log("FIRST INSTRUCTOR STRUCTURE:", JSON.stringify(instructorData[0], null, 2))
@@ -815,7 +825,6 @@ export default function InstructorsDirectoryPage() {
           </div>
         </div>
 
-
         {/* Filters Panel */}
         <div ref={scrollRef}></div>
         <AnimatePresence>
@@ -1171,10 +1180,7 @@ export default function InstructorsDirectoryPage() {
                         {instructor.description?.styles?.map((style, index) => (
                           <span
                             key={index}
-                            className={`text-xs px-2  => (
-                          <span
-                            key={index}
-                            className={\`text-xs px-2 py-1 rounded-full ${
+                            className={`text-xs px-2 py-1 rounded-full ${
                               isDarkMode ? "bg-slate-700 text-cyan-300" : "bg-blue-50 text-blue-700"
                             }`}
                           >

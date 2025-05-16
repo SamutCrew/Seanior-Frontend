@@ -178,7 +178,11 @@ export default function AllCoursesPage() {
           const featured = [...formattedCourses].sort((a, b) => b.rating - a.rating).slice(0, 3)
           setFeaturedCourses(featured)
         } else {
-          throw new Error("Invalid response format")
+          // Handle empty response without throwing error
+          console.warn("Empty or invalid response format")
+          setCourses([])
+          setFilteredCourses([])
+          setFeaturedCourses([])
         }
       } catch (err) {
         console.error("Error loading courses:", err)

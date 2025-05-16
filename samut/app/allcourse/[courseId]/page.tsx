@@ -6,6 +6,7 @@ import { useAppSelector } from "@/app/redux"
 import { SectionTitle } from "@/components/Common/SectionTitle"
 import { Button } from "@/components/Common/Button"
 import { motion } from "framer-motion"
+import { use } from "react"
 import {
   Calendar,
   Clock,
@@ -34,18 +35,26 @@ import {
 } from "lucide-react"
 import LoadingPage from "@/components/Common/LoadingPage"
 import { getCourseById } from "@/api/course_api"
+import EnrollmentModal from "@/components/Course/EnrollmentModal"
+import { formatDbPrice } from "@/utils/moneyUtils"
+import LoginRequiredButton from "@/components/Auth/LoginRequiredButton"
+import { useAuth } from "@/context/AuthContext"
 
 export default function CourseDetailsPage({ params }: { params: { courseId: string } }) {
+  // Use React.use to unwrap the params Promise (for future Next.js compatibility)
+  const unwrappedParams = use(params)
   const router = useRouter()
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
+  const { isAuthenticated } = useAuth()
   const [course, setCourse] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("overview")
-  const courseId = params.courseId
+  const courseId = unwrappedParams.courseId
   const [parsedLocation, setParsedLocation] = useState<any>(null)
   const [parsedSchedule, setParsedSchedule] = useState<any>(null)
   const [showFullDescription, setShowFullDescription] = useState(false)
+  const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false)
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -100,15 +109,6 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
     fetchCourseData()
   }, [courseId])
 
-  // Format price (convert from cents/satang to dollars/baht)
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("th-TH", {
-      style: "currency",
-      currency: "THB",
-      minimumFractionDigits: 2,
-    }).format(price / 100)
-  }
-
   // Format date to local date string
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -152,6 +152,14 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
     }
   }
 
+  // Open enrollment modal
+  const handleEnrollClick = () => {
+    setIsEnrollModalOpen(true)
+  }
+
+  // Format price using the utility function
+  const formattedPrice = course ? formatDbPrice(course.price) : "฿0.00"
+
   if (isLoading) {
     return <LoadingPage />
   }
@@ -178,6 +186,25 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
           </motion.div>
         </div>
       </div>
+    )
+  }
+
+  // Create a custom button component that uses LoginRequiredButton
+  const EnrollButton = ({ className = "", size = "default", children }: any) => {
+    return (
+      <LoginRequiredButton
+        onClick={handleEnrollClick}
+        className={`${
+          isDarkMode
+            ? "bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600"
+            : "bg-blue-600 hover:bg-blue-700"
+        } text-white font-medium rounded-lg transition-all duration-200 ${
+          size === "lg" ? "px-6 py-3 text-base" : "px-4 py-2 text-sm"
+        } ${className}`}
+        warningMessage="You need to be logged in to enroll in this course"
+      >
+        {children}
+      </LoginRequiredButton>
     )
   }
 
@@ -273,23 +300,14 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  <Button
-                    variant={isDarkMode ? "gradient" : "primary"}
-                    size="lg"
-                    className={`${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
-                  >
-                    Enroll Now
-                  </Button>
+                  <EnrollButton size="lg">Enroll Now</EnrollButton>
                   <Button
                     variant="outline"
                     size="lg"
                     className="border-white/30 text-white hover:bg-white/10"
                     onClick={handleShare}
                   >
-                    <Share2 className="mr-2 h-4 w-4" /> Share Course
-                  </Button>
-                  <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10">
-                    <Heart className="mr-2 h-4 w-4" /> Save
+                    <Share2 className="mr-2 h-4 w-4" /> You Need to Login to Enroll
                   </Button>
                 </div>
               </div>
@@ -306,7 +324,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   className="rounded-xl shadow-lg w-[400px] h-[300px] object-cover"
                 />
                 <div className="absolute bottom-4 right-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-2 rounded-lg font-bold">
-                  {formatPrice(course.price)}
+                  {formattedPrice}
                 </div>
               </div>
             </div>
@@ -340,7 +358,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
             className="w-full h-48 sm:h-64 object-cover"
           />
           <div className="absolute bottom-4 right-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-4 py-2 rounded-lg font-bold">
-            {formatPrice(course.price)}
+            {formattedPrice}
           </div>
         </div>
       </div>
@@ -567,7 +585,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                       </p>
                       <p className="flex items-center mb-2">
                         <DollarSign className={`w-4 h-4 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
-                        <span className="font-medium mr-2">Price:</span> {formatPrice(course.price)}
+                        <span className="font-medium mr-2">Price:</span> {formattedPrice}
                       </p>
                       <p className="flex items-center mb-2">
                         <Star className={`w-4 h-4 mr-2 ${isDarkMode ? "text-cyan-400" : "text-blue-500"}`} />
@@ -578,12 +596,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   </div>
                 </div>
 
-                <Button
-                  variant={isDarkMode ? "gradient" : "primary"}
-                  className={`w-full ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
-                >
-                  Enroll in This Course
-                </Button>
+                <EnrollButton className="w-full">Enroll in This Course</EnrollButton>
               </motion.div>
             )}
 
@@ -749,12 +762,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   </ul>
                 </div>
 
-                <Button
-                  variant={isDarkMode ? "gradient" : "primary"}
-                  className={`w-full ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
-                >
-                  Enroll in This Course
-                </Button>
+                <EnrollButton className="w-full">Enroll in This Course</EnrollButton>
               </motion.div>
             )}
 
@@ -848,12 +856,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   </div>
                 )}
 
-                <Button
-                  variant={isDarkMode ? "gradient" : "primary"}
-                  className={`w-full ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
-                >
-                  Enroll in This Course
-                </Button>
+                <EnrollButton className="w-full">Enroll in This Course</EnrollButton>
               </motion.div>
             )}
 
@@ -967,12 +970,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button
-                    variant={isDarkMode ? "gradient" : "primary"}
-                    className={`flex-1 ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
-                  >
-                    Enroll in This Course
-                  </Button>
+                  <EnrollButton className="flex-1">Enroll in This Course</EnrollButton>
                   <Button
                     variant="outline"
                     className={`flex-1 ${isDarkMode ? "border-slate-700 text-white" : ""}`}
@@ -1031,7 +1029,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                       </p>
                       <p className={`mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
                         <span className="font-medium">Price: </span>
-                        {formatPrice(course.price)}
+                        {formattedPrice}
                       </p>
                     </div>
                     <div>
@@ -1123,19 +1121,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button
-                    variant={isDarkMode ? "gradient" : "primary"}
-                    className={`flex-1 ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
-                  >
-                    Enroll in This Course
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className={`flex-1 ${isDarkMode ? "border-slate-700 text-white" : ""}`}
-                    onClick={handleShare}
-                  >
-                    <Share2 className="mr-2 h-4 w-4" /> Share Course
-                  </Button>
+                  <EnrollButton className="flex-1">Enroll in This Course</EnrollButton>
                 </div>
               </motion.div>
             )}
@@ -1162,7 +1148,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   />
                   <div>
                     <p className="font-medium">Price</p>
-                    <p className="text-lg font-bold">{formatPrice(course.price)}</p>
+                    <p className="text-lg font-bold">{formattedPrice}</p>
                   </div>
                 </div>
 
@@ -1230,100 +1216,45 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 </div>
               </div>
 
-              <Button
-                variant={isDarkMode ? "gradient" : "primary"}
-                className={`w-full mb-3 ${!isDarkMode && "bg-blue-600 text-white hover:bg-blue-700"}`}
-              >
-                Enroll Now
-              </Button>
+              <EnrollButton className="w-full mb-3">Enroll Now</EnrollButton>
 
-              <Button variant="outline" className={`w-full ${isDarkMode ? "border-slate-700 text-white" : ""}`}>
+              <LoginRequiredButton
+                className={`w-full ${isDarkMode ? "border-slate-700 text-white" : ""}`}
+                onClick={() => {}}
+                warningMessage="You need to be logged in to save this course"
+              >
                 <Heart className="mr-2 h-4 w-4" /> Add to Wishlist
-              </Button>
+              </LoginRequiredButton>
 
               <div className="mt-6">
-                <button
+                <LoginRequiredButton
                   className={`w-full flex items-center justify-center py-2 px-4 rounded-lg ${
                     isDarkMode
                       ? "bg-slate-700 hover:bg-slate-600 text-white"
                       : "bg-gray-100 hover:bg-gray-200 text-gray-800"
                   } transition-colors`}
+                  warningMessage="You need to be logged in to contact the instructor"
                 >
                   <MessageCircle className="mr-2 h-4 w-4" /> Contact Instructor
-                </button>
+                </LoginRequiredButton>
               </div>
             </motion.div>
           </div>
         </div>
 
-        {/* Related Courses */}
-        <div className="mt-8">
-          <h2 className={`text-2xl font-bold mb-8 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-            Similar Courses You Might Like
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* This would be populated with actual related courses */}
-            {[1, 2, 3].map((i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + i * 0.1 }}
-                className="cursor-pointer"
-                onClick={() => router.push(`/allcourse/${i}`)}
-              >
-                <div
-                  className={`rounded-xl overflow-hidden shadow-md ${
-                    isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white"
-                  }`}
-                >
-                  <div className="relative">
-                    <img
-                      src={`/placeholder-jf7aj.png?height=192&width=384&query=swimming course ${i}`}
-                      alt="Related Course"
-                      className="w-full h-48 object-cover"
-                    />
-                    <div
-                      className={`absolute top-3 left-3 px-2 py-1 rounded-md text-xs font-semibold ${
-                        isDarkMode ? "bg-slate-900/80 text-white" : "bg-white/80 text-blue-800"
-                      } backdrop-blur-sm`}
-                    >
-                      {i === 1 ? "Beginner" : i === 2 ? "Intermediate" : "Advanced"}
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <h3 className={`font-bold text-lg mb-1 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                      {i === 1
-                        ? "Beginner Swimming Fundamentals"
-                        : i === 2
-                          ? "Intermediate Stroke Development"
-                          : "Competitive Swim Training"}
-                    </h3>
-                    <p className={`text-sm mb-3 ${isDarkMode ? "text-cyan-400" : "text-blue-600"}`}>
-                      {i === 1
-                        ? "Learn basic swimming techniques"
-                        : i === 2
-                          ? "Refine all four competitive strokes"
-                          : "Advanced training for competitions"}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <Star className="w-4 h-4 text-yellow-400 mr-1" />
-                        <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                          {(4.5 + i * 0.1).toFixed(1)}
-                        </span>
-                      </div>
-                      <span className={`font-bold ${isDarkMode ? "text-white" : "text-gray-800"}`}>
-                        ฿{(3500 + i * 500).toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+
       </div>
+
+      {/* Enrollment Modal */}
+      {isAuthenticated && (
+        <EnrollmentModal
+          isOpen={isEnrollModalOpen}
+          onClose={() => setIsEnrollModalOpen(false)}
+          courseId={courseId}
+          courseName={course.course_name}
+          schedule={parsedSchedule}
+        />
+      )}
     </div>
   )
 }

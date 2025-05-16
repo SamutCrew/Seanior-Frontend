@@ -8,7 +8,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { getAuthUser } from "@/context/authToken"
-import NotificationPanel from '@/components/Partial/Notification/NotificationPanel'
+import NotificationPanel from "@/components/Partial/Notification/NotificationPanel"
 
 // Add these imports at the top of the file
 import { useAuth } from "@/context/AuthContext"
@@ -33,14 +33,6 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
   // Add state for user dropdown menu
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
 
-  // Check if we're on an auth page
-  const isAuthPage = pathname.startsWith("/auth/")
-
-  // If we're on an auth page, don't render the navbar
-  if (isAuthPage) {
-    return null
-  }
-
   // Track scroll direction
   const [prevScrollPos, setPrevScrollPos] = useState(0)
   const [visible, setVisible] = useState(true)
@@ -56,6 +48,14 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
 
   // Initialize state for handleScrollInitialized
   const [scrollInitialized, setScrollInitialized] = useState(false)
+
+  // Check if we're on an auth page
+  const isAuthPage = pathname.startsWith("/auth/")
+
+  // If we're on an auth page, don't render the navbar
+  if (isAuthPage) {
+    return null
+  }
 
   // Close user menu when route changes
   useEffect(() => {
@@ -347,7 +347,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
                   }`}
                 />
               </motion.button>
-                    
+
               {/* User dropdown menu */}
               {isUserMenuOpen && (
                 <motion.div

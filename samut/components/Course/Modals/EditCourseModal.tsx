@@ -6,7 +6,7 @@ import Modal from "@/components/UI/Modal"
 import EnhancedCourseForm from "../EnhancedCourseForm"
 import { updateCourse, uploadCourseImage, uploadPoolImage } from "@/api/course_api"
 import type { Course } from "@/types/course"
-import  AlertResponse  from "@/components/Responseback/AlertResponse"
+import AlertResponse from "@/components/Responseback/AlertResponse"
 
 interface EditCourseModalProps {
   isOpen: boolean
@@ -150,6 +150,20 @@ export default function EditCourseModal({ isOpen, onClose, onSubmit, course, onC
           />
         </div>
       )}
+
+      {/* คำแนะนำการแก้ไขข้อมูล */}
+      <div
+        className={`mb-6 p-4 rounded-lg ${isDarkMode ? "bg-slate-700/50 border border-slate-600" : "bg-blue-50 border border-blue-100"}`}
+      >
+        <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+          คำแนะนำการแก้ไขข้อมูล
+        </h3>
+        <ul className={`list-disc pl-5 space-y-1 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+          <li>แก้ไขข้อมูลเฉพาะส่วนที่ต้องการเปลี่ยนแปลง</li>
+          <li>ราคาให้กรอกเป็นบาท เช่น 10.00 สำหรับ 10 บาท (ระบบจะแปลงเป็นสตางค์อัตโนมัติ)</li>
+          <li>หากต้องการอัพโหลดรูปภาพใหม่ ให้เลือกไฟล์รูปภาพที่ต้องการ</li>
+        </ul>
+      </div>
 
       {course && (
         <EnhancedCourseForm

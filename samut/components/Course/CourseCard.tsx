@@ -7,6 +7,7 @@ import Image from "next/image"
 import { useAppSelector } from "@/app/redux"
 import { motion } from "framer-motion"
 import Link from "next/link"
+import { formatDbPrice } from "@/utils/moneyUtils"
 
 interface CourseCardProps {
   course: Course
@@ -289,6 +290,9 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
   const isAlmostFull = capacityPercentage >= 80
   const isFull = capacityPercentage >= 100
 
+  // Format price using the utility function
+  const formattedPrice = formatDbPrice(course.price)
+
   // Function to get level badge styling
   const getLevelBadgeStyle = (level: string) => {
     const baseClasses = "text-xs font-medium px-2.5 py-1 rounded-full"
@@ -403,9 +407,10 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
               <FaStar className="text-amber-400" />
               <span className="font-medium">{(course.rating || 4.5).toFixed(1)}</span>
             </div>
+            {/* แก้ไขการแสดงราคาในการ์ดคอร์ส */}
             <div className="flex items-center gap-1 bg-black/30 text-white px-2 py-1 rounded-full text-xs">
               <HiCurrencyDollar className="text-amber-400" />
-              <span className="font-bold">{course.price}</span>
+              <span className="font-bold">{formattedPrice}</span>
             </div>
           </div>
         </div>
@@ -469,19 +474,6 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
             <span className="text-sm font-medium">{poolTypeInfo.label}</span>
           </div>
 
-          <div className="flex flex-col items-end">
-            <p className={`text-xs mb-1 ${isDarkMode ? "text-slate-400" : "text-gray-500"}`}>
-              {isFull ? "Class Full" : `${course.students || 0}/${maxStudents} Students`}
-            </p>
-            <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full ${
-                  isFull ? "bg-red-500" : isAlmostFull ? "bg-amber-500" : "bg-green-500"
-                }`}
-                style={{ width: `${capacityPercentage}%` }}
-              ></div>
-            </div>
-          </div>
         </div>
       </div>
 

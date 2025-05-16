@@ -4,7 +4,9 @@ import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/context/AuthContext"
 import DashboardWrapper from "./dashboardWrapper"
-import 'leaflet/dist/leaflet.css';
+import "leaflet/dist/leaflet.css"
+import RouteGuard from "@/components/Auth/RouteGuard"
+import StoreProvider from "./redux"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,6 +21,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SeaNior - Swimming Instructor Platform",
   description: "Connect with certified swimming instructors for all ages and skill levels",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-icon.png",
+    shortcut: "/shortcut-icon.png",
+  },
 }
 
 export default function RootLayout({
@@ -29,9 +36,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>
-          <DashboardWrapper>{children}</DashboardWrapper>
-        </AuthProvider>
+        <StoreProvider>
+          <AuthProvider>
+            <RouteGuard>
+              <DashboardWrapper>{children}</DashboardWrapper>
+            </RouteGuard>
+          </AuthProvider>
+        </StoreProvider>
       </body>
     </html>
   )

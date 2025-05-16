@@ -22,7 +22,7 @@ export const getAllCourses = async () => {
   }
 }
 
-// Get course by ID
+
 // Get course by ID
 export const getCourseById = async (courseId: string) => {
   try {
@@ -52,9 +52,11 @@ export const getCourseById = async (courseId: string) => {
       throw new Error("No response from server. Please check your connection and try again.")
     }
 
-    throw error
+    // Return null instead of throwing for non-critical errors
+    return null
   }
 }
+
 
 // New function to get courses by instructor ID
 export const getCoursesByInstructorId = async (instructorId: string) => {
@@ -317,6 +319,25 @@ export const deleteCourse = async (courseId: string) => {
           }
         : null,
     })
+    throw error
+  }
+}
+
+export const createCourseRequest = async (requestData: {
+  courseId: string
+  startDateForFirstWeek: string
+  selectedSlots: Array<{
+    dayOfWeek: string
+    startTime: string
+    endTime: string
+  }>
+  notes?: string
+}) => {
+  try {
+    const response = await apiClient.post("/course-requests", requestData)
+    return response.data
+  } catch (error) {
+    console.error("Error creating course request:", error)
     throw error
   }
 }
