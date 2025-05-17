@@ -60,7 +60,7 @@ export const APIEndpoints = Object.freeze({
     USER_REQUESTS: (userId: string) => `/course-requests/user/${userId}`,
   },
   PAYMENT: {
-    CREATE_CHECKOUT_SESSION: `${API_BASE_URL}/payment/create-checkout-session`,
+    CREATE_PROMPTPAY_SESSION: `${API_BASE_URL}/payment/create-checkout-session`,
   },
   ENROLLMENT: {
     MY_ENROLLMENTS: `${API_BASE_URL}/enrollments/my`,
