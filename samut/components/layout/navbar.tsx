@@ -52,11 +52,6 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
   // Check if we're on an auth page
   const isAuthPage = pathname.startsWith("/auth/")
 
-  // If we're on an auth page, don't render the navbar
-  if (isAuthPage) {
-    return null
-  }
-
   // Close user menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false)
@@ -148,6 +143,11 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
     }
   }, [])
 
+  // If we're on an auth page, don't render the navbar
+  if (isAuthPage) {
+    return null
+  }
+
   return (
     <motion.nav
       initial={{ y: -20, opacity: 0 }}
@@ -190,6 +190,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
         }}
       >
         <div className="flex items-center">
+
           {/* Logo with gradient text to match sidebar */}
           <Link
             href="/"
@@ -330,7 +331,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
                     isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white border border-gray-200"
                   }`}
                 >
-                  {user.user_type === "admin" || user.user_type === "user" ? (
+                  {user?.user_type === "admin" || user?.user_type === "user" ? (
                     <Link
                       href="/become-instructor"
                       className={`flex items-center gap-2 px-4 py-2 text-sm ${
@@ -338,12 +339,12 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
                       }`}
                       onClick={() => setIsUserMenuOpen(false)}
                     >
-                      <Settings className="w-4 h-4" /> {/* You can use a different icon if preferred */}
+                      <Settings className="w-4 h-4" />
                       <span>Be a Teacher</span>
                     </Link>
                   ) : null}
                   <Link
-                    href={`/profile/${user.user_id}`}
+                    href={user?.user_id ? `/profile/${user.user_id}` : "/profile"}
                     className={`flex items-center gap-2 px-4 py-2 text-sm ${
                       isDarkMode ? "text-gray-200 hover:bg-slate-700" : "text-gray-700 hover:bg-gray-100"
                     }`}
@@ -352,7 +353,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
                     <UserCircle className="w-4 h-4" />
                     <span>Profile</span>
                   </Link>
-                  {user.user_type === "admin" && (
+                  {user?.user_type === "admin" && (
                     <Link
                       href="/admin/dashboard"
                       className={`flex items-center gap-2 px-4 py-2 text-sm ${
@@ -360,7 +361,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
                       }`}
                       onClick={() => setIsUserMenuOpen(false)}
                     >
-                      <Settings className="w-4 h-4" /> {/* You can use a different icon if preferred */}
+                      <Settings className="w-4 h-4" />
                       <span>Admin</span>
                     </Link>
                   )}
@@ -576,7 +577,7 @@ const AnimatedMobileMenu: React.FC<AnimatedMobileMenuProps> = ({
               transition={{ delay: navItems.length * 0.1 + 0.1 }}
             >
               <Link
-                href={`/profile/${user.user_id}`}
+                href={user?.user_id ? `/profile/${user.user_id}` : "/profile"}
                 className={`flex items-center gap-2 py-2 px-3 rounded-md ${
                   isDarkMode ? "text-gray-200 hover:bg-gray-800" : "text-gray-800 hover:bg-gray-100"
                 } transition-colors duration-200`}

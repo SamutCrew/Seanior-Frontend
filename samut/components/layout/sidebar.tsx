@@ -49,6 +49,11 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
 
   const handleResize = useRef<() => void>(() => {})
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Check if we're on an auth page
   const isAuthPage = pathname.startsWith("/auth/")
@@ -89,7 +94,7 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
     }
 
     return () => clearTimeout(timeoutId)
-  }, [])
+  }, [isSidebarCollapsed])
 
   const handleLogout = async () => {
     try {
@@ -119,11 +124,12 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
   const teacherNavItems = [
     { icon: Home, label: "Dashboard", href: "/dashboard" },
     { icon: BookOpen, label: "My Courses", href: "/my-courses" },
-    { icon: User, label: "Profile", href: `/allinstructor/${user.user_id}` },
+    { icon: User, label: "Profile", href: user?.user_id ? `/allinstructor/${user.user_id}` : "/allinstructor" },
     { icon: MessageCircle, label: "Support", href: "/support" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ]
 
+  // Also update the studentNavItems to ensure it has a null check
   const studentNavItems = [
     { icon: Search, label: "Find Instructors", href: "/allinstructor" },
     { icon: BookOpen, label: "My Courses", href: "/my-courses" },

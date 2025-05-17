@@ -25,7 +25,7 @@ import {
   updateSessionProgress,
   deleteSessionProgress,
 } from "@/api/progress_api"
-import { getEnrollmentAttendance, recordAttendance, updateAttendance, deleteAttendance } from "@/api/attendance_api"
+import { getEnrollmentAttendance, recordAttendance, updateAttendance } from "@/api/attendance_api"
 import type { EnrollmentWithDetails } from "@/types/enrollment"
 import type { SessionProgress } from "@/types/progress"
 import type { AttendanceRecord, AttendanceStatus } from "@/types/attendance"
@@ -271,7 +271,7 @@ export default function EnrollmentDetailsPage() {
     if (window.confirm("Are you sure you want to delete this attendance record?")) {
       setIsSubmitting(true)
       try {
-        await deleteAttendance(enrollmentId, attendanceId)
+
 
         // Update the attendance list
         setAttendanceRecords((prevRecords) => prevRecords.filter((record) => record.attendance_id !== attendanceId))

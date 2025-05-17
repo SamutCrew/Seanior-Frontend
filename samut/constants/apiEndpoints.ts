@@ -8,6 +8,7 @@ export const APIEndpoints = Object.freeze({
       ALL: "/users/retrieve/getAllUsers",
       CHECK_ISEXIST: "/users/retrieve/checkUser",
       DATA_BY_USERID: "/users/retrieve/[userId]",
+      getAllInstructors: "/users/retrieve/[userId]",
     },
     CREATE: "/users/create/createUser",
     UPDATE: {

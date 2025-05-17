@@ -203,41 +203,4 @@ export const updateAttendance = async (
   }
 }
 
-// Delete attendance
-export const deleteAttendance = async (enrollmentId: string, attendanceId: string): Promise<void> => {
-  console.log(`Deleting attendance ID: ${attendanceId} for enrollment ID: ${enrollmentId}`)
 
-  try {
-    // Get the Firebase token
-    const token = await getFirebaseToken()
-    if (!token) {
-      throw new Error("Authentication token is missing. Please log in again.")
-    }
-
-    // Use the endpoint format consistent with the API documentation
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://seanior-backend.onrender.com"
-    const endpoint = `${baseUrl}/enrollments/${enrollmentId}/attendances/${attendanceId}`
-
-    console.log(`Sending request to: ${endpoint}`)
-
-    const response = await fetch(endpoint, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "*/*",
-        Authorization: `Bearer ${token}`,
-      },
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error(`Failed to delete attendance. Status: ${response.status}`, errorText)
-      throw new Error(`Failed to delete attendance: ${response.status} ${errorText.substring(0, 100)}`)
-    }
-
-    console.log("Attendance record deleted successfully")
-  } catch (error) {
-    console.error("Error deleting attendance:", error)
-    throw error
-  }
-}
