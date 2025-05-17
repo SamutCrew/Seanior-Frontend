@@ -118,8 +118,8 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
   // Define navigation items for each role
   const teacherNavItems = [
     { icon: Home, label: "Dashboard", href: "/dashboard" },
-    { icon: BookOpen, label: "My Courses", href: "/dashboard/courses/manage/1" },
-    { icon: User, label: "Profile", href: "/teacher/1" },
+    { icon: BookOpen, label: "My Courses", href: "/my-courses" },
+    { icon: User, label: "Profile", href: `/allinstructor/${user.user_id}` },
     { icon: MessageCircle, label: "Support", href: "/support" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ]

@@ -1,928 +1,1020 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { useAppSelector } from "@/app/redux"
-import { getStudentEnrollments, getEnrollmentById } from "@/api/enrollment_api"
-import { getEnrollmentProgress } from "@/api/progress_api"
-import { getEnrollmentAttendance } from "@/api/attendance_api"
-import type { EnrollmentWithDetails } from "@/types/enrollment"
-import type { SessionProgress } from "@/types/progress"
-import type { AttendanceRecord } from "@/types/attendance"
 import {
-  Calendar,
+  Book,
+  Filter,
   Clock,
-  User,
-  BookOpen,
-  MapPin,
-  Award,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  BarChart2,
+  Search,
+  ChevronLeft,
   ChevronRight,
-  FileText,
-  MessageCircle,
-  Star,
+  CheckCircle,
+  X,
+  DollarSign,
+  ClockIcon,
+  AlertCircle,
+  MapPin,
+  Calendar,
+  User,
 } from "lucide-react"
+import { useAppSelector } from "@/app/redux"
+import { Button } from "@/components/Common/Button"
+import { SectionTitle } from "@/components/Common/SectionTitle"
+import LoadingPage from "@/components/Common/LoadingPage"
+import CourseCard from "@/components/Course/CourseCard"
+import { getStudentEnrollments } from "@/api/enrollment_api"
+import { getMyRequests } from "@/api/course_request_api"
+import { createCheckoutSession } from "@/api/payment_api"
+import type { Course } from "@/types/course"
+import type { EnrollmentWithDetails, RequestedSlot } from "@/types/enrollment"
+import type { CourseRequest } from "@/types/request"
 
-export default function CourseDetailsPage() {
-  const params = useParams()
-  const courseId = params.courseId as string
+// Real API call to get user's enrollments
+const getMyCourses = async (): Promise<{
+  currentCourses: Course[]
+  pastCourses: Course[]
+}> => {
+  try {
+    // Fetch enrollments from the API
+    const enrollments = await getStudentEnrollments()
+
+    // Transform enrollments into course data
+    const currentCourses: Course[] = []
+    const pastCourses: Course[] = []
+
+    enrollments.forEach((enrollment) => {
+      if (!enrollment.request?.Course) return
+
+      const course: Course = {
+        id: enrollment.request.course_id,
+        course_id: enrollment.request.course_id,
+        title: enrollment.request.Course.course_name,
+        course_name: enrollment.request.Course.course_name,
+        focus: "Swimming techniques", // Default focus if not available
+        level: "Intermediate", // Default level if not available
+        duration: `${enrollment.target_sessions_to_complete || 8} sessions`,
+        course_duration: enrollment.target_sessions_to_complete || 8,
+        schedule: enrollment.request.requestedSlots
+          ? formatRequestedSlotsToSchedule(enrollment.request.requestedSlots)
+          : "Schedule not available",
+        instructor_id: enrollment.request.Course.instructor_id || "",
+        instructor: enrollment.request.Course.instructor_name || "Instructor",
+        instructorImage: enrollment.request.Course.instructor_image || "/swimming-instructor-portrait.png",
+        rating: 4.5, // Default rating if not available
+        students: 10, // Default number of students if not available
+        price: enrollment.request.request_price,
+        location: {
+          address: enrollment.request.request_location || "Location not specified",
+        },
+        courseType: "public-pool", // Default course type if not available
+        pool_type: "public-pool",
+        description: enrollment.request.Course.description || "No description available",
+        study_frequency: 3,
+        days_study: 3,
+        number_of_total_sessions: enrollment.target_sessions_to_complete || 8,
+        status: enrollment.status === "completed" ? "completed" : "in-progress",
+        image: enrollment.request.Course.course_image || "/swimming-course.png",
+        course_image: enrollment.request.Course.course_image || "/swimming-course.png",
+        pool_image: enrollment.request.Course.pool_image || "/outdoor-swimming-pool.png",
+        created_at: enrollment.created_at,
+        updated_at: enrollment.updated_at,
+        progress: {
+          overallCompletion: calculateProgress(enrollment),
+          modules: [],
+          lastUpdated: enrollment.updated_at,
+        },
+      }
+
+      if (enrollment.status === "completed") {
+        pastCourses.push(course)
+      } else {
+        currentCourses.push(course)
+      }
+    })
+
+    return { currentCourses, pastCourses }
+  } catch (error) {
+    console.error("Failed to fetch enrollments:", error)
+    // Return empty arrays if there's an error
+    return { currentCourses: [], pastCourses: [] }
+  }
+}
+
+// Helper function to calculate progress percentage
+const calculateProgress = (enrollment: EnrollmentWithDetails): number => {
+  if (enrollment.target_sessions_to_complete === 0) return 0
+
+  const progress = Math.round((enrollment.actual_sessions_attended / enrollment.target_sessions_to_complete) * 100)
+
+  return Math.min(progress, 100) // Cap at 100%
+}
+
+// Helper function to format requested slots into a schedule object
+const formatRequestedSlotsToSchedule = (slots: RequestedSlot[]): any => {
+  const schedule: Record<string, any> = {}
+
+  slots.forEach((slot) => {
+    const day = slot.dayOfWeek.toLowerCase()
+    if (!schedule[day]) {
+      schedule[day] = {
+        selected: true,
+        ranges: [],
+      }
+    }
+
+    schedule[day].ranges.push({
+      start: slot.startTime,
+      end: slot.endTime,
+    })
+  })
+
+  return schedule
+}
+
+// Helper function to format status labels for display
+function formatStatusLabel(status: string): string {
+  if (!status || status === "all") return "All Requests"
+
+  return status
+    .split("_")
+    .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
+    .join(" ")
+}
+
+type ActiveTab = "courses" | "requests"
+
+export default function MyCoursesPage() {
+  const router = useRouter()
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
+  const [loading, setLoading] = useState(true)
+  const [currentCourses, setCurrentCourses] = useState<Course[]>([])
+  const [pastCourses, setPastCourses] = useState<Course[]>([])
+  const [courseRequests, setCourseRequests] = useState<CourseRequest[]>([])
+  const [filterStatus, setFilterStatus] = useState<"all" | "in-progress" | "completed">("all")
+  const [requestFilter, setRequestFilter] = useState<string>("all")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [activeTab, setActiveTab] = useState<ActiveTab>("courses")
+  const [processingPaymentId, setProcessingPaymentId] = useState<string | null>(null)
+  const [paymentError, setPaymentError] = useState<{ id: string; message: string } | null>(null)
 
-  const [enrollment, setEnrollment] = useState<EnrollmentWithDetails | null>(null)
-  const [sessionProgress, setSessionProgress] = useState<SessionProgress[]>([])
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [activeSection, setActiveSection] = useState<string>("overview")
+  // Pagination for requests
+  const [currentPage, setCurrentPage] = useState(1)
+  const requestsPerPage = 5
 
-  // Fetch enrollment and related data
   useEffect(() => {
     const fetchData = async () => {
-      if (!courseId) return
-
-      setIsLoading(true)
-      setError(null)
-
       try {
-        // Get all student enrollments
-        const enrollments = await getStudentEnrollments()
+        setLoading(true)
+        // Fetch both enrollments and course requests in parallel
+        const [coursesResult, requestsResult] = await Promise.all([getMyCourses(), getMyRequests()])
 
-        // Find the enrollment for this course
-        const courseEnrollment = enrollments.find((e) => e.request?.Course?.course_id === courseId)
-
-        if (!courseEnrollment) {
-          setError("Enrollment not found for this course")
-          setIsLoading(false)
-          return
-        }
-
-        // Once we have the enrollment ID, we can fetch the detailed enrollment data
-        try {
-          const detailedEnrollment = await getEnrollmentById(courseEnrollment.enrollment_id)
-          setEnrollment(detailedEnrollment)
-        } catch (enrollmentError) {
-          console.error("Error fetching detailed enrollment:", enrollmentError)
-          // Fall back to the basic enrollment data if detailed fetch fails
-          setEnrollment(courseEnrollment)
-        }
-
-        // Fetch session progress for this enrollment
-        try {
-          const progressData = await getEnrollmentProgress(courseEnrollment.enrollment_id)
-          setSessionProgress(progressData)
-        } catch (progressError) {
-          console.error("Error fetching session progress:", progressError)
-          setSessionProgress([])
-        }
-
-        // Fetch attendance records
-        try {
-          const attendanceData = await getEnrollmentAttendance(courseEnrollment.enrollment_id)
-          setAttendanceRecords(attendanceData)
-        } catch (attendanceError) {
-          console.error("Error fetching attendance records:", attendanceError)
-          setAttendanceRecords([])
-        }
+        setCurrentCourses(coursesResult.currentCourses)
+        setPastCourses(coursesResult.pastCourses)
+        setCourseRequests(requestsResult)
       } catch (error) {
-        console.error("Error fetching data:", error)
-        setError("Failed to load course details. Please try again later.")
+        console.error("Failed to fetch data:", error)
       } finally {
-        setIsLoading(false)
+        setLoading(false)
       }
     }
 
     fetchData()
-  }, [courseId])
+  }, [])
 
-  // Format date
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "N/A"
-    const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
+  const navigateToCourseDetail = (courseId: string) => {
+    router.push(`/my-courses/${courseId}`)
   }
 
-  // Format short date
-  const formatShortDate = (dateString: string) => {
-    if (!dateString) return "N/A"
-    const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
-  }
+  const handleMakePayment = async (requestId: string) => {
+    try {
+      setProcessingPaymentId(requestId)
+      setPaymentError(null)
 
-  // Calculate progress percentage
-  const calculateProgress = () => {
-    if (!enrollment) return 0
-    return Math.min(
-      100,
-      Math.round((enrollment.actual_sessions_attended / enrollment.target_sessions_to_complete) * 100),
-    )
-  }
+      // Call the payment API to create a checkout session
+      const checkoutSession = await createCheckoutSession(requestId)
 
-  // Get status badge color
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "active":
-        return "bg-emerald-900/30 text-emerald-300 border-emerald-800"
-      case "completed":
-        return "bg-blue-900/30 text-blue-300 border-blue-800"
-      case "paused":
-        return "bg-amber-900/30 text-amber-300 border-amber-800"
-      case "cancelled":
-        return "bg-red-900/30 text-red-300 border-red-800"
-      default:
-        return "bg-slate-900/30 text-slate-300 border-slate-800"
+      // Redirect to the Stripe checkout URL
+      window.location.href = checkoutSession.url
+    } catch (error: any) {
+      console.error("Payment error:", error)
+      setPaymentError({
+        id: requestId,
+        message:
+          "Unable to process payment at this time. Our payment system is currently undergoing maintenance. Please try again later.",
+      })
+    } finally {
+      setProcessingPaymentId(null)
     }
   }
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-gray-400">Loading course details...</p>
-        </div>
-      </div>
-    )
+  if (loading) {
+    return <LoadingPage />
   }
 
-  // Error state
-  if (error || !enrollment) {
-    return (
-      <div className="min-h-screen bg-slate-900 text-white p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="p-8 rounded-xl bg-slate-800 shadow text-center">
-            <div className="w-16 h-16 mx-auto mb-4 text-amber-500 flex items-center justify-center rounded-full bg-amber-900/20">
-              <AlertCircle className="w-8 h-8" />
-            </div>
-            <h2 className="text-2xl font-bold mb-2">{error || "Course Not Found"}</h2>
-            <p className="mb-6 text-gray-400">
-              {error
-                ? "We encountered an error while loading your course data. Please try again later."
-                : "We couldn't find the course you're looking for. It may have been removed or you don't have access to it."}
+  const filteredCurrentCourses =
+    filterStatus === "all"
+      ? currentCourses
+      : currentCourses.filter((course) =>
+          filterStatus === "in-progress" ? course.status === "in-progress" : course.status === "completed",
+        )
+
+  const filteredPastCourses =
+    filterStatus === "all"
+      ? pastCourses
+      : pastCourses.filter((course) =>
+          filterStatus === "completed" ? course.status === "completed" : course.status === "in-progress",
+        )
+
+  // Filter and search requests
+  const filteredRequests = courseRequests.filter((request) => {
+    // Status filter
+    if (requestFilter !== "all" && request.status !== requestFilter) {
+      return false
+    }
+
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      return (
+        request.Course.course_name.toLowerCase().includes(query) ||
+        (request.Course.instructor?.name || "").toLowerCase().includes(query) ||
+        request.request_location.toLowerCase().includes(query)
+      )
+    }
+
+    return true
+  })
+
+  // Pagination
+  const indexOfLastRequest = currentPage * requestsPerPage
+  const indexOfFirstRequest = indexOfLastRequest - requestsPerPage
+  const currentRequests = filteredRequests.slice(indexOfFirstRequest, indexOfLastRequest)
+  const totalPages = Math.ceil(filteredRequests.length / requestsPerPage)
+
+  // Get unique status values for filter
+  const statusOptions = ["all", ...new Set(courseRequests.map((request) => request.status))]
+
+  const hasFilteredCourses = filteredCurrentCourses.length > 0 || filteredPastCourses.length > 0
+  const hasPendingRequests = courseRequests.length > 0
+
+  return (
+    <div className={`min-h-screen ${isDarkMode ? "bg-slate-900" : "bg-gray-50"}`}>
+      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+          <div className="flex flex-col">
+            <SectionTitle className="mb-2">My Courses</SectionTitle>
+            <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+              Track your progress and continue learning
             </p>
           </div>
         </div>
+
+        {/* Navigation Tabs */}
+        <div className={`mb-6 border-b ${isDarkMode ? "border-gray-700" : "border-gray-200"}`}>
+          <nav className="flex space-x-8" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab("courses")}
+              className={`py-4 px-1 inline-flex items-center border-b-2 font-medium text-sm ${
+                activeTab === "courses"
+                  ? isDarkMode
+                    ? "border-blue-400 text-blue-400"
+                    : "border-blue-600 text-blue-600"
+                  : isDarkMode
+                    ? "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Current Courses
+              {currentCourses.length > 0 && (
+                <span
+                  className={`ml-2 py-0.5 px-2 rounded-full text-xs ${
+                    activeTab === "courses"
+                      ? isDarkMode
+                        ? "bg-blue-900 text-blue-200"
+                        : "bg-blue-100 text-blue-600"
+                      : isDarkMode
+                        ? "bg-gray-800 text-gray-300"
+                        : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  {currentCourses.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("requests")}
+              className={`py-4 px-1 inline-flex items-center border-b-2 font-medium text-sm ${
+                activeTab === "requests"
+                  ? isDarkMode
+                    ? "border-blue-400 text-blue-400"
+                    : "border-blue-600 text-blue-600"
+                  : isDarkMode
+                    ? "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Course Requests
+              {courseRequests.length > 0 && (
+                <span
+                  className={`ml-2 py-0.5 px-2 rounded-full text-xs ${
+                    activeTab === "requests"
+                      ? isDarkMode
+                        ? "bg-blue-900 text-blue-200"
+                        : "bg-blue-100 text-blue-600"
+                      : isDarkMode
+                        ? "bg-gray-800 text-gray-300"
+                        : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  {courseRequests.length}
+                </span>
+              )}
+            </button>
+          </nav>
+        </div>
+
+        {/* Course Requests View */}
+        {activeTab === "requests" && (
+          <div className="mb-10">
+            {/* Filters and Search */}
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className={`flex-1 relative rounded-md shadow-sm ${isDarkMode ? "bg-slate-800" : "bg-white"}`}>
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className={`h-5 w-5 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                    setCurrentPage(1) // Reset to first page on new search
+                  }}
+                  className={`block w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    isDarkMode
+                      ? "bg-slate-800 border-gray-700 text-white placeholder-gray-400"
+                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
+                  }`}
+                  placeholder="Search by course name, instructor, or location"
+                />
+              </div>
+
+              <div
+                className={`flex items-center gap-2 p-2 rounded-md ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}
+              >
+                <Filter className={`w-4 h-4 ${isDarkMode ? "text-blue-400" : "text-blue-600"}`} />
+                <select
+                  value={requestFilter}
+                  onChange={(e) => {
+                    setRequestFilter(e.target.value)
+                    setCurrentPage(1) // Reset to first page on filter change
+                  }}
+                  className={`text-sm font-medium bg-transparent border-none focus:ring-0 focus:outline-none ${
+                    isDarkMode ? "text-white" : "text-gray-800"
+                  }`}
+                >
+                  <option value="all">All Statuses</option>
+                  {statusOptions
+                    .filter((status) => status !== "all")
+                    .map((status) => (
+                      <option key={status} value={status}>
+                        {formatStatusLabel(status)}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Request Cards */}
+            {filteredRequests.length > 0 ? (
+              <div className="space-y-4">
+                {currentRequests.map((request) => (
+                  <RequestCard
+                    key={request.request_id}
+                    request={request}
+                    isDarkMode={isDarkMode}
+                    onMakePayment={handleMakePayment}
+                    isProcessingPayment={processingPaymentId === request.request_id}
+                    paymentError={paymentError?.id === request.request_id ? paymentError.message : null}
+                  />
+                ))}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div
+                    className="flex items-center justify-between border-t pt-4 mt-6 
+                    border-gray-700"
+                  >
+                    <div className="flex-1 flex justify-between sm:hidden">
+                      <Button
+                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        variant={isDarkMode ? "outline" : "secondary"}
+                        size="sm"
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        variant={isDarkMode ? "outline" : "secondary"}
+                        size="sm"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                      <div>
+                        <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-700"}`}>
+                          Showing <span className="font-medium">{indexOfFirstRequest + 1}</span> to{" "}
+                          <span className="font-medium">{Math.min(indexOfLastRequest, filteredRequests.length)}</span>{" "}
+                          of <span className="font-medium">{filteredRequests.length}</span> results
+                        </p>
+                      </div>
+                      <div>
+                        <nav
+                          className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                          aria-label="Pagination"
+                        >
+                          <button
+                            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className={`relative inline-flex items-center px-2 py-2 rounded-l-md border ${
+                              isDarkMode
+                                ? "border-gray-700 bg-slate-800 text-gray-400 hover:bg-slate-700"
+                                : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+                            } ${currentPage === 1 ? "opacity-50 cursor-not-allowed" : ""}`}
+                          >
+                            <span className="sr-only">Previous</span>
+                            <ChevronLeft className="h-5 w-5" />
+                          </button>
+
+                          {/* Page numbers */}
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <button
+                              key={page}
+                              onClick={() => setCurrentPage(page)}
+                              className={`relative inline-flex items-center px-4 py-2 border ${
+                                currentPage === page
+                                  ? isDarkMode
+                                    ? "bg-slate-700 border-gray-700 text-white"
+                                    : "bg-blue-50 border-blue-500 text-blue-600"
+                                  : isDarkMode
+                                    ? "border-gray-700 bg-slate-800 text-gray-400 hover:bg-slate-700"
+                                    : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          ))}
+
+                          <button
+                            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className={`relative inline-flex items-center px-2 py-2 rounded-r-md border ${
+                              isDarkMode
+                                ? "border-gray-700 bg-slate-800 text-gray-400 hover:bg-slate-700"
+                                : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+                            } ${currentPage === totalPages ? "opacity-50 cursor-not-allowed" : ""}`}
+                          >
+                            <span className="sr-only">Next</span>
+                            <ChevronRight className="h-5 w-5" />
+                          </button>
+                        </nav>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className={`rounded-lg p-8 text-center ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}>
+                <div className="flex flex-col items-center justify-center">
+                  <div className={`p-4 rounded-full ${isDarkMode ? "bg-slate-700" : "bg-blue-50"} mb-4`}>
+                    <AlertCircle className={`w-8 h-8 ${isDarkMode ? "text-blue-400" : "text-blue-500"}`} />
+                  </div>
+                  <h3 className={`text-xl font-bold mb-2 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                    No requests found
+                  </h3>
+                  <p className={`text-sm mb-6 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                    {searchQuery
+                      ? "No requests match your search criteria"
+                      : requestFilter !== "all"
+                        ? `No requests with status: ${formatStatusLabel(requestFilter)}`
+                        : "You haven't made any course requests yet"}
+                  </p>
+                  <Button variant={isDarkMode ? "gradient" : "primary"}>Browse Available Courses</Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Courses View */}
+        {activeTab === "courses" && (
+          <>
+            <div className="flex justify-end mb-4">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-opacity-10 bg-blue-500">
+                <Filter className={`w-4 h-4 ${isDarkMode ? "text-blue-400" : "text-blue-600"}`} />
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value as any)}
+                  className={`text-sm font-medium bg-transparent border-none focus:ring-0 ${
+                    isDarkMode ? "text-white" : "text-gray-800"
+                  }`}
+                >
+                  <option value="all">All Courses</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+            </div>
+
+            {!hasFilteredCourses && (
+              <div className={`rounded-xl p-8 text-center ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-sm`}>
+                <div className="flex flex-col items-center justify-center">
+                  <div className={`p-4 rounded-full ${isDarkMode ? "bg-slate-700" : "bg-blue-50"} mb-4`}>
+                    <Book className={`w-8 h-8 ${isDarkMode ? "text-blue-400" : "text-blue-500"}`} />
+                  </div>
+                  <h3 className={`text-xl font-bold mb-2 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                    No courses found
+                  </h3>
+                  <p className={`text-sm mb-6 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                    {filterStatus === "all"
+                      ? "You haven't enrolled in any courses yet."
+                      : `You don't have any ${filterStatus === "in-progress" ? "in-progress" : "completed"} courses.`}
+                  </p>
+                  <Button variant={isDarkMode ? "gradient" : "primary"}>Browse Available Courses</Button>
+                </div>
+              </div>
+            )}
+
+            {filteredCurrentCourses.length > 0 && (
+              <div className="mb-10">
+                <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                  Current Courses
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredCurrentCourses.map((course) => (
+                    <EnhancedCourseCard
+                      key={course.id}
+                      course={course}
+                      onClick={() => navigateToCourseDetail(course.course_id)}
+                      isDarkMode={isDarkMode}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {filteredPastCourses.length > 0 && (
+              <div>
+                <h2 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                  Past Courses
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredPastCourses.map((course) => (
+                    <EnhancedCourseCard
+                      key={course.id}
+                      course={course}
+                      onClick={() => navigateToCourseDetail(course.course_id)}
+                      isDarkMode={isDarkMode}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
-    )
+    </div>
+  )
+}
+
+interface CourseCardProps {
+  course: Course
+  onClick: () => void
+  isDarkMode: boolean
+}
+
+function CourseCardItem({ course, onClick, isDarkMode }: CourseCardProps) {
+  return (
+    <div onClick={onClick} className="cursor-pointer">
+      <CourseCard course={course} variant="standard" />
+    </div>
+  )
+}
+
+function EnhancedCourseCard({ course, onClick, isDarkMode }: CourseCardProps) {
+  // Format schedule for display
+  const formatSchedule = (schedule: any) => {
+    if (typeof schedule === "string") {
+      try {
+        schedule = JSON.parse(schedule)
+      } catch (e) {
+        return { days: [], times: [] }
+      }
+    }
+
+    // Extract days and times from schedule
+    const days: string[] = []
+    const times: { day: string; ranges: { start: string; end: string }[] }[] = []
+
+    if (schedule && typeof schedule === "object") {
+      Object.entries(schedule).forEach(([day, value]: [string, any]) => {
+        if (value.selected) {
+          days.push(day.charAt(0).toUpperCase() + day.slice(1))
+
+          if (value.ranges && Array.isArray(value.ranges)) {
+            times.push({
+              day: day.charAt(0).toUpperCase() + day.slice(1),
+              ranges: value.ranges,
+            })
+          }
+        }
+      })
+    }
+
+    return { days, times }
   }
 
-  const progressPercentage = calculateProgress()
-  const course = enrollment.request?.Course
+  // Format location for display
+  const formatLocation = (location: any): string => {
+    if (!location) return "Location not specified"
+
+    if (typeof location === "string") {
+      return location
+    }
+
+    if (typeof location === "object") {
+      if (location.address) {
+        if (typeof location.address === "string") {
+          return location.address
+        }
+        if (typeof location.address === "object") {
+          // Try to extract meaningful location data
+          const addressParts = []
+          if (location.address.address) addressParts.push(location.address.address)
+          if (location.address.city) addressParts.push(location.address.city)
+          if (location.address.district) addressParts.push(location.address.district)
+          if (location.address.province) addressParts.push(location.address.province)
+
+          return addressParts.length > 0 ? addressParts.join(", ") : "Location not specified"
+        }
+      }
+    }
+
+    return "Location not specified"
+  }
+
+  const { days, times } = formatSchedule(course.schedule)
+  const locationText = formatLocation(course.location)
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
-      {/* Hero Section */}
-      <div className="relative h-64 md:h-80">
+    <div
+      onClick={onClick}
+      className={`rounded-lg overflow-hidden shadow-md cursor-pointer transition-transform hover:scale-[1.02] ${
+        isDarkMode ? "bg-slate-800 text-white" : "bg-white text-gray-900"
+      }`}
+    >
+      {/* Course Image */}
+      <div className="relative h-48 w-full overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
         <Image
-          src={course?.course_image || "/placeholder.svg?height=320&width=1200&query=swimming pool"}
-          alt={course?.course_name || "Course"}
+          src={course.course_image || `/placeholder.svg?height=300&width=400&query=swimming course ${course.course_id}`}
+          alt={course.title || course.course_name}
           fill
-          className="object-cover"
+          style={{ objectFit: "cover" }}
+          className="transition-transform hover:scale-110 duration-500"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent"></div>
-        <div className="absolute bottom-0 left-0 w-full p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span
-                    className={`px-2 py-1 text-xs font-medium rounded-full uppercase border ${getStatusColor(enrollment.status)}`}
-                  >
-                    {enrollment.status}
-                  </span>
-                  <span className="px-2 py-1 text-xs font-medium rounded-full uppercase bg-slate-800 text-gray-300 border border-slate-700">
-                    {course?.level || "Beginner"}
-                  </span>
-                </div>
-                <h1 className="text-3xl font-bold text-white mb-2">{course?.course_name || "Unnamed Course"}</h1>
-                <p className="text-gray-300">{course?.description || "No description available"}</p>
-              </div>
-              <div className="flex flex-col items-end">
-                <div className="flex items-center gap-1 mb-2">
-                  <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-                  <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-                  <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-                  <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
-                  <Star className="w-5 h-5 text-gray-600" />
-                  <span className="ml-2 text-white font-medium">4.0</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="relative w-8 h-8 rounded-full overflow-hidden bg-slate-700">
-                    <Image
-                      src={course?.instructor?.profile_img || "/placeholder.svg?height=32&width=32&query=instructor"}
-                      alt="Instructor"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <span className="text-gray-300">
-                    Instructor:{" "}
-                    {typeof course?.instructor === "object"
-                      ? course?.instructor?.name
-                      : course?.instructor || "Unknown"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+
+        {/* Level Tag */}
+        <div className="absolute top-3 left-3 z-20">
+          <span
+            className={`px-2 py-1 text-xs font-medium rounded-full ${
+              isDarkMode ? "bg-amber-700 text-amber-100" : "bg-amber-100 text-amber-800"
+            }`}
+          >
+            {course.level || "Intermediate"}
+          </span>
+        </div>
+
+        {/* Status Tag */}
+        <div className="absolute top-3 right-3 z-20">
+          <span
+            className={`px-2 py-1 text-xs font-medium rounded-full ${
+              course.status === "in-progress"
+                ? isDarkMode
+                  ? "bg-blue-700 text-blue-100"
+                  : "bg-blue-100 text-blue-800"
+                : isDarkMode
+                  ? "bg-green-700 text-green-100"
+                  : "bg-green-100 text-green-800"
+            }`}
+          >
+            {course.status === "in-progress" ? "in-progress" : "completed"}
+          </span>
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className="bg-slate-800 border-b border-slate-700 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex overflow-x-auto hide-scrollbar">
-            <button
-              onClick={() => setActiveSection("overview")}
-              className={`px-4 py-3 flex items-center whitespace-nowrap ${
-                activeSection === "overview"
-                  ? "border-b-2 border-cyan-500 text-cyan-400 font-medium"
-                  : "text-gray-400 hover:text-gray-200"
-              }`}
-            >
-              Overview
-            </button>
-            <button
-              onClick={() => setActiveSection("progress")}
-              className={`px-4 py-3 flex items-center whitespace-nowrap ${
-                activeSection === "progress"
-                  ? "border-b-2 border-cyan-500 text-cyan-400 font-medium"
-                  : "text-gray-400 hover:text-gray-200"
-              }`}
-            >
-              My Progress
-            </button>
-            <button
-              onClick={() => setActiveSection("schedule")}
-              className={`px-4 py-3 flex items-center whitespace-nowrap ${
-                activeSection === "schedule"
-                  ? "border-b-2 border-cyan-500 text-cyan-400 font-medium"
-                  : "text-gray-400 hover:text-gray-200"
-              }`}
-            >
-              Schedule
-            </button>
-            <button
-              onClick={() => setActiveSection("materials")}
-              className={`px-4 py-3 flex items-center whitespace-nowrap ${
-                activeSection === "materials"
-                  ? "border-b-2 border-cyan-500 text-cyan-400 font-medium"
-                  : "text-gray-400 hover:text-gray-200"
-              }`}
-            >
-              Materials
-            </button>
+      {/* Course Content */}
+      <div className="p-4">
+        <h3 className={`text-xl font-bold mb-2 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+          {course.title || course.course_name}
+        </h3>
+
+        {/* Rating and Price */}
+        <div className="flex items-center mb-3">
+          <div className="flex items-center">
+            {[...Array(5)].map((_, i) => (
+              <svg
+                key={i}
+                className={`w-4 h-4 ${i < Math.floor(course.rating || 4.5) ? "text-yellow-400" : "text-gray-300"}`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            ))}
           </div>
+          <span className={`ml-1 text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+            {course.rating || 4.5}
+          </span>
+          <span className={`mx-2 text-sm ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>•</span>
+          <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+            ฿{course.price?.toLocaleString()}
+          </span>
+        </div>
+
+        {/* Location */}
+        <div className="flex items-start gap-2 mb-2">
+          <MapPin className={`w-4 h-4 mt-0.5 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
+          <p className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>{locationText}</p>
+        </div>
+
+        {/* Schedule */}
+        <div className="flex items-start gap-2 mb-4">
+          <Calendar className={`w-4 h-4 mt-0.5 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
+          <div>
+            <div className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+              {times.map((time, index) => (
+                <div key={index} className="mb-1">
+                  <span className="font-medium">{time.day}:</span>
+                  {time.ranges.map((range, i) => (
+                    <span key={i} className="ml-1">
+                      {range.start} - {range.end}
+                      {i < time.ranges.length - 1 ? ", " : ""}
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+            <div className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+              Course duration: {course.course_duration || 8} sessions
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className={`border-t ${isDarkMode ? "border-gray-700" : "border-gray-200"} my-3`}></div>
+
+        {/* Instructor */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-200">
+              {course.instructorImage ? (
+                <Image
+                  src={course.instructorImage || "/placeholder.svg"}
+                  alt={typeof course.instructor === "string" ? course.instructor : "Instructor"}
+                  fill
+                  style={{ objectFit: "cover" }}
+                />
+              ) : (
+                <User className="w-4 h-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-400" />
+              )}
+            </div>
+            <div>
+              <p className={`text-sm font-medium ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}>Instructor</p>
+              <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+                {typeof course.instructor === "string" ? course.instructor : "Instructor"}
+              </p>
+            </div>
+          </div>
+
+          {/* Progress */}
+          {course.status === "in-progress" && course.progress && (
+            <div className="text-right">
+              <p className={`text-xs font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>Progress</p>
+              <p className={`text-sm font-bold ${isDarkMode ? "text-blue-400" : "text-blue-600"}`}>
+                {course.progress.overallCompletion}%
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Progress Bar for in-progress courses */}
+        {course.status === "in-progress" && course.progress && (
+          <div className="mt-2">
+            <div className={`w-full h-2 rounded-full ${isDarkMode ? "bg-gray-700" : "bg-gray-200"}`}>
+              <div
+                className="h-2 rounded-full bg-blue-500"
+                style={{ width: `${course.progress.overallCompletion}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+interface RequestCardProps {
+  request: CourseRequest
+  isDarkMode: boolean
+  onMakePayment?: (requestId: string) => void
+  isProcessingPayment?: boolean
+  paymentError?: string | null
+}
+
+function RequestCard({ request, isDarkMode, onMakePayment, isProcessingPayment, paymentError }: RequestCardProps) {
+  // Format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(date)
+  }
+
+  // Get status info (color, icon, and display text)
+  const getStatusInfo = (status: string) => {
+    const statusLower = status.toLowerCase()
+
+    if (statusLower.includes("paid_and_enrolled")) {
+      return {
+        color: isDarkMode ? "bg-green-800 text-green-200" : "bg-green-100 text-green-800",
+        icon: <CheckCircle className="w-4 h-4" />,
+        text: "Enrolled",
+        description: "You are enrolled in this course",
+      }
+    } else if (statusLower.includes("rejected")) {
+      return {
+        color: isDarkMode ? "bg-red-800 text-red-200" : "bg-red-100 text-red-800",
+        icon: <X className="w-4 h-4" />,
+        text: "Rejected",
+        description: "Your request was rejected by the instructor",
+      }
+    } else if (statusLower.includes("approved_pending_payment")) {
+      return {
+        color: isDarkMode ? "bg-blue-800 text-blue-200" : "bg-blue-100 text-blue-800",
+        icon: <DollarSign className="w-4 h-4" />,
+        text: "Payment Required",
+        description: "Approved - Waiting for payment",
+      }
+    } else if (statusLower.includes("pending_approval")) {
+      return {
+        color: isDarkMode ? "bg-yellow-800 text-yellow-200" : "bg-yellow-100 text-yellow-800",
+        icon: <ClockIcon className="w-4 h-4" />,
+        text: "Pending",
+        description: "Waiting for instructor approval",
+      }
+    } else {
+      return {
+        color: isDarkMode ? "bg-gray-800 text-gray-200" : "bg-gray-100 text-gray-800",
+        icon: <AlertCircle className="w-4 h-4" />,
+        text: formatStatusLabel(status),
+        description: "Request status",
+      }
+    }
+  }
+
+  const statusInfo = getStatusInfo(request.status)
+
+  return (
+    <div className={`rounded-lg shadow-sm overflow-hidden ${isDarkMode ? "bg-slate-800" : "bg-white"}`}>
+      <div className={`px-4 py-3 ${statusInfo.color} flex items-center gap-2`}>
+        {statusInfo.icon}
+        <div>
+          <span className="font-semibold">{statusInfo.text}</span>
+          <span className="text-xs ml-2 opacity-90">{statusInfo.description}</span>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Overview Section */}
-        {activeSection === "overview" && (
-          <div className="space-y-8">
-            {/* Progress Summary */}
-            <div className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 shadow-sm p-6">
-              <div className="flex flex-col md:flex-row justify-between gap-6">
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold mb-4">Your Progress</h3>
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-400">Overall Completion</span>
-                      <span className="font-bold text-cyan-400">{progressPercentage}%</span>
-                    </div>
-                    <div className="w-full h-3 rounded-full bg-slate-700">
-                      <div
-                        className="h-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600"
-                        style={{ width: `${progressPercentage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-slate-700/50 p-3 rounded-lg">
-                      <div className="flex items-center gap-2 mb-1">
-                        <BookOpen className="w-4 h-4 text-cyan-400" />
-                        <span className="text-sm text-gray-300">Sessions Completed</span>
-                      </div>
-                      <p className="text-xl font-bold">
-                        {enrollment.actual_sessions_attended} / {enrollment.target_sessions_to_complete}
-                      </p>
-                    </div>
-                    <div className="bg-slate-700/50 p-3 rounded-lg">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Calendar className="w-4 h-4 text-cyan-400" />
-                        <span className="text-sm text-gray-300">Next Session</span>
-                      </div>
-                      <p className="text-lg font-medium">Tomorrow, 10:00 AM</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold mb-4">Recent Activity</h3>
-                  <div className="space-y-3">
-                    {sessionProgress.slice(0, 3).map((session, index) => (
-                      <div key={index} className="flex items-start gap-3 p-3 bg-slate-700/50 rounded-lg">
-                        <div className="w-8 h-8 rounded-full bg-cyan-900/60 flex items-center justify-center text-cyan-400 font-bold flex-shrink-0">
-                          {session.session_number}
-                        </div>
-                        <div>
-                          <p className="font-medium">{session.topic_covered || `Session ${session.session_number}`}</p>
-                          <p className="text-sm text-gray-400">{formatShortDate(session.date_session)}</p>
-                        </div>
-                      </div>
-                    ))}
-                    {sessionProgress.length === 0 && (
-                      <div className="p-3 bg-slate-700/50 rounded-lg text-center">
-                        <p className="text-gray-400">No recent activity recorded</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div className="p-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex-1">
+            <h3 className={`text-lg font-semibold mb-3 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
+              {request.Course.course_name}
+            </h3>
 
-            {/* Course Details */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Course Information */}
-              <div className="col-span-2 bg-slate-800 rounded-xl overflow-hidden border border-slate-700 shadow-sm">
-                <div className="p-4 border-b border-slate-700">
-                  <h3 className="text-lg font-bold">Course Information</h3>
-                </div>
-                <div className="p-6">
-                  <div className="prose prose-invert max-w-none">
-                    <p>{course?.description || "No description available for this course."}</p>
-
-                    <h4 className="text-lg font-medium mt-6 mb-3">What You'll Learn</h4>
-                    <ul className="space-y-2">
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                        <span>Proper swimming techniques and form</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                        <span>Water safety and survival skills</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                        <span>Different swimming strokes and their applications</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                        <span>Breathing techniques and endurance training</span>
-                      </li>
-                    </ul>
-
-                    <h4 className="text-lg font-medium mt-6 mb-3">Requirements</h4>
-                    <ul className="space-y-2">
-                      <li className="flex items-start gap-2">
-                        <ChevronRight className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                        <span>Swimming attire (swimsuit, goggles, swim cap)</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <ChevronRight className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                        <span>Towel and personal hygiene items</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <ChevronRight className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                        <span>Basic comfort in water (for intermediate levels)</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-start gap-2">
+                <span
+                  className={`w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${isDarkMode ? "bg-slate-700" : "bg-gray-100"}`}
+                >
+                  <User className={`w-3 h-3 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
+                </span>
+                <p className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                  <span className="font-medium">Instructor:</span> {request.Course.instructor?.name || "Instructor"}
+                </p>
               </div>
 
-              {/* Course Details Sidebar */}
-              <div className="space-y-6">
-                <div className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 shadow-sm">
-                  <div className="p-4 border-b border-slate-700">
-                    <h3 className="text-lg font-bold">Course Details</h3>
-                  </div>
-                  <div className="p-4">
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-3">
-                        <Calendar className="w-5 h-5 text-cyan-400 mt-0.5" />
-                        <div>
-                          <p className="text-xs text-gray-400">START DATE</p>
-                          <p className="text-sm">{formatDate(enrollment.start_date)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <Clock className="w-5 h-5 text-cyan-400 mt-0.5" />
-                        <div>
-                          <p className="text-xs text-gray-400">DURATION</p>
-                          <p className="text-sm">{course?.course_duration || 8} weeks</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <MapPin className="w-5 h-5 text-cyan-400 mt-0.5" />
-                        <div>
-                          <p className="text-xs text-gray-400">LOCATION</p>
-                          <p className="text-sm">
-                            {typeof course?.location === "object"
-                              ? course?.location?.address
-                              : course?.location || "Not specified"}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <Award className="w-5 h-5 text-cyan-400 mt-0.5" />
-                        <div>
-                          <p className="text-xs text-gray-400">LEVEL</p>
-                          <p className="text-sm">{course?.level || "Beginner"}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <User className="w-5 h-5 text-cyan-400 mt-0.5" />
-                        <div>
-                          <p className="text-xs text-gray-400">INSTRUCTOR</p>
-                          <p className="text-sm">
-                            {typeof course?.instructor === "object"
-                              ? course?.instructor?.name
-                              : course?.instructor || "Unknown"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div className="flex items-start gap-2">
+                <span
+                  className={`w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${isDarkMode ? "bg-slate-700" : "bg-gray-100"}`}
+                >
+                  <MapPin className={`w-3 h-3 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
+                </span>
+                <p className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                  <span className="font-medium">Location:</span> {request.request_location}
+                </p>
+              </div>
 
-                <div className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 shadow-sm">
-                  <div className="p-4 border-b border-slate-700">
-                    <h3 className="text-lg font-bold">Contact</h3>
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="relative w-12 h-12 rounded-full overflow-hidden bg-slate-700">
-                        <Image
-                          src={
-                            typeof course?.instructor === "object"
-                              ? course?.instructor?.profile_img ||
-                                "/placeholder.svg?height=48&width=48&query=instructor"
-                              : "/placeholder.svg?height=48&width=48&query=instructor"
-                          }
-                          alt="Instructor"
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div>
-                        <p className="font-medium">
-                          {typeof course?.instructor === "object"
-                            ? course?.instructor?.name
-                            : course?.instructor || "Your Instructor"}
-                        </p>
-                        <p className="text-sm text-gray-400">Swimming Coach</p>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 p-2 bg-slate-700/50 rounded-lg">
-                        <MessageCircle className="w-5 h-5 text-cyan-400" />
-                        <span className="text-sm">Message</span>
-                      </div>
-                      <div className="flex items-center gap-2 p-2 bg-slate-700/50 rounded-lg">
-                        <FileText className="w-5 h-5 text-cyan-400" />
-                        <span className="text-sm">Support</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div className="flex items-start gap-2">
+                <span
+                  className={`w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${isDarkMode ? "bg-slate-700" : "bg-gray-100"}`}
+                >
+                  <DollarSign className={`w-3 h-3 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
+                </span>
+                <p className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                  <span className="font-medium">Price:</span> ฿{request.request_price.toLocaleString()}
+                </p>
+              </div>
+
+              <div className="flex items-start gap-2">
+                <span
+                  className={`w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${isDarkMode ? "bg-slate-700" : "bg-gray-100"}`}
+                >
+                  <Clock className={`w-3 h-3 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
+                </span>
+                <p className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                  <span className="font-medium">Schedule:</span>{" "}
+                  {request.requestedSlots
+                    ?.map((slot) => `${slot.dayOfWeek}, ${slot.startTime} - ${slot.endTime}`)
+                    .join("; ") || "Schedule not available"}
+                </p>
               </div>
             </div>
           </div>
-        )}
 
-        {/* Progress Section */}
-        {activeSection === "progress" && (
-          <div className="space-y-8">
-            {/* Progress Overview */}
-            <div className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 shadow-sm">
-              <div className="p-4 border-b border-slate-700">
-                <h3 className="text-lg font-bold">Progress Overview</h3>
-              </div>
-              <div className="p-6">
-                <div className="mb-6">
-                  <div className="flex justify-between items-center mb-2">
-                    <h4 className="font-medium text-white">Overall Completion</h4>
-                    <span className="font-bold text-cyan-400">{progressPercentage}%</span>
-                  </div>
-                  <div className="w-full h-3 rounded-full bg-slate-700">
-                    <div
-                      className="h-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600"
-                      style={{ width: `${progressPercentage}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-xs mt-2 text-gray-400">Last updated: {formatDate(enrollment.updated_at)}</p>
-                </div>
-
-                {/* Skill Progress */}
-                <div>
-                  <h4 className="font-medium text-white mb-4">Skill Progress</h4>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm text-gray-300">Technique</span>
-                        <span className="text-sm font-medium text-cyan-400">80%</span>
-                      </div>
-                      <div className="w-full h-2 rounded-full bg-slate-700">
-                        <div className="h-2 rounded-full bg-cyan-500" style={{ width: "80%" }}></div>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm text-gray-300">Endurance</span>
-                        <span className="text-sm font-medium text-cyan-400">65%</span>
-                      </div>
-                      <div className="w-full h-2 rounded-full bg-slate-700">
-                        <div className="h-2 rounded-full bg-cyan-500" style={{ width: "65%" }}></div>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm text-gray-300">Speed</span>
-                        <span className="text-sm font-medium text-cyan-400">50%</span>
-                      </div>
-                      <div className="w-full h-2 rounded-full bg-slate-700">
-                        <div className="h-2 rounded-full bg-cyan-500" style={{ width: "50%" }}></div>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm text-gray-300">Form</span>
-                        <span className="text-sm font-medium text-cyan-400">70%</span>
-                      </div>
-                      <div className="w-full h-2 rounded-full bg-slate-700">
-                        <div className="h-2 rounded-full bg-cyan-500" style={{ width: "70%" }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div className="flex flex-col gap-2 mt-4 md:mt-0 md:text-right">
+            <div className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+              Requested on {formatDate(request.created_at)}
             </div>
 
-            {/* Session Records */}
-            <div className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 shadow-sm">
-              <div className="p-4 border-b border-slate-700">
-                <h3 className="text-lg font-bold">Session Records</h3>
-              </div>
-              <div className="p-4">
-                {sessionProgress.length > 0 ? (
-                  <div className="space-y-4">
-                    {sessionProgress.map((session, index) => (
-                      <div key={session.session_progress_id} className="bg-slate-700/50 p-4 rounded-lg">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-cyan-900/60 flex items-center justify-center text-cyan-400 font-bold">
-                              {session.session_number}
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-white">
-                                {session.topic_covered || `Session ${session.session_number}`}
-                              </h4>
-                              <p className="text-xs text-gray-400">{formatDate(session.date_session)}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="px-2 py-1 text-xs rounded-full bg-cyan-900/30 text-cyan-300 border border-cyan-800">
-                              {session.skill_area || "General"}
-                            </div>
-                            <div className="px-2 py-1 text-xs rounded-full bg-purple-900/30 text-purple-300 border border-purple-800">
-                              Level {session.proficiency_level || "3"}
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-gray-300 text-sm">
-                          {session.performance_notes ||
-                            session.instructor_notes ||
-                            "No notes recorded for this session."}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <BarChart2 className="w-12 h-12 mx-auto text-gray-600 mb-3" />
-                    <h4 className="text-lg font-medium text-gray-400 mb-1">No Session Records</h4>
-                    <p className="text-sm text-gray-500">No progress records have been added yet.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Attendance Summary */}
-            <div className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 shadow-sm">
-              <div className="p-4 border-b border-slate-700">
-                <h3 className="text-lg font-bold">Attendance Summary</h3>
-              </div>
-              <div className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-slate-700/50 p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-400">Present</p>
-                        <p className="text-2xl font-bold text-white">
-                          {attendanceRecords.filter((a) => a.status === "PRESENT").length}
-                        </p>
-                      </div>
-                      <CheckCircle className="w-8 h-8 text-green-500 opacity-80" />
-                    </div>
-                  </div>
-                  <div className="bg-slate-700/50 p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-400">Late</p>
-                        <p className="text-2xl font-bold text-white">
-                          {attendanceRecords.filter((a) => a.status === "LATE").length}
-                        </p>
-                      </div>
-                      <Clock className="w-8 h-8 text-yellow-500 opacity-80" />
-                    </div>
-                  </div>
-                  <div className="bg-slate-700/50 p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-400">Absent</p>
-                        <p className="text-2xl font-bold text-white">
-                          {attendanceRecords.filter((a) => a.status === "ABSENT").length}
-                        </p>
-                      </div>
-                      <XCircle className="w-8 h-8 text-red-500 opacity-80" />
-                    </div>
-                  </div>
-                  <div className="bg-slate-700/50 p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-400">Attendance Rate</p>
-                        <p className="text-2xl font-bold text-white">
-                          {attendanceRecords.length > 0
-                            ? Math.round(
-                                (attendanceRecords.filter((a) => a.status === "PRESENT").length /
-                                  attendanceRecords.length) *
-                                  100,
-                              )
-                            : 0}
-                          %
-                        </p>
-                      </div>
-                      <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center">
-                        <div
-                          className="w-6 h-6 rounded-full border-3 border-green-500"
-                          style={{
-                            borderRightColor: "transparent",
-                            transform: `rotate(${
-                              attendanceRecords.length > 0
-                                ? (
-                                    attendanceRecords.filter((a) => a.status === "PRESENT").length /
-                                      attendanceRecords.length
-                                  ) * 360
-                                : 0
-                            }deg)`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {attendanceRecords.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="bg-slate-700">
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                            Session #
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                            Date
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                            Status
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-700">
-                        {attendanceRecords.map((record) => (
-                          <tr key={record.attendance_id} className="hover:bg-slate-700/50">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                              {record.session_number}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                              {formatDate(record.date_attendance)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                {record.status === "PRESENT" && (
-                                  <>
-                                    <div className="w-3 h-3 rounded-full mr-2 bg-green-500"></div>
-                                    <span className="text-sm">Present</span>
-                                  </>
-                                )}
-                                {record.status === "ABSENT" && (
-                                  <>
-                                    <div className="w-3 h-3 rounded-full mr-2 bg-red-500"></div>
-                                    <span className="text-sm">Absent</span>
-                                  </>
-                                )}
-                                {record.status === "LATE" && (
-                                  <>
-                                    <div className="w-3 h-3 rounded-full mr-2 bg-yellow-500"></div>
-                                    <span className="text-sm">Late</span>
-                                  </>
-                                )}
-                                {record.status === "EXCUSED" && (
-                                  <>
-                                    <div className="w-3 h-3 rounded-full mr-2 bg-blue-500"></div>
-                                    <span className="text-sm">Excused</span>
-                                  </>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="text-center py-4">
-                    <p className="text-gray-400">No attendance records available</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Schedule Section */}
-        {activeSection === "schedule" && (
-          <div className="space-y-8">
-            <div className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 shadow-sm">
-              <div className="p-4 border-b border-slate-700">
-                <h3 className="text-lg font-bold">Course Schedule</h3>
-              </div>
-              <div className="p-6">
-                <div className="mb-6">
-                  <h4 className="font-medium text-white mb-4">Weekly Schedule</h4>
-                  {enrollment.request?.requestedSlots && enrollment.request.requestedSlots.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {enrollment.request.requestedSlots.map((slot, index) => (
-                        <div key={index} className="bg-slate-700/50 p-4 rounded-lg">
-                          <div className="flex items-start gap-3">
-                            <Calendar className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                            <div>
-                              <p className="font-medium text-white capitalize">{slot.dayOfWeek.toLowerCase()}</p>
-                              <p className="text-sm text-gray-400">
-                                {slot.startTime} - {slot.endTime}
-                              </p>
-                              <p className="text-xs text-gray-500 mt-2">
-                                Location:{" "}
-                                {typeof course?.location === "object"
-                                  ? course?.location?.address
-                                  : course?.location || "Not specified"}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+            {request.status === "APPROVED_PENDING_PAYMENT" && (
+              <div className="flex flex-col">
+                <Button
+                  variant={isDarkMode ? "gradient" : "primary"}
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => onMakePayment && onMakePayment(request.request_id)}
+                  disabled={isProcessingPayment}
+                >
+                  {isProcessingPayment ? (
+                    <div className="flex items-center">
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Processing...
                     </div>
                   ) : (
-                    <div className="bg-slate-700/50 p-4 rounded-lg text-center">
-                      <p className="text-gray-400">No schedule information available</p>
+                    <div className="flex items-center">
+                      <DollarSign className="w-4 h-4 mr-1" />
+                      Make Payment
                     </div>
                   )}
-                </div>
+                </Button>
 
-                <div>
-                  <h4 className="font-medium text-white mb-4">Course Timeline</h4>
-                  <div className="relative pl-8 space-y-8 before:absolute before:inset-0 before:h-full before:w-[2px] before:bg-slate-700 before:left-3">
-                    <div className="relative">
-                      <div className="absolute -left-8 w-6 h-6 rounded-full bg-cyan-900 border-2 border-cyan-500 flex items-center justify-center">
-                        <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
-                      </div>
-                      <div className="bg-slate-700/50 p-4 rounded-lg">
-                        <p className="font-medium text-white">Course Start</p>
-                        <p className="text-sm text-gray-400">{formatDate(enrollment.start_date)}</p>
-                        <p className="text-sm text-gray-300 mt-2">Introduction to course materials and objectives</p>
-                      </div>
-                    </div>
-                    <div className="relative">
-                      <div className="absolute -left-8 w-6 h-6 rounded-full bg-slate-900 border-2 border-slate-600 flex items-center justify-center">
-                        <div className="w-2 h-2 rounded-full bg-slate-400"></div>
-                      </div>
-                      <div className="bg-slate-700/50 p-4 rounded-lg">
-                        <p className="font-medium text-white">Mid-Course Assessment</p>
-                        <p className="text-sm text-gray-400">
-                          {formatShortDate(
-                            new Date(
-                              new Date(enrollment.start_date).getTime() +
-                                ((enrollment.course_duration || 8) * 7 * 24 * 60 * 60 * 1000) / 2,
-                            ),
-                          )}
-                        </p>
-                        <p className="text-sm text-gray-300 mt-2">Evaluation of progress and skill development</p>
-                      </div>
-                    </div>
-                    <div className="relative">
-                      <div className="absolute -left-8 w-6 h-6 rounded-full bg-slate-900 border-2 border-slate-600 flex items-center justify-center">
-                        <div className="w-2 h-2 rounded-full bg-slate-400"></div>
-                      </div>
-                      <div className="bg-slate-700/50 p-4 rounded-lg">
-                        <p className="font-medium text-white">Course Completion</p>
-                        <p className="text-sm text-gray-400">
-                          {enrollment.end_date ? formatDate(enrollment.end_date) : "TBD"}
-                        </p>
-                        <p className="text-sm text-gray-300 mt-2">Final assessment and certification</p>
-                      </div>
-                    </div>
+                {paymentError && (
+                  <div
+                    className={`text-sm mt-2 p-2 rounded ${isDarkMode ? "bg-red-900 text-red-200" : "bg-red-50 text-red-600"}`}
+                  >
+                    {paymentError}
                   </div>
-                </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
-        )}
-
-        {/* Materials Section */}
-        {activeSection === "materials" && (
-          <div className="space-y-8">
-            <div className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 shadow-sm">
-              <div className="p-4 border-b border-slate-700">
-                <h3 className="text-lg font-bold">Course Materials</h3>
-              </div>
-              <div className="p-6">
-                <div className="mb-6">
-                  <h4 className="font-medium text-white mb-4">Required Equipment</h4>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3 p-3 bg-slate-700/50 rounded-lg">
-                      <CheckCircle className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium">Swimming Goggles</p>
-                        <p className="text-sm text-gray-400">Recommended: Anti-fog, UV protection</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3 p-3 bg-slate-700/50 rounded-lg">
-                      <CheckCircle className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium">Swimsuit</p>
-                        <p className="text-sm text-gray-400">Comfortable, athletic style recommended</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3 p-3 bg-slate-700/50 rounded-lg">
-                      <CheckCircle className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium">Swim Cap</p>
-                        <p className="text-sm text-gray-400">Silicone or latex cap to keep hair dry</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3 p-3 bg-slate-700/50 rounded-lg">
-                      <CheckCircle className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium">Towel</p>
-                        <p className="text-sm text-gray-400">Quick-dry towel recommended</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium text-white mb-4">Learning Resources</h4>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3 p-3 bg-slate-700/50 rounded-lg">
-                      <FileText className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium">Swimming Technique Guide</p>
-                        <p className="text-sm text-gray-400">PDF document with detailed instructions</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3 p-3 bg-slate-700/50 rounded-lg">
-                      <FileText className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium">Water Safety Manual</p>
-                        <p className="text-sm text-gray-400">Essential safety guidelines and procedures</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3 p-3 bg-slate-700/50 rounded-lg">
-                      <FileText className="w-5 h-5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium">Training Schedule</p>
-                        <p className="text-sm text-gray-400">Weekly progression plan</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   )

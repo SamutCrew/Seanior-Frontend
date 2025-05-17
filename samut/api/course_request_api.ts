@@ -1,5 +1,6 @@
 import apiClient from "./api_client"
 import { APIEndpoints } from "@/constants/apiEndpoints"
+import { getAuthToken } from "@/context/authToken"
 
 // Get pending course requests for the instructor
 export const getPendingCourseRequests = async () => {
@@ -8,6 +9,28 @@ export const getPendingCourseRequests = async () => {
     return response.data
   } catch (error) {
     console.error("Error fetching pending course requests:", error)
+    // Return empty array instead of throwing to prevent UI crashes
+    return []
+  }
+}
+
+// Get all course requests for the logged-in student
+export const getMyRequests = async () => {
+  try {
+    const token = await getAuthToken()
+    if (!token) {
+      console.error("No authentication token available")
+      return []
+    }
+
+    const response = await apiClient.get(`${APIEndpoints.COURSE_REQUESTS.BASE}/my-requests`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+    return response.data
+  } catch (error) {
+    console.error("Error fetching student course requests:", error)
     // Return empty array instead of throwing to prevent UI crashes
     return []
   }
