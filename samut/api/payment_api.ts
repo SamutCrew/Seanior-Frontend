@@ -20,9 +20,7 @@ export const createCheckoutSession = async (requestId: string): Promise<Checkout
       throw new Error("Authentication token not found. Please log in again.")
     }
 
-    // For development/testing: Use mock data if the API endpoint is not available
-    // Remove this in production or when the actual API endpoint is ready
-    const useMockData = true // Set to false when the real API is available
+    const useMockData = false // Set to false when the real API is available
 
     if (useMockData) {
       console.log("Using mock payment data for development")
@@ -35,7 +33,7 @@ export const createCheckoutSession = async (requestId: string): Promise<Checkout
     }
 
     // Real API call
-    const response = await fetch(`${APIEndpoints}/payment/create-checkout-session`, {
+    const response = await fetch(APIEndpoints.PAYMENT.CREATE_PROMPTPAY_SESSION, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

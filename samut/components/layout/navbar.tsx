@@ -190,7 +190,6 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
         }}
       >
         <div className="flex items-center">
-          
 
           {/* Logo with gradient text to match sidebar */}
           <Link

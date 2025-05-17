@@ -1,7 +1,7 @@
 "use client"
 import { useRef } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
-
+import { useRouter } from 'next/navigation';
 import { SectionTitle } from "@/components/Common/SectionTitle"
 import HeroSection from "@/components/Partial/PageLanding/HeroSection"
 import EventSection from "@/components/Partial/PageLanding/EventsSection"
@@ -114,6 +114,10 @@ export default function Home() {
     },
   ]
 
+  const router = useRouter();
+  const handleBrowseInstructorsClick = () => {
+    router.push('/allinstructor'); // Navigate to /allinstructor
+  };
   return (
     <div>
       <HeroSection
@@ -122,7 +126,7 @@ export default function Home() {
         imageSrc="/SwimmimgLanding.jpg"
         primaryAction={{
           text: "Browse Instructors",
-          onClick: () => console.log("Browse Instructors Clicked"),
+          onClick: handleBrowseInstructorsClick,
         }}
         secondaryAction={{
           text: "How It Works",
