@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { Search, Filter, X, ChevronDown, BookOpen, Bookmark, Layers } from "lucide-react"
+import { Search, Filter, X, ChevronDown, BookOpen, Bookmark, Layers, MapPin } from "lucide-react"
 import { SectionTitle } from "@/components/Common/SectionTitle"
 import { Button } from "@/components/Common/Button"
 import { IconButton } from "@/components/Common/IconButton"
@@ -14,6 +14,7 @@ import LoadingPage from "@/components/Common/LoadingPage"
 import { HiAcademicCap, HiOutlineAcademicCap } from "react-icons/hi"
 import { FaSwimmer } from "react-icons/fa"
 import { getAllCourses } from "@/api/course_api"
+import { LocationFilter } from "@/components/Searchpage/LocationFilter"
 
 /**
  * Extract address from location data
@@ -76,6 +77,7 @@ export default function AllCoursesPage() {
     duration: "",
     location: "",
     instructor: "",
+    maxDistance: 0,
   })
 
   // View state
@@ -89,6 +91,85 @@ export default function AllCoursesPage() {
   const [featuredCourses, setFeaturedCourses] = useState<Course[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Location state
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; address?: string } | null>(null)
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address?: string } | null>(null)
+  const [locationError, setLocationError] = useState<string | null>(null)
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false)
+  const [showMap, setShowMap] = useState(false)
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({ lat: 13.7563, lng: 100.5018 }) // Bangkok coordinates
+
+  // Get user's current location
+  const getCurrentLocation = () => {
+    setIsLoadingLocation(true)
+    setLocationError(null)
+
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser")
+      setIsLoadingLocation(false)
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const location = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          address: "Your current location",
+        }
+        setUserLocation(location)
+        setSelectedLocation(location)
+        setMapCenter({ lat: location.lat, lng: location.lng })
+        setIsLoadingLocation(false)
+      },
+      (error) => {
+        console.error("Geolocation error:", error)
+        setLocationError("Unable to retrieve your location")
+        setIsLoadingLocation(false)
+      },
+    )
+  }
+
+  // Handle map click to select a new location
+  const handleMapClick = (location: { lat: number; lng: number }) => {
+    const newLocation = {
+      lat: location.lat,
+      lng: location.lng,
+      address: "Selected location",
+    }
+    setSelectedLocation(newLocation)
+    setMapCenter({ lat: location.lat, lng: location.lng })
+  }
+
+  // Toggle map visibility
+  const toggleMap = () => {
+    setShowMap(!showMap)
+    if (!showMap && userLocation) {
+      setMapCenter({ lat: userLocation.lat, lng: userLocation.lng })
+    }
+  }
+
+  // Helper function to calculate distance between two coordinates (in km)
+  function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+    if (!lat1 || !lon1 || !lat2 || !lon2) {
+      return Number.POSITIVE_INFINITY
+    }
+
+    const R = 6371 // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1)
+    const dLon = deg2rad(lon2 - lon1)
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    const distance = R * c // Distance in km
+    return distance
+  }
+
+  function deg2rad(deg: number) {
+    return deg * (Math.PI / 180)
+  }
 
   // Load courses from API
   useEffect(() => {
@@ -199,6 +280,7 @@ export default function AllCoursesPage() {
     if (courseFilters.duration) count++
     if (courseFilters.location) count++
     if (courseFilters.instructor) count++
+    if (courseFilters.maxDistance) count++
     setActiveFilterCount(count)
   }, [courseFilters])
 
@@ -267,11 +349,65 @@ export default function AllCoursesPage() {
       )
     }
 
+    // Apply distance filter
+    if (courseFilters.maxDistance > 0 && (userLocation || selectedLocation)) {
+      const referenceLocation = selectedLocation || userLocation
+      if (referenceLocation) {
+        results = results.filter((course) => {
+          // Skip courses without location data
+          if (!course.location || (!course.location.lat && !course.location.lng)) {
+            return false
+          }
+
+          // Extract lat/lng from location
+          let courseLat, courseLng
+
+          if (typeof course.location === "object") {
+            // If location is an object with lat/lng properties
+            if (course.location.lat && course.location.lng) {
+              courseLat = course.location.lat
+              courseLng = course.location.lng
+            } else {
+              return false
+            }
+          } else if (typeof course.location === "string") {
+            // Try to extract coordinates from JSON string
+            try {
+              const locationObj = JSON.parse(course.location)
+              if (locationObj.lat && locationObj.lng) {
+                courseLat = locationObj.lat
+                courseLng = locationObj.lng
+              } else {
+                return false
+              }
+            } catch (e) {
+              // If parsing fails, try regex to extract coordinates
+              const latMatch = course.location.match(/"lat":([0-9.]+)/)
+              const lngMatch = course.location.match(/"lng":([0-9.]+)/)
+
+              if (latMatch && lngMatch) {
+                courseLat = Number.parseFloat(latMatch[1])
+                courseLng = Number.parseFloat(lngMatch[1])
+              } else {
+                return false
+              }
+            }
+          } else {
+            return false
+          }
+
+          const distance = getDistance(referenceLocation.lat, referenceLocation.lng, courseLat, courseLng)
+
+          return distance <= courseFilters.maxDistance
+        })
+      }
+    }
+
     // Apply sorting
     results = sortCourses(results, sortOption)
 
     setFilteredCourses(results)
-  }, [searchTerm, courseFilters, courses, sortOption, activeCategory])
+  }, [searchTerm, courseFilters, courses, sortOption, activeCategory, userLocation, selectedLocation])
 
   // Sort Courses based on selected option
   const sortCourses = (courseList: Course[], option: string) => {
@@ -292,8 +428,14 @@ export default function AllCoursesPage() {
     }
   }
 
+  // Add a null check for the viewCourseDetails function
   const viewCourseDetails = (id: number | string) => {
-    router.push(`/allcourse/${id}`)
+    if (id) {
+      router.push(`/allcourse/${id}`)
+    } else {
+      console.error("Invalid course ID")
+      // Optionally show an error message to the user
+    }
   }
 
   // Reset all filters
@@ -305,7 +447,10 @@ export default function AllCoursesPage() {
       duration: "",
       location: "",
       instructor: "",
+      maxDistance: 0,
     })
+    setSelectedLocation(null)
+    setShowMap(false)
     setActiveCategory("all")
   }
 
@@ -557,6 +702,19 @@ export default function AllCoursesPage() {
                         />
                       </motion.span>
                     )}
+                    {courseFilters.maxDistance > 0 && (
+                      <motion.span
+                        className="px-3 py-1 rounded-full text-xs bg-indigo-600/80 backdrop-blur-sm text-white flex items-center gap-1"
+                        initial={{ scale: 0.8 }}
+                        animate={{ scale: 1 }}
+                      >
+                        Distance: {courseFilters.maxDistance}km
+                        <X
+                          className="h-3 w-3 cursor-pointer"
+                          onClick={() => setCourseFilters({ ...courseFilters, maxDistance: 0 })}
+                        />
+                      </motion.span>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -721,6 +879,25 @@ export default function AllCoursesPage() {
                     >
                       Under $200
                     </div>
+                    <div
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium flex items-center cursor-pointer shadow-sm hover:shadow-md transition-all duration-200 ${
+                        courseFilters.maxDistance === 10
+                          ? "bg-indigo-600 text-white"
+                          : isDarkMode
+                            ? "bg-slate-700 text-gray-300 border border-slate-600"
+                            : "bg-white text-gray-700 border border-gray-300"
+                      }`}
+                      onClick={() => {
+                        if (courseFilters.maxDistance === 10) {
+                          setCourseFilters({ ...courseFilters, maxDistance: 0 })
+                        } else {
+                          getCurrentLocation()
+                          setCourseFilters({ ...courseFilters, maxDistance: 10 })
+                        }
+                      }}
+                    >
+                      <MapPin className="w-3 h-3 mr-1" /> Nearby
+                    </div>
                   </div>
                 </div>
 
@@ -827,6 +1004,48 @@ export default function AllCoursesPage() {
                       }`}
                     />
                   </div>
+                </div>
+
+                {/* Location Filter */}
+                <div className={`mt-6 pt-6 border-t ${isDarkMode ? "border-slate-700" : "border-gray-200"}`}>
+                  <h4 className={`text-base font-medium mb-3 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      <span>Location</span>
+                    </div>
+                  </h4>
+                  <LocationFilter
+                    isLoadingLocation={isLoadingLocation}
+                    locationError={locationError}
+                    userLocation={userLocation}
+                    selectedLocation={selectedLocation}
+                    showMap={showMap}
+                    maxDistance={courseFilters.maxDistance}
+                    searchType="course"
+                    getCurrentLocation={getCurrentLocation}
+                    toggleMap={toggleMap}
+                    handleMapClick={handleMapClick}
+                    mapCenter={mapCenter}
+                    setMaxDistance={(distance) => {
+                      setCourseFilters({ ...courseFilters, maxDistance: distance })
+                    }}
+                    courseLocations={filteredCourses.map((c) => ({
+                      id: c.id || "",
+                      name: c.title || "",
+                      location:
+                        typeof c.location === "object"
+                          ? c.location
+                          : typeof c.location === "string" && c.location.includes('"lat"')
+                            ? (() => {
+                                try {
+                                  return JSON.parse(c.location)
+                                } catch (e) {
+                                  return null
+                                }
+                              })()
+                            : null,
+                    }))}
+                  />
                 </div>
 
                 <div className="flex justify-end mt-6 pt-6 border-t border-dashed gap-3">
@@ -1083,6 +1302,47 @@ export default function AllCoursesPage() {
                       </div>
                     </div>
                   </div>
+                  {userLocation || selectedLocation ? (
+                    <span className={isDarkMode ? "text-gray-400 ml-1" : "text-gray-500 ml-1"}>
+                      {(() => {
+                        let courseLat, courseLng
+
+                        if (typeof course.location === "object" && course.location.lat && course.location.lng) {
+                          courseLat = course.location.lat
+                          courseLng = course.location.lng
+                        } else if (typeof course.location === "string") {
+                          try {
+                            const locationObj = JSON.parse(course.location)
+                            if (locationObj.lat && locationObj.lng) {
+                              courseLat = locationObj.lat
+                              courseLng = locationObj.lng
+                            }
+                          } catch (e) {
+                            const latMatch = course.location.match(/"lat":([0-9.]+)/)
+                            const lngMatch = course.location.match(/"lng":([0-9.]+)/)
+
+                            if (latMatch && lngMatch) {
+                              courseLat = Number.parseFloat(latMatch[1])
+                              courseLng = Number.parseFloat(lngMatch[1])
+                            }
+                          }
+                        }
+
+                        if (courseLat && courseLng) {
+                          const distance = Math.round(
+                            getDistance(
+                              (userLocation || selectedLocation)!.lat,
+                              (userLocation || selectedLocation)!.lng,
+                              courseLat,
+                              courseLng,
+                            ),
+                          )
+                          return `(${distance} km away)`
+                        }
+                        return ""
+                      })()}
+                    </span>
+                  ) : null}
                 </motion.div>
               ))}
             </div>

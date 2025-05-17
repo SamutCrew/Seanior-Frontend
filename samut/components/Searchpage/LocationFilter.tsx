@@ -32,7 +32,7 @@ interface LocationFilterProps {
   courseLocations?: LocationItem[]
 }
 
-// 🌍 ฟังก์ชันคำนวณระยะทางระหว่าง 2 พิกัด
+// Update the getDistance function to be more robust
 const getDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
   if (lat1 === undefined || lng1 === undefined || lat2 === undefined || lng2 === undefined) {
     return Number.POSITIVE_INFINITY // Return a large value if coordinates are undefined
@@ -64,29 +64,29 @@ export const LocationFilter = ({
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
   const referenceLocation = selectedLocation || userLocation
 
-  // ✅ ฟิลเตอร์รายการตามระยะทาง
+  // Update the filtered items logic to handle missing location data
   const filteredInstructors = referenceLocation
     ? instructorLocations.filter((t) => {
-      if (!t.location || t.location.lat === undefined || t.location.lng === undefined) {
-        return false
-      }
-      return (
-        getDistance(referenceLocation.lat, referenceLocation.lng, t.location.lat, t.location.lng) <= maxDistance ||
-        maxDistance === 0
-      )
-    })
+        if (!t.location || t.location.lat === undefined || t.location.lng === undefined) {
+          return false
+        }
+        return (
+          getDistance(referenceLocation.lat, referenceLocation.lng, t.location.lat, t.location.lng) <= maxDistance ||
+          maxDistance === 0
+        )
+      })
     : instructorLocations
 
   const filteredCourses = referenceLocation
     ? courseLocations.filter((c) => {
-      if (!c.location || c.location.lat === undefined || c.location.lng === undefined) {
-        return false
-      }
-      return (
-        getDistance(referenceLocation.lat, referenceLocation.lng, c.location.lat, c.location.lng) <= maxDistance ||
-        maxDistance === 0
-      )
-    })
+        if (!c.location || c.location.lat === undefined || c.location.lng === undefined) {
+          return false
+        }
+        return (
+          getDistance(referenceLocation.lat, referenceLocation.lng, c.location.lat, c.location.lng) <= maxDistance ||
+          maxDistance === 0
+        )
+      })
     : courseLocations
 
   return (
@@ -96,8 +96,9 @@ export const LocationFilter = ({
       </label>
       <div className="flex">
         <select
-          className={`flex-1 border rounded-l-md p-2 ${isDarkMode ? "bg-slate-700 border-slate-600 text-white" : "bg-white text-black border-gray-300"
-            }`}
+          className={`flex-1 border rounded-l-md p-2 ${
+            isDarkMode ? "bg-slate-700 border-slate-600 text-white" : "bg-white text-black border-gray-300"
+          }`}
           value={maxDistance}
           onChange={(e) => setMaxDistance(Number(e.target.value))}
         >
@@ -110,8 +111,9 @@ export const LocationFilter = ({
         <button
           onClick={getCurrentLocation}
           disabled={isLoadingLocation}
-          className={`flex items-center justify-center px-3 rounded-r-md hover:bg-blue-700 disabled:bg-blue-400 ${isDarkMode ? "bg-blue-700 text-white" : "bg-blue-600 text-white"
-            }`}
+          className={`flex items-center justify-center px-3 rounded-r-md hover:bg-blue-700 disabled:bg-blue-400 ${
+            isDarkMode ? "bg-blue-700 text-white" : "bg-blue-600 text-white"
+          }`}
         >
           {isLoadingLocation ? (
             "Locating..."
@@ -125,8 +127,9 @@ export const LocationFilter = ({
 
       <button
         onClick={toggleMap}
-        className={`mt-2 w-full text-sm flex items-center justify-center ${isDarkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-800"
-          }`}
+        className={`mt-2 w-full text-sm flex items-center justify-center ${
+          isDarkMode ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-800"
+        }`}
       >
         <FaMapMarkerAlt className="mr-1" />
         {showMap ? "Hide Map" : "Show Map to Select Location"}
@@ -138,25 +141,33 @@ export const LocationFilter = ({
         >
           <OSMMapSelector
             center={mapCenter}
+            initialMarker={selectedLocation || undefined}
             instructorLocations={
               searchType === "instructor"
-                ? filteredInstructors.map((t) => ({
-                  id: t.id,
-                  name: t.name,
-                  location: t.location,
-                }))
+                ? filteredInstructors
+                    .filter((t) => t.location && t.location.lat !== undefined && t.location.lng !== undefined)
+                    .map((t) => ({
+                      lat: t.location.lat,
+                      lng: t.location.lng,
+                      name: t.name,
+                    }))
                 : undefined
             }
             courseLocations={
               searchType === "course"
-                ? filteredCourses.map((c) => ({
-                  id: c.id,
-                  name: c.name,
-                  location: c.location,
-                }))
+                ? filteredCourses
+                    .filter((c) => c.location && c.location.lat !== undefined && c.location.lng !== undefined)
+                    .map((c) => ({
+                      lat: c.location.lat,
+                      lng: c.location.lng,
+                      title: c.name,
+                    }))
                 : undefined
             }
             onLocationSelect={handleMapClick}
+            height="400px"
+            zoom={12}
+            allowDragging={true}
           />
           <div className={`p-2 text-sm ${isDarkMode ? "bg-slate-700 text-gray-300" : "bg-gray-50 text-gray-700"}`}>
             {selectedLocation && (
@@ -168,7 +179,6 @@ export const LocationFilter = ({
         </div>
       )}
 
-      {locationError && <p className="mt-1 text-sm text-red-600">{locationError}</p>}
       {(userLocation || selectedLocation) && (
         <p className={`mt-1 text-sm ${isDarkMode ? "text-green-400" : "text-green-600"}`}>
           {userLocation === selectedLocation ? "Using your current location" : "Using selected location"}

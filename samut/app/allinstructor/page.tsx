@@ -24,9 +24,42 @@ import { useAppSelector } from "@/app/redux"
 import { LocationFilter } from "@/components/Searchpage/LocationFilter"
 import { InstructorFiltersComponent } from "@/components/Searchpage/InstructorFilters"
 import type { Instructor, InstructorFilters, Location } from "@/types/instructor"
-import { fetchInstructors } from "@/api/instructorCourseApi"
 import LoadingPage from "@/components/Common/LoadingPage"
 import { motion, AnimatePresence } from "framer-motion"
+
+// Direct API URL - no authentication needed
+const API_URL = "https://seanior-backend.onrender.com/users/retrieve/getAllInstructors"
+
+// Function to map API data to the format expected by the UI
+const mapApiDataToInstructors = (apiData: any[]): Instructor[] => {
+  if (!apiData || !Array.isArray(apiData)) return []
+
+  return apiData.map((instructor) => ({
+    id: instructor.user_id,
+    name: instructor.name,
+    profile_img: instructor.profile_img || "/swimming-instructor.png",
+    description: {
+      specialty: instructor.description?.specialty || "",
+      bio: instructor.description?.bio || "",
+      rating: 4.5, // Default rating since it's not in the API data
+      experience: instructor.description?.experience ? Number.parseInt(instructor.description.experience) : 0,
+      price: 75, // Default price since it's not in the API data
+      styles: instructor.description?.styles
+        ? typeof instructor.description.styles === "string"
+          ? instructor.description.styles.split(", ")
+          : [instructor.description.styles]
+        : [],
+      levels: ["Beginner", "Intermediate"], // Default levels since it's not in the API data
+      lessonType: "Private", // Default lesson type since it's not in the API data
+      certification: [instructor.description?.certification || ""],
+      location: instructor.description?.location || {
+        lat: 0,
+        lng: 0,
+        address: "Location not specified",
+      },
+    },
+  }))
+}
 
 export default function InstructorsDirectoryPage() {
   const router = useRouter()
@@ -71,19 +104,26 @@ export default function InstructorsDirectoryPage() {
   const [error, setError] = useState<string | null>(null)
   const [sortOption, setSortOption] = useState("relevance")
 
-  // Fetch instructors data
+  // Fetch instructors data directly from the API
   useEffect(() => {
-    const loadInstructors = async () => {
+    const fetchInstructors = async () => {
       try {
         setIsLoading(true)
         setError(null)
-        const instructorData = await fetchInstructors()
-        console.log("FETCHED INSTRUCTORS DATA:", instructorData)
-        console.log("INSTRUCTOR COUNT:", instructorData.length)
 
-        // Handle empty response
-        if (!instructorData || instructorData.length === 0) {
-          console.warn("No instructor data received")
+        console.log("Fetching instructors from API:", API_URL)
+        const response = await fetch(API_URL)
+
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`)
+        }
+
+        const data = await response.json()
+        console.log("API Response:", data)
+
+        if (!data || !Array.isArray(data) || data.length === 0) {
+          console.warn("No instructor data received or invalid data format")
+          setError("No instructor data available. Please try again later.")
           setInstructors([])
           setFilteredInstructors([])
           setFeaturedInstructors([])
@@ -91,50 +131,27 @@ export default function InstructorsDirectoryPage() {
           return
         }
 
-        // Log the first instructor to check its structure
-        if (instructorData.length > 0) {
-          console.log("FIRST INSTRUCTOR STRUCTURE:", JSON.stringify(instructorData[0], null, 2))
-        }
+        // Map API data to the format expected by the UI
+        const mappedInstructors = mapApiDataToInstructors(data)
+        console.log("Mapped instructors:", mappedInstructors)
 
-        // Check for required fields
-        const validInstructors = instructorData.filter(
-          (inst) => inst && typeof inst.id !== "undefined" && typeof inst.name === "string",
-        )
+        setInstructors(mappedInstructors)
+        setFilteredInstructors(mappedInstructors)
 
-        console.log("VALID INSTRUCTORS COUNT:", validInstructors.length)
-
-        if (validInstructors.length === 0) {
-          console.error("NO VALID INSTRUCTORS FOUND IN DATA")
-          setError("No valid instructor data found. Please try again later.")
-          setIsLoading(false)
-          return
-        }
-
-        // Check for location data specifically
-        const instructorsWithLocation = instructorData.filter(
-          (inst) => inst.description?.location?.lat && inst.description?.location?.lng,
-        )
-        console.log("INSTRUCTORS WITH VALID LOCATION:", instructorsWithLocation.length)
-
-        setInstructors(instructorData)
-        setFilteredInstructors(instructorData)
-
-        // Set featured instructors (top 3 by rating)
-        const featured = [...instructorData]
-          .filter((inst) => inst.description?.rating)
-          .sort((a, b) => (b.description?.rating || 0) - (a.description?.rating || 0))
+        // Set featured instructors (top 3 by experience)
+        const featured = [...mappedInstructors]
+          .sort((a, b) => (b.description?.experience || 0) - (a.description?.experience || 0))
           .slice(0, 3)
         setFeaturedInstructors(featured)
-
-        setIsLoading(false)
       } catch (err) {
-        console.error("Error loading instructors:", err)
+        console.error("Error fetching instructors:", err)
         setError("Failed to load instructors. Please try again later.")
+      } finally {
         setIsLoading(false)
       }
     }
 
-    loadInstructors()
+    fetchInstructors()
   }, [])
 
   // Update active filter count
@@ -220,15 +237,6 @@ export default function InstructorsDirectoryPage() {
       Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     const distance = R * c // Distance in km
-
-    // Log only occasionally to avoid console spam
-    if (Math.random() < 0.05) {
-      console.log("DISTANCE CALCULATION:", {
-        from: { lat: lat1, lng: lon1 },
-        to: { lat: lat2, lng: lon2 },
-        distance: distance,
-      })
-    }
 
     return distance
   }
@@ -331,6 +339,7 @@ export default function InstructorsDirectoryPage() {
 
         const beforeCount = results.length
         results = results.filter((instructor) => {
+          // Ensure instructor has location data with valid coordinates
           if (!instructor.description?.location?.lat || !instructor.description?.location?.lng) {
             return false
           }
@@ -419,9 +428,14 @@ export default function InstructorsDirectoryPage() {
     }
   }
 
-  const viewInstructorProfile = (id: number) => {
+  const viewInstructorProfile = (id: number | string) => {
     console.log("NAVIGATING TO INSTRUCTOR PROFILE:", id)
-    router.push(`/allinstructor/${id}`)
+    if (id) {
+      router.push(`/allinstructor/${id}`)
+    } else {
+      console.error("Invalid instructor ID")
+      // Optionally show an error message to the user
+    }
   }
 
   // Check if any filters are active
@@ -956,11 +970,13 @@ export default function InstructorsDirectoryPage() {
                     setMaxDistance={(distance) => {
                       setInstructorFilters({ ...instructorFilters, maxDistance: distance })
                     }}
-                    instructorLocations={filteredInstructors.map((t) => ({
-                      id: t.id,
-                      name: t.name,
-                      location: t.description?.location,
-                    }))}
+                    instructorLocations={filteredInstructors
+                      .filter((inst) => inst.description?.location?.lat && inst.description?.location?.lng)
+                      .map((t) => ({
+                        id: t.id,
+                        name: t.name,
+                        location: t.description?.location,
+                      }))}
                   />
                 </div>
 

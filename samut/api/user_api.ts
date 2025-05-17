@@ -37,6 +37,28 @@ export const checkAlreadyHaveUserInDb = async (firebase_uid: string) => {
   }
 };
 
+export const getAllInstructors = async () => {
+  const url = APIEndpoints.INSTRUCTOR.RETRIEVE.ALL;
+  console.log('Attempting to fetch all instructors');
+
+  try {
+    const response = await apiClient.get(url);
+    console.log('Fetched instructors:', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching instructors:', {
+      message: error.message,
+      response: error.response ? {
+        status: error.response.status,
+        data: error.response.data,
+      } : null,
+    });
+    throw error;
+  }
+};
+
+
+
 export const createUser = async (userData: UserCreate) => {
     const url = APIEndpoints.USER.CREATE;
     console.log('Attempting to create user with data:', userData);
@@ -72,11 +94,7 @@ export const verifyUserToken = async (): Promise<boolean> => {
 export const getUserData = async (userId: string) => {
   const url = APIEndpoints.USER.RETRIEVE.DATA_BY_USERID.replace("[userId]", userId);
   try {
-    const token = await getAuthToken();
     const response = await apiClient.get(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     });
     console.log("User data response:", response.data);
     return response.data;
