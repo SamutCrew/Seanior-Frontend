@@ -1,4 +1,3 @@
-export const API_BASE_URL = "http://localhost:8000"
 export const APIEndpoints = Object.freeze({
   AUTH: {
     VERIFY_TOKEN: "/auth/verifyToken",
@@ -61,13 +60,11 @@ export const APIEndpoints = Object.freeze({
     USER_REQUESTS: (userId: string) => `/course-requests/user/${userId}`,
   },
   PAYMENT: {
-    CREATE_PROMPTPAY_SESSION: `${API_BASE_URL}/payment/create-checkout-session`,
+    CREATE_PROMPTPAY_SESSION: `/payment/create-checkout-session`,
   },
   ENROLLMENT: {
-    MY_ENROLLMENTS: `${API_BASE_URL}/enrollments/my`,
-    INSTRUCTOR_ENROLLMENTS: `${API_BASE_URL}/enrollments/instructor`,
-    // ATTENDANCE: (enrollmentId: string) => `<span class="math-inline">\{API\_BASE\_URL\}/enrollments/</span>{enrollmentId}/attendances`,
-    // SESSION_PROGRESS: (enrollmentId: string) => `<span class="math-inline">\{API\_BASE\_URL\}/enrollments/</span>{enrollmentId}/session-progress`,
+    MY_ENROLLMENTS: `/enrollments/my`,
+    INSTRUCTOR_ENROLLMENTS: `/enrollments/instructor`,
   },
   NOTIFICATION: {
     RETRIEVE: {

@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -18,6 +20,7 @@ import {
   MapPin,
   Calendar,
   User,
+  Star,
 } from "lucide-react"
 import { useAppSelector } from "@/app/redux"
 import { Button } from "@/components/Common/Button"
@@ -145,6 +148,243 @@ function formatStatusLabel(status: string): string {
 
 type ActiveTab = "courses" | "requests"
 
+// Review Modal Component
+interface ReviewModalProps {
+  course: Course
+  isOpen: boolean
+  onClose: () => void
+  isDarkMode: boolean
+}
+
+function ReviewModal({ course, isOpen, onClose, isDarkMode }: ReviewModalProps) {
+  const [rating, setRating] = useState(5)
+  const [comment, setComment] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [hoverRating, setHoverRating] = useState(0)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      // Here you would implement the API call to submit the review
+      console.log("Submitting review:", { courseId: course.id, rating, comment })
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      // Close modal after successful submission
+      onClose()
+      // You might want to show a success message here
+    } catch (error) {
+      console.error("Failed to submit review:", error)
+      // Handle error (show error message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm animate-fadeIn">
+      <div
+        className={`relative w-full max-w-md rounded-xl shadow-2xl transform transition-all duration-300 ease-in-out animate-scaleIn ${
+          isDarkMode ? "bg-gradient-to-br from-slate-800 to-slate-900 text-white" : "bg-white text-gray-900"
+        }`}
+      >
+        {/* Course Image Header */}
+        <div className="relative h-40 w-full rounded-t-xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
+          <Image
+            src={
+              course.course_image || `/placeholder.svg?height=300&width=400&query=swimming course ${course.course_id}`
+            }
+            alt={course.title || course.course_name}
+            fill
+            style={{ objectFit: "cover" }}
+          />
+
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-black/30 hover:bg-black/50 transition-colors"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+
+          {/* Course title overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 z-20">
+            <h3 className="text-xl font-bold text-white">{course.title || course.course_name}</h3>
+            <div className="flex items-center mt-1">
+              <div className="flex items-center">
+                {[...Array(5)].map((_, i) => (
+                  <svg
+                    key={i}
+                    className={`w-4 h-4 ${i < Math.floor(course.rating || 4.5) ? "text-yellow-400" : "text-gray-300"}`}
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              <span className="ml-1 text-sm text-white">{course.rating || 4.5}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Review Form */}
+        <div className="p-6">
+          <h4 className={`text-lg font-semibold mb-5 ${isDarkMode ? "text-white" : "text-gray-800"}`}>
+            Share Your Experience
+          </h4>
+
+          <form onSubmit={handleSubmit}>
+            {/* Rating */}
+            <div className="mb-6">
+              <label className={`block mb-3 text-sm font-medium ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}>
+                How would you rate this course?
+              </label>
+              <div className="flex items-center justify-center space-x-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    onClick={() => setRating(star)}
+                    className="focus:outline-none transform transition-transform hover:scale-110 duration-150"
+                  >
+                    <Star
+                      className={`w-10 h-10 ${
+                        (hoverRating ? star <= hoverRating : star <= rating)
+                          ? "text-yellow-400 fill-yellow-400"
+                          : isDarkMode
+                            ? "text-gray-600"
+                            : "text-gray-300"
+                      } transition-colors duration-150`}
+                    />
+                  </button>
+                ))}
+              </div>
+              <div className="text-center mt-2">
+                <span className={`text-sm font-medium ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
+                  {rating === 1 && "Poor"}
+                  {rating === 2 && "Fair"}
+                  {rating === 3 && "Good"}
+                  {rating === 4 && "Very Good"}
+                  {rating === 5 && "Excellent"}
+                </span>
+              </div>
+            </div>
+
+            {/* Comment */}
+            <div className="mb-6">
+              <label
+                htmlFor="comment"
+                className={`block mb-2 text-sm font-medium ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}
+              >
+                Your Review
+              </label>
+              <textarea
+                id="comment"
+                rows={4}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="What did you like or dislike? What was your experience with the instructor?"
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 transition-all duration-200 ${
+                  isDarkMode
+                    ? "bg-slate-700/50 border-slate-600 text-white placeholder-gray-400 focus:ring-blue-500/40 focus:border-blue-500"
+                    : "bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-blue-500/30 focus:border-blue-500"
+                }`}
+                required
+              />
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex justify-end space-x-3">
+              <Button
+                type="button"
+                variant={isDarkMode ? "outline" : "secondary"}
+                size="sm"
+                onClick={onClose}
+                className={`px-4 ${isDarkMode ? "hover:bg-slate-700" : "hover:bg-gray-100"}`}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant={isDarkMode ? "gradient" : "primary"}
+                size="sm"
+                className="px-5 font-medium"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Submitting...
+                  </div>
+                ) : (
+                  "Submit Review"
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Add these animations to the global CSS or at the top of the file
+const animationStyles = `
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.3s ease-out;
+}
+`
+
+// Add this style tag at the top of the component
+if (typeof document !== "undefined") {
+  const style = document.createElement("style")
+  style.textContent = animationStyles
+  document.head.appendChild(style)
+}
+
 export default function MyCoursesPage() {
   const router = useRouter()
   const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
@@ -158,6 +398,10 @@ export default function MyCoursesPage() {
   const [activeTab, setActiveTab] = useState<ActiveTab>("courses")
   const [processingPaymentId, setProcessingPaymentId] = useState<string | null>(null)
   const [paymentError, setPaymentError] = useState<{ id: string; message: string } | null>(null)
+
+  // Review modal state
+  const [reviewModalOpen, setReviewModalOpen] = useState(false)
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
 
   // Pagination for requests
   const [currentPage, setCurrentPage] = useState(1)
@@ -207,6 +451,16 @@ export default function MyCoursesPage() {
     } finally {
       setProcessingPaymentId(null)
     }
+  }
+
+  const openReviewModal = (course: Course) => {
+    setSelectedCourse(course)
+    setReviewModalOpen(true)
+  }
+
+  const closeReviewModal = () => {
+    setReviewModalOpen(false)
+    setSelectedCourse(null)
   }
 
   if (loading) {
@@ -561,6 +815,7 @@ export default function MyCoursesPage() {
                       course={course}
                       onClick={() => navigateToCourseDetail(course.course_id)}
                       isDarkMode={isDarkMode}
+                      onReview={() => openReviewModal(course)}
                     />
                   ))}
                 </div>
@@ -579,12 +834,23 @@ export default function MyCoursesPage() {
                       course={course}
                       onClick={() => navigateToCourseDetail(course.course_id)}
                       isDarkMode={isDarkMode}
+                      onReview={() => openReviewModal(course)}
                     />
                   ))}
                 </div>
               </div>
             )}
           </>
+        )}
+
+        {/* Review Modal */}
+        {selectedCourse && (
+          <ReviewModal
+            course={selectedCourse}
+            isOpen={reviewModalOpen}
+            onClose={closeReviewModal}
+            isDarkMode={isDarkMode}
+          />
         )}
       </div>
     </div>
@@ -595,9 +861,10 @@ interface CourseCardProps {
   course: Course
   onClick: () => void
   isDarkMode: boolean
+  onReview: () => void
 }
 
-function CourseCardItem({ course, onClick, isDarkMode }: CourseCardProps) {
+function CourseCardItem({ course, onClick, isDarkMode }: Omit<CourseCardProps, "onReview">) {
   return (
     <div onClick={onClick} className="cursor-pointer">
       <CourseCard course={course} variant="standard" />
@@ -605,7 +872,9 @@ function CourseCardItem({ course, onClick, isDarkMode }: CourseCardProps) {
   )
 }
 
-function EnhancedCourseCard({ course, onClick, isDarkMode }: CourseCardProps) {
+function EnhancedCourseCard({ course, onClick, isDarkMode, onReview }: CourseCardProps) {
+  const router = useRouter()
+
   // Format schedule for display
   const formatSchedule = (schedule: any) => {
     if (typeof schedule === "string") {
@@ -618,7 +887,7 @@ function EnhancedCourseCard({ course, onClick, isDarkMode }: CourseCardProps) {
 
     // Extract days and times from schedule
     const days: string[] = []
-    const times: { day: string; ranges: { start: string; end: string }[] }[] = []
+    const times: { day: string; ranges: { start: string; end: string }[] } = []
 
     if (schedule && typeof schedule === "object") {
       Object.entries(schedule).forEach(([day, value]: [string, any]) => {
@@ -796,6 +1065,66 @@ function EnhancedCourseCard({ course, onClick, isDarkMode }: CourseCardProps) {
             </div>
           </div>
         )}
+
+        {/* Action Buttons */}
+        <div className="mt-3 pt-3 border-t border-gray-700">
+          <div className="grid grid-cols-2 gap-2">
+            {/* Review Button */}
+            <Button
+              variant={isDarkMode ? "outline" : "secondary"}
+              size="sm"
+              className="flex items-center justify-center gap-2"
+              onClick={(e) => {
+                e.stopPropagation() // Prevent card click navigation
+                onReview() // Open the review modal
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-star"
+              >
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              Review
+            </Button>
+
+            {/* View Details Button */}
+            <Button
+              variant={isDarkMode ? "primary" : "default"}
+              size="sm"
+              className="flex items-center justify-center gap-2"
+              onClick={(e) => {
+                e.stopPropagation() // Prevent card click navigation
+                window.location.href = `http://localhost:3000/my-courses/${course.id}`
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="lucide lucide-eye"
+              >
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              Details
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   )

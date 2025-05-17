@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import {
   ChevronLeft,
@@ -35,6 +35,25 @@ interface SidebarProps {
 
 const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "student" }: SidebarProps) => {
   const { user, logOut } = useAuth()
+
+  // Determine if user is an instructor based on user_type
+  const isInstructor = user?.user_type === "instructor"
+
+  // Check if user is an admin
+  const isAdmin = user?.user_type === "admin"
+
+  // Set initial user role based on actual user type
+  useEffect(() => {
+    if (user) {
+      // ถ้าเป็น admin ให้เริ่มต้นเป็น instructor view
+      if (user.user_type === "admin") {
+        setUserRoleState("teacher")
+      } else {
+        // สำหรับผู้ใช้ทั่วไปให้ตั้งค่าตามบทบาทจริง
+        setUserRoleState(isInstructor ? "teacher" : "student")
+      }
+    }
+  }, [user, isInstructor])
 
   const [devMode, setDevMode] = useState(false)
   const [userRoleState, setUserRoleState] = useState(userRole)
@@ -72,29 +91,33 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
   }
 
   // Track window resize
+  const debouncedHandleResize = useCallback(() => {
+    handleResize.current()
+  }, [])
+
   useEffect(() => {
     let timeoutId: NodeJS.Timeout
 
-    const debouncedHandleResize = () => {
+    const debouncedResize = () => {
       clearTimeout(timeoutId)
       timeoutId = setTimeout(() => {
-        handleResize.current()
+        debouncedHandleResize()
       }, 100) // Debounce the resize event
     }
 
     if (typeof window !== "undefined") {
       setWindowWidth(window.innerWidth) // Set initial width
-      window.addEventListener("resize", debouncedHandleResize)
-      debouncedHandleResize() // Check initial size
+      window.addEventListener("resize", debouncedResize)
+      debouncedResize() // Check initial size
 
       return () => {
-        window.removeEventListener("resize", debouncedHandleResize)
+        window.removeEventListener("resize", debouncedResize)
         clearTimeout(timeoutId)
       }
     }
 
     return () => clearTimeout(timeoutId)
-  }, [isSidebarCollapsed])
+  }, [debouncedHandleResize, isSidebarCollapsed])
 
   const handleLogout = async () => {
     try {
@@ -154,7 +177,6 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
     { icon: Compass, label: "Recommended", href: "/student/recommended" },
   ]
 
-  // Select the appropriate class items based on user role
   const classItems = userRoleState === "teacher" ? teacherClassItems : studentClassItems
 
   // Animation variants for the sidebar
@@ -363,19 +385,18 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
             </AnimatePresence>
           </div>
 
-          {/* Development Mode Toggle - only visible in development - Fixed height */}
-          {process.env.NODE_ENV === "development" && (
+          {/* Role Toggle - only visible for admin users */}
+          {isAdmin && (
             <div className="flex-shrink-0 flex items-center justify-center py-1 px-2 border-b border-gray-100 dark:border-gray-800">
               <div className="flex items-center gap-2">
                 {(!isMobile && !isSidebarCollapsed) || isMobile ? (
                   <span className="text-xs text-gray-600 dark:text-gray-300">
-                    {userRoleState === "teacher" ? "Teacher" : "Student"}
+                    {userRoleState === "teacher" ? "Instructor" : "Student"} View
                   </span>
                 ) : null}
                 <button
                   onClick={() => {
                     setUserRoleState((prev) => (prev === "teacher" ? "student" : "teacher"))
-                    setDevMode((prev) => !prev)
                   }}
                   className={`relative inline-flex h-4 w-8 items-center rounded-full ${
                     userRoleState === "teacher" ? "bg-cyan-500" : "bg-blue-500"
@@ -412,7 +433,7 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
                 </div>
                 <div>
                   <h2 className="text-sm font-bold tracking-wide dark:text-gray-200">
-                    {userRoleState === "teacher" ? "Teacher Portal" : "Student Portal"}
+                    {userRoleState === "teacher" ? "Instructor Portal" : "Student Portal"}
                   </h2>
                   <p className="text-xs text-gray-500">
                     {userRoleState === "teacher" ? "Swimming Instructor" : "Swimming Student"}
