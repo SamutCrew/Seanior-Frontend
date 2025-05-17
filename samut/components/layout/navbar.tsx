@@ -190,34 +190,6 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
         }}
       >
         <div className="flex items-center">
-          {/* Hamburger menu with hover effect - visible on all screens */}
-          <motion.button
-            onMouseEnter={() => setIsMenuHovered(true)}
-            onMouseLeave={() => setIsMenuHovered(false)}
-            onClick={handleToggleMobileSidebar}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className={`mr-4 rounded-md p-2 transition-all duration-200
-              ${
-                isLandingPage && isAtTop
-                  ? "text-white hover:bg-white/10"
-                  : isDarkMode
-                    ? "text-gray-300 hover:bg-gray-800"
-                    : "text-gray-700 hover:bg-gray-100"
-              }`}
-            aria-label="Toggle sidebar"
-          >
-            {isMobileSidebarOpen ? (
-              <X
-                className={`${isLandingPage && isAtTop ? "h-6 w-6" : "h-5 w-5"} ${isMenuHovered ? "text-cyan-500" : ""}`}
-              />
-            ) : (
-              <Menu
-                className={`${isLandingPage && isAtTop ? "h-6 w-6" : "h-5 w-5"} ${isMenuHovered ? "text-cyan-500" : ""}`}
-              />
-            )}
-          </motion.button>
-
           {/* Logo with gradient text to match sidebar */}
           <Link
             href="/"
