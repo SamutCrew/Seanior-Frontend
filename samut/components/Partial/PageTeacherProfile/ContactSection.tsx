@@ -4,17 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import {
-  FaEnvelope,
-  FaPhone,
-  FaMapMarkerAlt,
-  FaCalendarAlt,
-  FaPaperPlane,
-  FaBook,
-  FaHome,
-  FaSwimmer,
-  FaWarehouse,
-} from "react-icons/fa"
+import { FaPaperPlane, FaBook, FaHome, FaSwimmer, FaWarehouse } from "react-icons/fa"
 import type { Teacher } from "@/types/instructor"
 import type { Course, CourseType } from "@/types/course"
 import { Button } from "@/components/Common/Button"
@@ -67,51 +57,7 @@ export default function ContactSection({ teacher, courses = [] }: ContactSection
 
   return (
     <div className={`rounded-xl shadow-sm p-6 ${isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white"}`}>
-      <h3 className={`text-xl font-bold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>Contact Information</h3>
-
-      <div className="space-y-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className={isDarkMode ? "bg-blue-900/50 p-2 rounded-full" : "bg-blue-100 p-2 rounded-full"}>
-            <FaEnvelope className={isDarkMode ? "text-cyan-400" : "text-blue-600"} />
-          </div>
-          <div>
-            <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Email</p>
-            <p className={isDarkMode ? "text-white" : "text-gray-800"}>{teacher.email}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className={isDarkMode ? "bg-blue-900/50 p-2 rounded-full" : "bg-blue-100 p-2 rounded-full"}>
-            <FaPhone className={isDarkMode ? "text-cyan-400" : "text-blue-600"} />
-          </div>
-          <div>
-            <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Phone</p>
-            <p className={isDarkMode ? "text-white" : "text-gray-800"}>{teacher.phone}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className={isDarkMode ? "bg-blue-900/50 p-2 rounded-full" : "bg-blue-100 p-2 rounded-full"}>
-            <FaMapMarkerAlt className={isDarkMode ? "text-cyan-400" : "text-blue-600"} />
-          </div>
-          <div>
-            <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Location</p>
-            <p className={isDarkMode ? "text-white" : "text-gray-800"}>{teacher.location.address}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className={isDarkMode ? "bg-blue-900/50 p-2 rounded-full" : "bg-blue-100 p-2 rounded-full"}>
-            <FaCalendarAlt className={isDarkMode ? "text-cyan-400" : "text-blue-600"} />
-          </div>
-          <div>
-            <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Preferred Contact Hours</p>
-            <p className={isDarkMode ? "text-white" : "text-gray-800"}>{teacher.contactHours}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className={`border-t pt-6 ${isDarkMode ? "border-slate-700" : "border-gray-200"}`}>
+      <div>
         <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? "text-white" : "text-gray-800"}`}>Send a Message</h3>
 
         {submitted ? (

@@ -47,12 +47,28 @@ export async function fetchInstructorsAdmin(): Promise<InstructorAdmin[]> {
   }
 }
 
-export async function fetchCourses(): Promise<Course[]> {
+export async function fetchCourses(instructorId?: string): Promise<Course[]> {
   try {
+    // Use the same endpoint as the dashboard
     const res = await apiClient.get(APIEndpoints.COURSE.RETRIEVE.ALL)
+
+    // If instructorId is provided, filter courses by instructor
+    if (instructorId) {
+      return res.data.filter((course: any) => {
+        // Check various ways the instructor might be associated with the course
+        return (
+          course.instructor_id === instructorId ||
+          course.instructor === instructorId ||
+          (course.instructor && typeof course.instructor === "object" && course.instructor.id === instructorId) ||
+          course.user_id === instructorId
+        )
+      })
+    }
+
     return res.data
   } catch (error) {
     console.error("Error fetching courses:", error)
+    // Return empty array instead of throwing to prevent cascading errors
     return []
   }
 }

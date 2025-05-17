@@ -18,7 +18,7 @@ export default function ProfileTabs({ activeTab, setActiveTab }: ProfileTabsProp
     { id: "certifications", label: "Certifications", icon: <FaCertificate /> },
     { id: "testimonials", label: "Testimonials", icon: <FaStar /> },
     { id: "schedule", label: "Schedule", icon: <FaCalendarAlt /> },
-    { id: "contact", label: "Contact", icon: <FaEnvelope /> },
+
   ]
 
   return (

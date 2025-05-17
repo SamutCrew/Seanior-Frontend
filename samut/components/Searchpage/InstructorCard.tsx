@@ -69,16 +69,30 @@ export const InstructorCard = ({ instructor, userLocation, isDarkMode = false }:
 
         {/* Certification Badges - Moved to top left */}
         <div className="absolute top-4 left-4 flex flex-col gap-2">
-          {instructor.description?.certification?.slice(0, 2).map((cert, index) => (
-            <span
-              key={index}
-              className={`${
-                isDarkMode ? "bg-slate-800/80 text-cyan-400 border border-slate-700/50" : "bg-white/80 text-blue-800"
-              } backdrop-blur-sm text-xs px-2 py-1 rounded-md font-medium shadow-sm`}
-            >
-              {cert}
-            </span>
-          ))}
+          {Array.isArray(instructor.description?.certification)
+            ? instructor.description?.certification?.slice(0, 2).map((cert, index) => (
+                <span
+                  key={index}
+                  className={`${
+                    isDarkMode
+                      ? "bg-slate-800/80 text-cyan-400 border border-slate-700/50"
+                      : "bg-white/80 text-blue-800"
+                  } backdrop-blur-sm text-xs px-2 py-1 rounded-md font-medium shadow-sm`}
+                >
+                  {cert}
+                </span>
+              ))
+            : instructor.description?.certification && (
+                <span
+                  className={`${
+                    isDarkMode
+                      ? "bg-slate-800/80 text-cyan-400 border border-slate-700/50"
+                      : "bg-white/80 text-blue-800"
+                  } backdrop-blur-sm text-xs px-2 py-1 rounded-md font-medium shadow-sm`}
+                >
+                  {instructor.description.certification}
+                </span>
+              )}
         </div>
       </div>
 
@@ -111,16 +125,26 @@ export const InstructorCard = ({ instructor, userLocation, isDarkMode = false }:
         </p>
 
         <div className="flex flex-wrap gap-2 mb-4">
-          {instructor.description?.styles?.map((style, index) => (
-            <span
-              key={index}
-              className={`text-xs px-2 py-1 rounded-full ${
-                isDarkMode ? "bg-slate-700 text-cyan-300 border border-slate-600" : "bg-blue-50 text-blue-700"
-              }`}
-            >
-              {style}
-            </span>
-          ))}
+          {Array.isArray(instructor.description?.styles)
+            ? instructor.description?.styles?.map((style, index) => (
+                <span
+                  key={index}
+                  className={`text-xs px-2 py-1 rounded-full ${
+                    isDarkMode ? "bg-slate-700 text-cyan-300 border border-slate-600" : "bg-blue-50 text-blue-700"
+                  }`}
+                >
+                  {style}
+                </span>
+              ))
+            : instructor.description?.styles && (
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ${
+                    isDarkMode ? "bg-slate-700 text-cyan-300 border border-slate-600" : "bg-blue-50 text-blue-700"
+                  }`}
+                >
+                  {instructor.description.styles}
+                </span>
+              )}
         </div>
 
         <div className="mt-auto">
