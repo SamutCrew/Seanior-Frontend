@@ -16,7 +16,8 @@ const publicEndpoints = [
   "/courses", // Course endpoints
   "/instructors/all",
   "/courses/all",
-  "/users/retrieve/getAllInstructors"
+  "/users/retrieve/getAllInstructors",
+  "/about"
 ]
 
 // Add request interceptor for logging
