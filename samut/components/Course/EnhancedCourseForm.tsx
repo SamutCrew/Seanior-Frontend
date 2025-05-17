@@ -615,6 +615,28 @@ export default function EnhancedCourseForm({
       // Create a copy of the form data for submission
       const submissionData = { ...formData }
 
+      // --- START: แปลงค่า price เป็นหน่วยสตางค์ ---
+      // ตรวจสอบอีกครั้งเผื่อกรณีพิเศษ แต่ปกติควรจะเป็น number แล้ว
+      if (typeof submissionData.price === 'number') {
+        submissionData.price = submissionData.price * 100; // คูณ 100 เพื่อแปลงเป็นสตางค์
+        console.log("Price converted to satang:", submissionData.price);
+      } else {
+        // กรณีนี้ไม่ควรเกิดขึ้นถ้า handleChange ทำงานถูกต้อง
+        // แต่ถ้าเกิดขึ้น แสดงว่ามีบางอย่างผิดพลาดในการจัดการ State ของ price
+        console.warn("Price is not a number during submission, attempting conversion:", submissionData.price);
+        const numericPrice = Number.parseInt(String(submissionData.price).replace(/,/g, ""), 10); // Cast to String ก่อน replace
+        if (!isNaN(numericPrice)) {
+          submissionData.price = numericPrice * 100;
+          console.log("Price (from non-number) converted to satang:", submissionData.price);
+        } else {
+          console.error("CRITICAL: Price could not be converted to a number for submission. Value:", submissionData.price);
+          // คุณอาจจะต้องโยน Error หรือ Alert User ตรงนี้
+          // submissionData.price = 0; // หรือตั้งค่า Default เพื่อป้องกัน Error ตอนส่ง
+          // return; // หรือหยุดการ Submit ไปเลย
+        }
+      }
+      // --- END: แปลงค่า price เป็นหน่วยสตางค์ ---
+
       // Convert location object to string for Prisma
       if (submissionData.location && typeof submissionData.location === "object") {
         // Stringify the location object for database storage

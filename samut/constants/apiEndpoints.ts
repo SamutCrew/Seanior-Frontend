@@ -63,6 +63,12 @@ export const APIEndpoints = Object.freeze({
   PAYMENT: {
     CREATE_PROMPTPAY_SESSION: `${API_BASE_URL}/payment/create-checkout-session`,
   },
+  ENROLLMENT: {
+    MY_ENROLLMENTS: `${API_BASE_URL}/enrollments/my`,
+    INSTRUCTOR_ENROLLMENTS: `${API_BASE_URL}/enrollments/instructor`,
+    // ATTENDANCE: (enrollmentId: string) => `<span class="math-inline">\{API\_BASE\_URL\}/enrollments/</span>{enrollmentId}/attendances`,
+    // SESSION_PROGRESS: (enrollmentId: string) => `<span class="math-inline">\{API\_BASE\_URL\}/enrollments/</span>{enrollmentId}/session-progress`,
+  },
   NOTIFICATION: {
     RETRIEVE: {
       BY_USER_ID: "/notifications/user/[userId]",
