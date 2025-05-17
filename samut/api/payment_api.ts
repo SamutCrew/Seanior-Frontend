@@ -33,7 +33,7 @@ export const createCheckoutSession = async (requestId: string): Promise<Checkout
     }
 
     // Real API call
-    const response = await fetch(APIEndpoints.PAYMENT.CREATE_CHECKOUT_SESSION, {
+    const response = await fetch(APIEndpoints.PAYMENT.CREATE_PROMPTPAY_SESSION, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
