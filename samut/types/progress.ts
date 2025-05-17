@@ -1,3 +1,4 @@
+// Update the SessionProgress interface to match the API response format
 export interface SessionProgress {
   session_progress_id: string
   enrollment_id: string
@@ -7,24 +8,37 @@ export interface SessionProgress {
   date_session: string
   created_at: string
   updated_at: string
+  // Keep other fields that might be used elsewhere
+  skill_area?: string
+  skill_name?: string
+  proficiency_level?: number
+  instructor_notes?: string
+  student_notes?: string
+  achievements?: string
+  areas_for_improvement?: string
+  next_steps?: string
+  media_urls?: string[]
 }
 
-export interface ProgressSummary {
-  totalSessions: number
-  completedSessions: number
-  upcomingSessions: number
-  nextSessionDate: string | null
-  lastSessionDate: string | null
-  progressPercentage: number
+export interface ProgressMilestone {
+  milestone_id: string
+  enrollment_id: string
+  title: string
+  description: string
+  target_date: string
+  completed: boolean
+  completed_date?: string
+  created_at: string
+  updated_at: string
 }
 
 export interface SkillAssessment {
+  skill_id: string
+  enrollment_id: string
   name: string
-  progress: number
-}
-
-export interface Milestone {
-  name: string
-  completed: boolean
-  date: string
+  category: string
+  progress: number // 0-100
+  last_assessed: string
+  created_at: string
+  updated_at: string
 }

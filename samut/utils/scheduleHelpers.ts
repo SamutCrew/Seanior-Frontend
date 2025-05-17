@@ -1,83 +1,107 @@
-/**
- * Helper functions for working with schedule data
- */
+import type { RequestedSlot } from "@/types/enrollment"
 
 /**
- * Formats a schedule object into a human-readable string
- * @param schedule The schedule object or string to format
- * @returns A formatted string representation of the schedule
+ * Format a time string to AM/PM format
  */
-export const formatScheduleForDisplay = (schedule: any): string => {
-  if (!schedule) return "No schedule available"
+export const formatTime = (time: string): string => {
+  if (!time) return "N/A"
+  const [hours, minutes] = time.split(":").map(Number)
+  const period = hours >= 12 ? "PM" : "AM"
+  const displayHours = hours % 12 || 12
+  return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`
+}
 
-  try {
-    // Parse schedule if it's a string
-    const scheduleObj = typeof schedule === "string" ? JSON.parse(schedule) : schedule
+/**
+ * Convert requested slots to a formatted schedule object
+ */
+export const formatScheduleFromSlots = (slots: RequestedSlot[]): { day: string; times: string[] }[] => {
+  // Group slots by day
+  const dayMap: Record<string, string[]> = {}
 
-    // Get selected days
-    const selectedDays = Object.keys(scheduleObj)
-      .filter((day) => scheduleObj[day]?.selected)
-      .map((day) => {
-        const dayName = day.charAt(0).toUpperCase() + day.slice(1)
-        const ranges = scheduleObj[day].ranges || []
-        const times = ranges
-          .map((range) => {
-            // Format time to AM/PM
-            const formatTime = (time: string) => {
-              const [hours, minutes] = time.split(":").map(Number)
-              const period = hours >= 12 ? "PM" : "AM"
-              const displayHours = hours % 12 || 12
-              return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`
-            }
+  slots.forEach((slot) => {
+    const day = slot.dayOfWeek
+    const timeRange = `${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}`
 
-            return `${formatTime(range.start)} - ${formatTime(range.end)}`
-          })
-          .join(", ")
+    if (!dayMap[day]) {
+      dayMap[day] = []
+    }
 
-        return `${dayName}: ${times}`
+    dayMap[day].push(timeRange)
+  })
+
+  // Convert to array format
+  const result: { day: string; times: string[] }[] = []
+
+  // Define day order for consistent display
+  const daysOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+  // Sort days according to the defined order
+  daysOrder.forEach((day) => {
+    if (dayMap[day]) {
+      result.push({
+        day,
+        times: dayMap[day],
       })
+    }
+  })
 
-    return selectedDays.length > 0 ? selectedDays.join(" • ") : "No days selected"
-  } catch (error) {
-    console.error("Error formatting schedule:", error)
-    return "Schedule format error"
-  }
+  return result
 }
 
 /**
- * Checks if a schedule has any selected days
- * @param schedule The schedule object or string to check
- * @returns True if any days are selected, false otherwise
+ * Format schedule object into structured data
  */
-export const hasSelectedDays = (schedule: any): boolean => {
-  if (!schedule) return false
-
+export const formatScheduleObject = (scheduleObj: any): { day: string; times: string[] }[] => {
   try {
-    const scheduleObj = typeof schedule === "string" ? JSON.parse(schedule) : schedule
+    if (!scheduleObj) return []
 
-    return Object.keys(scheduleObj).some((day) => scheduleObj[day]?.selected)
+    // Define day order for consistent display
+    const daysOrder = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+
+    // Format each day with its time slots
+    return daysOrder
+      .filter((day) => {
+        const dayData = scheduleObj[day]
+        return dayData && dayData.selected === true
+      })
+      .map((day) => {
+        const dayData = scheduleObj[day]
+        const dayName = day.charAt(0).toUpperCase() + day.slice(1)
+        const ranges = dayData.ranges || []
+
+        // Format all time ranges for this day
+        const timeSlots = ranges.map((range: any) => `${formatTime(range.start)} - ${formatTime(range.end)}`)
+
+        return {
+          day: dayName,
+          times: timeSlots,
+        }
+      })
   } catch (error) {
-    console.error("Error checking selected days:", error)
-    return false
-  }
-}
-
-/**
- * Gets an array of selected day names from a schedule
- * @param schedule The schedule object or string to check
- * @returns An array of selected day names
- */
-export const getSelectedDays = (schedule: any): string[] => {
-  if (!schedule) return []
-
-  try {
-    const scheduleObj = typeof schedule === "string" ? JSON.parse(schedule) : schedule
-
-    return Object.keys(scheduleObj)
-      .filter((day) => scheduleObj[day]?.selected)
-      .map((day) => day.charAt(0).toUpperCase() + day.slice(1))
-  } catch (error) {
-    console.error("Error getting selected days:", error)
+    console.error("Error formatting schedule object:", error)
     return []
   }
+}
+
+/**
+ * Safely parse and format schedule data
+ */
+export const safeFormatSchedule = (schedule: any): { day: string; times: string[] }[] => {
+  // If schedule is a string that looks like JSON, try to parse it
+  if (typeof schedule === "string") {
+    try {
+      const parsed = JSON.parse(schedule)
+      return formatScheduleObject(parsed)
+    } catch (error) {
+      console.log("Schedule string couldn't be parsed as JSON:", error)
+      return []
+    }
+  }
+
+  // If it's an object, format it
+  if (schedule && typeof schedule === "object") {
+    return formatScheduleObject(schedule)
+  }
+
+  return []
 }

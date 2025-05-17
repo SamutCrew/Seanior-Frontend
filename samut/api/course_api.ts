@@ -22,7 +22,6 @@ export const getAllCourses = async () => {
   }
 }
 
-
 // Get course by ID
 export const getCourseById = async (courseId: string) => {
   try {
@@ -57,7 +56,6 @@ export const getCourseById = async (courseId: string) => {
   }
 }
 
-
 // New function to get courses by instructor ID
 export const getCoursesByInstructorId = async (instructorId: string) => {
   try {
@@ -67,9 +65,47 @@ export const getCoursesByInstructorId = async (instructorId: string) => {
 
     const response = await apiClient.get(url)
     console.log("API Response for instructor courses:", response)
-    
+
+    // If the instructor data is missing, try to fetch it separately
+    let coursesData = response.data || []
+
+    if (Array.isArray(coursesData)) {
+      // Log the instructor data for debugging
+      console.log(
+        "Instructor data in courses:",
+        coursesData.map((course) => ({
+          id: course.id || course.course_id,
+          instructor: course.instructor,
+        })),
+      )
+
+      // If courses don't have instructor data, add the current user as instructor
+      if (
+        coursesData.length > 0 &&
+        (!coursesData[0].instructor ||
+          (typeof coursesData[0].instructor === "object" && !coursesData[0].instructor.name))
+      ) {
+        try {
+          // Try to get user data from localStorage or session
+          const userData = localStorage.getItem("user") || sessionStorage.getItem("user")
+          if (userData) {
+            const user = JSON.parse(userData)
+            coursesData = coursesData.map((course) => ({
+              ...course,
+              instructor: {
+                ...course.instructor,
+                name: user.name || user.user_name || "Current Instructor",
+              },
+            }))
+          }
+        } catch (err) {
+          console.error("Error adding instructor data:", err)
+        }
+      }
+    }
+
     // Return the data array or an empty array if the response is invalid
-    return response.data || []
+    return coursesData || []
   } catch (error: any) {
     // More detailed error logging
     console.error("Error fetching instructor courses:", {
@@ -84,7 +120,6 @@ export const getCoursesByInstructorId = async (instructorId: string) => {
     return []
   }
 }
-
 
 // Create a new course
 export const createCourse = async (courseData: any) => {
@@ -107,9 +142,9 @@ export const createCourse = async (courseData: any) => {
       message: error.message,
       response: error.response
         ? {
-            status: error.response.status,
-            data: error.response.data,
-          }
+          status: error.response.status,
+          data: error.response.data,
+        }
         : null,
     })
     throw error
@@ -148,8 +183,46 @@ export const updateCourse = async (courseId: string, courseData: any) => {
     const url = APIEndpoints.COURSE.UPDATE.replace("[courseId]", courseId)
     console.log(`Sending PUT request to ${url}`)
 
+    // Get the token directly for this critical request
+    let token = null
+
+    // Try multiple token storage locations
+    token = localStorage.getItem("token") || sessionStorage.getItem("token")
+
+    // If token not found directly, try to extract from user object
+    if (!token) {
+    }
+    // Try to get token from Firebase auth if available
+    if (!token && typeof window !== "undefined") {
+      try {
+        const auth = require("@/lib/firebase").auth
+        if (auth && auth.currentUser) {
+          token = await auth.currentUser.getIdToken(true)
+          console.log("Retrieved fresh token from Firebase auth")
+        }
+      } catch (firebaseError) {
+        console.error("Error getting Firebase token:", firebaseError)
+      }
+    }
+
+    if (!token) {
+      console.error("No authentication token found for course update request")
+      throw new Error("Authentication token is missing. Please log in again.")
+    }
+
+    // Log token presence (not the actual token for security)
+    console.log("Using authentication token for course update:", token ? "Token found" : "No token")
+
+    // Include the token explicitly in this request
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    }
+
+    console.log("Sending update request with auth headers")
+
     // Some APIs expect PUT, others PATCH - try PUT first
-    const response = await apiClient.put(url, cleanedData)
+    const response = await apiClient.put(url, cleanedData, { headers })
     console.log("API Response for update course:", response)
     return response.data
   } catch (putError: any) {
@@ -157,9 +230,9 @@ export const updateCourse = async (courseId: string, courseData: any) => {
       message: putError.message,
       response: putError.response
         ? {
-            status: putError.response.status,
-            data: putError.response.data,
-          }
+          status: putError.response.status,
+          data: putError.response.data,
+        }
         : null,
     })
 
@@ -195,9 +268,9 @@ export const updateCourse = async (courseId: string, courseData: any) => {
           message: patchError.message,
           response: patchError.response
             ? {
-                status: patchError.response.status,
-                data: patchError.response.data,
-              }
+              status: patchError.response.status,
+              data: patchError.response.data,
+            }
             : null,
         })
         throw patchError
@@ -245,9 +318,9 @@ export const uploadCourseImage = async (courseId: string, imageFile: File) => {
       message: error.message,
       response: error.response
         ? {
-            status: error.response.status,
-            data: error.response.data,
-          }
+          status: error.response.status,
+          data: error.response.data,
+        }
         : null,
     })
     throw error
@@ -290,9 +363,9 @@ export const uploadPoolImage = async (courseId: string, imageFile: File) => {
       message: error.message,
       response: error.response
         ? {
-            status: error.response.status,
-            data: error.response.data,
-          }
+          status: error.response.status,
+          data: error.response.data,
+        }
         : null,
     })
     throw error
@@ -314,9 +387,9 @@ export const deleteCourse = async (courseId: string) => {
       message: error.message,
       response: error.response
         ? {
-            status: error.response.status,
-            data: error.response.data,
-          }
+          status: error.response.status,
+          data: error.response.data,
+        }
         : null,
     })
     throw error

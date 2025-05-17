@@ -1,62 +1,88 @@
-import  apiClient  from "./api_client"
-import type { SessionProgress } from "@/types/progress"
+import apiClient from "./api_client"
+import type { SessionProgress, ProgressMilestone, SkillAssessment } from "@/types/progress"
 
 // Get all session progress records for an enrollment
 export const getEnrollmentProgress = async (enrollmentId: string): Promise<SessionProgress[]> => {
   try {
     const response = await apiClient.get(`/enrollments/${enrollmentId}/session-progress`)
-    return response.data
+    return response.data || []
   } catch (error) {
     console.error(`Error fetching progress for enrollment ${enrollmentId}:`, error)
-    throw error
+    // Return empty array instead of throwing to prevent UI from breaking
+    return []
   }
 }
 
 // Create a new session progress record
 export const createSessionProgress = async (
   enrollmentId: string,
-  progressData: Omit<SessionProgress, "session_progress_id" | "enrollment_id" | "created_at" | "updated_at">,
+  data: {
+    sessionNumber: number
+    topicCovered: string
+    performanceNotes: string
+    dateSession: string
+  },
 ): Promise<SessionProgress> => {
   try {
-    const response = await apiClient.post(`/enrollments/${enrollmentId}/session-progress`, progressData)
+    console.log("Creating session progress with data:", data)
+    const response = await apiClient.post(`/enrollments/${enrollmentId}/session-progress`, data)
     return response.data
   } catch (error) {
-    console.error(`Error creating progress for enrollment ${enrollmentId}:`, error)
+    console.error("Error creating session progress:", error)
     throw error
   }
 }
 
-// Get a specific session progress record
-export const getSessionProgress = async (progressId: string): Promise<SessionProgress> => {
-  try {
-    const response = await apiClient.get(`/session-progress/${progressId}`)
-    return response.data
-  } catch (error) {
-    console.error(`Error fetching progress ${progressId}:`, error)
-    throw error
-  }
-}
-
-// Update a session progress record
+// Update an existing session progress record
 export const updateSessionProgress = async (
-  progressId: string,
-  progressData: Partial<Omit<SessionProgress, "session_progress_id" | "enrollment_id" | "created_at" | "updated_at">>,
+  sessionProgressId: string,
+  data: {
+    sessionNumber?: number
+    topicCovered?: string
+    performanceNotes?: string
+    dateSession?: string
+  },
 ): Promise<SessionProgress> => {
   try {
-    const response = await apiClient.put(`/session-progress/${progressId}`, progressData)
+    console.log("Updating session progress with data:", data)
+    const response = await apiClient.put(`/session-progress/${sessionProgressId}`, data)
     return response.data
   } catch (error) {
-    console.error(`Error updating progress ${progressId}:`, error)
+    console.error(`Error updating session progress ${sessionProgressId}:`, error)
     throw error
   }
 }
 
-// Delete a session progress record (this would need a custom endpoint on your backend)
-export const deleteSessionProgress = async (progressId: string): Promise<void> => {
+// Delete a session progress record
+export const deleteSessionProgress = async (sessionProgressId: string): Promise<void> => {
   try {
-    await apiClient.delete(`/session-progress/${progressId}`)
+    await apiClient.delete(`/session-progress/${sessionProgressId}`)
   } catch (error) {
-    console.error(`Error deleting progress ${progressId}:`, error)
+    console.error(`Error deleting session progress ${sessionProgressId}:`, error)
     throw error
+  }
+}
+
+// Get all milestones for an enrollment
+export const getEnrollmentMilestones = async (enrollmentId: string): Promise<ProgressMilestone[]> => {
+  try {
+    const response = await apiClient.get(`/enrollments/${enrollmentId}/milestones`)
+    return response.data || []
+  } catch (error) {
+    console.error(`Error fetching milestones for enrollment ${enrollmentId}:`, error)
+    // Return empty array instead of throwing
+    return []
+  }
+}
+
+// Get all skill assessments for an enrollment
+export const getEnrollmentSkills = async (enrollmentId: string): Promise<SkillAssessment[]> => {
+  try {
+    const response = await apiClient.get(`/enrollments/${enrollmentId}/skills`)
+    return response.data || []
+  } catch (error) {
+    console.error(`Error fetching skills for enrollment ${enrollmentId}:`, error)
+    // Return empty array instead of throwing
+    return []
   }
 }

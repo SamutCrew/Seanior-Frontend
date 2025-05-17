@@ -2,7 +2,19 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
-import { ArrowLeft, User, Calendar, BarChart2, Settings, CheckCircle, XCircle, Clock } from "lucide-react"
+import {
+  ArrowLeft,
+  User,
+  Calendar,
+  BarChart2,
+  Settings,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Plus,
+  AlertTriangle,
+  LogIn,
+} from "lucide-react"
 import { Button } from "@/components/Common/Button"
 import { useAppSelector } from "@/app/redux"
 import Image from "next/image"
@@ -13,24 +25,15 @@ import {
   updateSessionProgress,
   deleteSessionProgress,
 } from "@/api/progress_api"
+import { getEnrollmentAttendance, recordAttendance, updateAttendance, deleteAttendance } from "@/api/attendance_api"
 import type { EnrollmentWithDetails } from "@/types/enrollment"
 import type { SessionProgress } from "@/types/progress"
+import type { AttendanceRecord, AttendanceStatus } from "@/types/attendance"
 import SessionProgressModal from "@/components/StudentProgress/SessionProgressModal"
+import AttendanceModal from "@/components/StudentProgress/AttendanceModal"
 import ProgressTracker, { type SkillAssessment } from "@/components/StudentProgress/ProgressTracker"
 import { Toast } from "@/components/Responseback/Toast"
-
-// Mock attendance data
-const MOCK_ATTENDANCE = [
-  { date: "2023-05-01", status: "present", notes: "Arrived on time" },
-  { date: "2023-05-08", status: "present", notes: "Participated actively" },
-  { date: "2023-05-15", status: "absent", notes: "Sick leave" },
-  { date: "2023-05-22", status: "present", notes: "Arrived 5 minutes late" },
-  { date: "2023-05-29", status: "late", notes: "Arrived 15 minutes late" },
-  { date: "2023-06-05", status: "present", notes: "Excellent participation" },
-  { date: "2023-06-12", status: "present", notes: "Completed all exercises" },
-  { date: "2023-06-19", status: "upcoming", notes: "" },
-  { date: "2023-06-26", status: "upcoming", notes: "" },
-]
+import { auth } from "@/lib/firebase"
 
 export default function EnrollmentDetailsPage() {
   const params = useParams()
@@ -41,31 +44,51 @@ export default function EnrollmentDetailsPage() {
   const [activeTab, setActiveTab] = useState("progress")
   const [currentEnrollment, setCurrentEnrollment] = useState<EnrollmentWithDetails | null>(null)
   const [sessionProgress, setSessionProgress] = useState<SessionProgress[]>([])
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([])
   const [isSessionModalOpen, setIsSessionModalOpen] = useState(false)
+  const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false)
   const [currentSession, setCurrentSession] = useState<SessionProgress | null>(null)
+  const [currentAttendance, setCurrentAttendance] = useState<AttendanceRecord | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingAttendance, setIsLoadingAttendance] = useState(false)
   const [skills, setSkills] = useState<SkillAssessment[]>([])
   const [progressTrackerTab, setProgressTrackerTab] = useState<"progress" | "sessions">("progress")
-  const [attendance, setAttendance] = useState(MOCK_ATTENDANCE)
-  const [editingAttendanceIndex, setEditingAttendanceIndex] = useState<number | null>(null)
-  const [attendanceNote, setAttendanceNote] = useState("")
-  const [attendanceStatus, setAttendanceStatus] = useState<"present" | "absent" | "late" | "upcoming">("present")
+  const [error, setError] = useState<string | null>(null)
+  const [attendanceError, setAttendanceError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  // Check authentication status
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsAuthenticated(!!user)
+      if (!user) {
+        setError("You must be logged in to view this page")
+      }
+    })
+
+    return () => unsubscribe()
+  }, [])
 
   // Fetch enrollment and session progress data
   useEffect(() => {
     const fetchData = async () => {
-      if (!enrollmentId) return
+      if (!enrollmentId || !isAuthenticated) return
 
       setIsLoading(true)
+      setError(null)
+      setAttendanceError(null)
+
       try {
-        // Fetch all enrollments for the instructor
-        const enrollmentsData = await getInstructorEnrollments()
+        // First try to get all instructor enrollments
+        const enrollments = await getInstructorEnrollments()
 
         // Find the specific enrollment by ID
-        const enrollment = enrollmentsData.find((e) => e.enrollment_id === enrollmentId)
+        const enrollment = enrollments.find((e) => e.enrollment_id === enrollmentId)
 
         if (!enrollment) {
           console.log("No enrollment found with ID:", enrollmentId)
+          setError(`No enrollment found with ID: ${enrollmentId}`)
           setIsLoading(false)
           return
         }
@@ -108,9 +131,28 @@ export default function EnrollmentDetailsPage() {
           Toast.error("Failed to load session progress data")
           setSessionProgress([])
         }
+
+        // Fetch attendance records
+        setIsLoadingAttendance(true)
+        try {
+          const attendanceData = await getEnrollmentAttendance(enrollmentId)
+          console.log("Attendance data received:", attendanceData)
+          setAttendanceRecords(attendanceData)
+        } catch (attendanceError) {
+          console.error("Error fetching attendance records:", attendanceError)
+          setAttendanceError(
+            `Failed to load attendance data: ${
+              attendanceError instanceof Error ? attendanceError.message : "Unknown error"
+            }`,
+          )
+          setAttendanceRecords([])
+        } finally {
+          setIsLoadingAttendance(false)
+        }
       } catch (error) {
         console.error("Error fetching data:", error)
         Toast.error("Failed to load enrollment data")
+        setError(`Failed to load enrollment data: ${error instanceof Error ? error.message : "Unknown error"}`)
         setCurrentEnrollment(null)
       } finally {
         setIsLoading(false)
@@ -118,11 +160,17 @@ export default function EnrollmentDetailsPage() {
     }
 
     fetchData()
-  }, [enrollmentId])
+  }, [enrollmentId, isAuthenticated])
 
   // Handle session edit
   const handleEditSession = (session: SessionProgress) => {
     setCurrentSession(session)
+    setIsSessionModalOpen(true)
+  }
+
+  // Handle add new session
+  const handleAddSession = () => {
+    setCurrentSession(null)
     setIsSessionModalOpen(true)
   }
 
@@ -158,10 +206,10 @@ export default function EnrollmentDetailsPage() {
       if (sessionData.session_progress_id) {
         // Update existing session
         updatedSession = await updateSessionProgress(sessionData.session_progress_id, {
-          session_number: sessionData.session_number,
-          topic_covered: sessionData.topic_covered,
-          performance_notes: sessionData.performance_notes,
-          date_session: sessionData.date_session,
+          sessionNumber: sessionData.session_number,
+          topicCovered: sessionData.topic_covered,
+          performanceNotes: sessionData.performance_notes,
+          dateSession: sessionData.date_session,
         })
 
         // Update the session in the list
@@ -170,13 +218,15 @@ export default function EnrollmentDetailsPage() {
             session.session_progress_id === updatedSession.session_progress_id ? updatedSession : session,
           ),
         )
+
+        Toast.success("Session updated successfully")
       } else {
         // Create new session
         updatedSession = await createSessionProgress(enrollmentId, {
-          session_number: sessionData.session_number || 1,
-          topic_covered: sessionData.topic_covered || "",
-          performance_notes: sessionData.performance_notes || "",
-          date_session: sessionData.date_session || new Date().toISOString(),
+          sessionNumber: sessionData.session_number || 1,
+          topicCovered: sessionData.topic_covered || "",
+          performanceNotes: sessionData.performance_notes || "",
+          dateSession: sessionData.date_session || new Date().toISOString(),
         })
 
         // Add the new session to the list
@@ -192,11 +242,12 @@ export default function EnrollmentDetailsPage() {
             actual_sessions_attended: newAttendanceCount,
           })
         }
+
+        Toast.success("Session added successfully")
       }
 
       setIsSessionModalOpen(false)
       setCurrentSession(null)
-      Toast.success("Session saved successfully")
     } catch (error) {
       console.error("Error saving session:", error)
       Toast.error("Failed to save session")
@@ -204,27 +255,95 @@ export default function EnrollmentDetailsPage() {
   }
 
   // Handle attendance edit
-  const handleEditAttendance = (index: number) => {
-    setEditingAttendanceIndex(index)
-    setAttendanceStatus(attendance[index].status as any)
-    setAttendanceNote(attendance[index].notes)
+  const handleEditAttendance = (attendance: AttendanceRecord) => {
+    setCurrentAttendance(attendance)
+    setIsAttendanceModalOpen(true)
+  }
+
+  // Handle add new attendance
+  const handleAddAttendance = () => {
+    setCurrentAttendance(null)
+    setIsAttendanceModalOpen(true)
+  }
+
+  // Handle attendance delete
+  const handleDeleteAttendance = async (attendanceId: string) => {
+    if (window.confirm("Are you sure you want to delete this attendance record?")) {
+      setIsSubmitting(true)
+      try {
+        await deleteAttendance(enrollmentId, attendanceId)
+
+        // Update the attendance list
+        setAttendanceRecords((prevRecords) => prevRecords.filter((record) => record.attendance_id !== attendanceId))
+
+        Toast.success("Attendance record deleted successfully")
+      } catch (error) {
+        console.error("Error deleting attendance record:", error)
+        Toast.error("Failed to delete attendance record")
+      } finally {
+        setIsSubmitting(false)
+      }
+    }
   }
 
   // Handle attendance save
-  const handleSaveAttendance = () => {
-    if (editingAttendanceIndex === null) return
+  const handleSaveAttendance = async (attendanceData: Partial<AttendanceRecord>) => {
+    setIsSubmitting(true)
+    try {
+      if (!currentEnrollment) {
+        Toast.error("No enrollment selected")
+        return
+      }
 
-    const updatedAttendance = [...attendance]
-    updatedAttendance[editingAttendanceIndex] = {
-      ...updatedAttendance[editingAttendanceIndex],
-      status: attendanceStatus,
-      notes: attendanceNote,
+      let updatedAttendance: AttendanceRecord
+
+      if (attendanceData.attendance_id) {
+        // Update existing attendance
+        updatedAttendance = await updateAttendance(enrollmentId, attendanceData.attendance_id, {
+          sessionNumber: attendanceData.session_number,
+          status: attendanceData.status as AttendanceStatus,
+          reasonForAbsence: attendanceData.reason_for_absence || "",
+          dateAttendance: attendanceData.date_attendance,
+        })
+
+        // Update the attendance in the list
+        setAttendanceRecords((prevRecords) =>
+          prevRecords.map((record) =>
+            record.attendance_id === updatedAttendance.attendance_id ? updatedAttendance : record,
+          ),
+        )
+
+        Toast.success("Attendance record updated successfully")
+      } else {
+        // Create new attendance - format exactly as the API expects
+        console.log("Creating new attendance with data:", {
+          sessionNumber: attendanceData.session_number || 1,
+          status: (attendanceData.status as AttendanceStatus) || "PRESENT",
+          reasonForAbsence: attendanceData.reason_for_absence || "",
+          dateAttendance: attendanceData.date_attendance || new Date().toISOString().split("T")[0],
+        })
+
+        updatedAttendance = await recordAttendance(enrollmentId, {
+          sessionNumber: attendanceData.session_number || 1,
+          status: (attendanceData.status as AttendanceStatus) || "PRESENT",
+          reasonForAbsence: attendanceData.reason_for_absence || "",
+          dateAttendance: attendanceData.date_attendance || new Date().toISOString().split("T")[0],
+        })
+
+        // Add the new attendance to the list
+        setAttendanceRecords((prevRecords) => [...prevRecords, updatedAttendance])
+
+        Toast.success("Attendance record added successfully")
+      }
+
+      setIsAttendanceModalOpen(false)
+      setCurrentAttendance(null)
+    } catch (error) {
+      console.error("Error saving attendance:", error)
+      Toast.error(`Failed to save attendance record: ${error instanceof Error ? error.message : String(error)}`)
+    } finally {
+      setIsSubmitting(false)
     }
-
-    setAttendance(updatedAttendance)
-    setEditingAttendanceIndex(null)
-    setAttendanceNote("")
-    Toast.success("Attendance updated successfully")
   }
 
   // Format date
@@ -237,6 +356,32 @@ export default function EnrollmentDetailsPage() {
     })
   }
 
+  // Handle login redirect
+  const handleLogin = () => {
+    router.push("/auth/Login?redirect=" + encodeURIComponent(window.location.pathname))
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-900 text-white p-6">
+        <div className="flex items-center mb-6">
+          <button onClick={() => router.push("/dashboard")} className="p-2 rounded-full hover:bg-slate-800">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-xl font-bold ml-2">Authentication Required</h1>
+        </div>
+
+        <div className="p-8 text-center rounded-lg border-2 border-dashed border-slate-700 text-gray-400">
+          <p className="text-lg mb-4">You must be logged in to view enrollment details</p>
+          <Button variant="gradient" onClick={handleLogin}>
+            <LogIn className="w-4 h-4 mr-2" />
+            Log In
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
@@ -245,8 +390,8 @@ export default function EnrollmentDetailsPage() {
     )
   }
 
-  // If no enrollment found, show empty state
-  if (!currentEnrollment) {
+  // If error or no enrollment found, show empty state
+  if (error || !currentEnrollment) {
     return (
       <div className="min-h-screen bg-slate-900 text-white p-6">
         <div className="flex items-center mb-6">
@@ -257,7 +402,7 @@ export default function EnrollmentDetailsPage() {
         </div>
 
         <div className="p-8 text-center rounded-lg border-2 border-dashed border-slate-700 text-gray-400">
-          <p className="text-lg mb-4">No enrollment found with ID: {enrollmentId}</p>
+          <p className="text-lg mb-4">{error || `No enrollment found with ID: ${enrollmentId}`}</p>
           <Button variant="gradient" onClick={() => router.push("/dashboard")}>
             Return to Dashboard
           </Button>
@@ -402,21 +547,83 @@ export default function EnrollmentDetailsPage() {
           <div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-white">Progress Tracking</h2>
+              <Button variant="gradient" size="sm" onClick={handleAddSession}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Session
+              </Button>
             </div>
 
-            {/* Use the ProgressTracker component */}
-            <ProgressTracker
-              overallProgress={overallProgress}
-              lastUpdated={new Date().toISOString()}
-              skills={skills}
-              isEditable={true}
-              sessions={sessionProgress}
-              onEditSession={handleEditSession}
-              onDeleteSession={handleDeleteSession}
-              enrollmentId={enrollmentId}
-              activeTab={progressTrackerTab}
-              onTabChange={setProgressTrackerTab}
-            />
+            {sessionProgress.length > 0 ? (
+              <div className="mb-6 rounded-xl bg-slate-800 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-slate-700">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Session #
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Topic
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Notes
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700">
+                      {sessionProgress.map((session) => (
+                        <tr key={session.session_progress_id} className="hover:bg-slate-700/50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            {session.session_number}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            {formatDate(session.date_session)}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-300">{session.topic_covered}</td>
+                          <td className="px-6 py-4 text-sm text-gray-300">
+                            {session.performance_notes?.length > 50
+                              ? `${session.performance_notes.substring(0, 50)}...`
+                              : session.performance_notes}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex justify-end space-x-2">
+                              <button
+                                onClick={() => handleEditSession(session)}
+                                className="text-cyan-400 hover:text-cyan-300"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteSession(session.session_progress_id)}
+                                className="text-red-400 hover:text-red-300"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <div className="p-8 text-center rounded-lg border-2 border-dashed border-slate-700 text-gray-400 mb-6">
+                <p className="text-lg mb-4">No session progress records found</p>
+                <Button variant="gradient" onClick={handleAddSession}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add First Session
+                </Button>
+              </div>
+            )}
+
+
           </div>
         )}
 
@@ -424,240 +631,194 @@ export default function EnrollmentDetailsPage() {
           <div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-white">Attendance Records</h2>
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-green-500 mr-1"></div>
-                  <span className="text-xs text-gray-400">Present</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-yellow-500 mr-1"></div>
-                  <span className="text-xs text-gray-400">Late</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-red-500 mr-1"></div>
-                  <span className="text-xs text-gray-400">Absent</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-gray-500 mr-1"></div>
-                  <span className="text-xs text-gray-400">Upcoming</span>
-                </div>
-              </div>
+              <Button variant="gradient" size="sm" onClick={handleAddAttendance} disabled={isSubmitting}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Attendance
+              </Button>
             </div>
 
-            <div className="rounded-xl bg-slate-800/80 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-slate-700">
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Notes
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-700">
-                    {attendance.map((record, index) => (
-                      <tr key={index} className="hover:bg-slate-700/50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{formatDate(record.date)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {editingAttendanceIndex === index ? (
-                            <select
-                              value={attendanceStatus}
-                              onChange={(e) => setAttendanceStatus(e.target.value as any)}
-                              className="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-white"
-                            >
-                              <option value="present">Present</option>
-                              <option value="late">Late</option>
-                              <option value="absent">Absent</option>
-                              <option value="upcoming">Upcoming</option>
-                            </select>
-                          ) : (
+            {/* API error message */}
+            {attendanceError && (
+              <div className="mb-6 p-4 rounded-lg bg-red-900/30 border border-red-800 text-red-200">
+                <div className="flex items-start">
+                  <AlertTriangle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Error loading attendance data</p>
+                    <p className="text-sm mt-1">{attendanceError}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {isLoadingAttendance ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : attendanceRecords.length > 0 ? (
+              <div className="rounded-xl bg-slate-800/80 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-slate-700">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Session #
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Reason
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700">
+                      {attendanceRecords.map((record) => (
+                        <tr key={record.attendance_id} className="hover:bg-slate-700/50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{record.session_number}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            {formatDate(record.date_attendance)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <div
-                                className={`w-3 h-3 rounded-full mr-2 ${
-                                  record.status === "present"
-                                    ? "bg-green-500"
-                                    : record.status === "late"
-                                      ? "bg-yellow-500"
-                                      : record.status === "absent"
-                                        ? "bg-red-500"
-                                        : "bg-gray-500"
-                                }`}
-                              ></div>
-                              <span className="text-sm capitalize">{record.status}</span>
+                              {record.status === "PRESENT" && (
+                                <>
+                                  <div className="w-3 h-3 rounded-full mr-2 bg-green-500"></div>
+                                  <span className="text-sm">Present</span>
+                                </>
+                              )}
+                              {record.status === "ABSENT" && (
+                                <>
+                                  <div className="w-3 h-3 rounded-full mr-2 bg-red-500"></div>
+                                  <span className="text-sm">Absent</span>
+                                </>
+                              )}
+                              {record.status === "LATE" && (
+                                <>
+                                  <div className="w-3 h-3 rounded-full mr-2 bg-yellow-500"></div>
+                                  <span className="text-sm">Late</span>
+                                </>
+                              )}
+                              {record.status === "EXCUSED" && (
+                                <>
+                                  <div className="w-3 h-3 rounded-full mr-2 bg-blue-500"></div>
+                                  <span className="text-sm">Excused</span>
+                                </>
+                              )}
                             </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-300">
-                          {editingAttendanceIndex === index ? (
-                            <input
-                              type="text"
-                              value={attendanceNote}
-                              onChange={(e) => setAttendanceNote(e.target.value)}
-                              className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-white"
-                              placeholder="Add notes..."
-                            />
-                          ) : (
-                            record.notes || "-"
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          {editingAttendanceIndex === index ? (
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-300">{record.reason_for_absence || "-"}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex justify-end space-x-2">
                               <button
-                                onClick={() => setEditingAttendanceIndex(null)}
-                                className="text-gray-400 hover:text-white"
+                                onClick={() => handleEditAttendance(record)}
+                                className="text-cyan-400 hover:text-cyan-300"
+                                disabled={isSubmitting}
                               >
-                                Cancel
+                                Edit
                               </button>
-                              <button onClick={handleSaveAttendance} className="text-cyan-400 hover:text-cyan-300">
-                                Save
+                              <button
+                                onClick={() => handleDeleteAttendance(record.attendance_id)}
+                                className="text-red-400 hover:text-red-300"
+                                disabled={isSubmitting}
+                              >
+                                Delete
                               </button>
                             </div>
-                          ) : (
-                            <button
-                              onClick={() => handleEditAttendance(index)}
-                              className="text-cyan-400 hover:text-cyan-300"
-                              disabled={record.status === "upcoming"}
-                            >
-                              Edit
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-8 text-center rounded-lg border-2 border-dashed border-slate-700 text-gray-400">
+                <p className="text-lg mb-4">No attendance records found</p>
+                <Button variant="gradient" onClick={handleAddAttendance} disabled={isSubmitting}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add First Attendance Record
+                </Button>
+              </div>
+            )}
 
             {/* Attendance Summary */}
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="p-4 rounded-lg bg-slate-800 border border-slate-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Present</p>
-                    <p className="text-2xl font-bold text-white">
-                      {attendance.filter((a) => a.status === "present").length}
-                    </p>
-                  </div>
-                  <CheckCircle className="w-10 h-10 text-green-500 opacity-80" />
-                </div>
-              </div>
-              <div className="p-4 rounded-lg bg-slate-800 border border-slate-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Late</p>
-                    <p className="text-2xl font-bold text-white">
-                      {attendance.filter((a) => a.status === "late").length}
-                    </p>
-                  </div>
-                  <Clock className="w-10 h-10 text-yellow-500 opacity-80" />
-                </div>
-              </div>
-              <div className="p-4 rounded-lg bg-slate-800 border border-slate-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Absent</p>
-                    <p className="text-2xl font-bold text-white">
-                      {attendance.filter((a) => a.status === "absent").length}
-                    </p>
-                  </div>
-                  <XCircle className="w-10 h-10 text-red-500 opacity-80" />
-                </div>
-              </div>
-              <div className="p-4 rounded-lg bg-slate-800 border border-slate-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-400">Attendance Rate</p>
-                    <p className="text-2xl font-bold text-white">
-                      {Math.round(
-                        (attendance.filter((a) => a.status === "present").length /
-                          attendance.filter((a) => a.status !== "upcoming").length) *
-                          100,
-                      )}
-                      %
-                    </p>
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
-                    <div
-                      className="w-8 h-8 rounded-full border-4 border-green-500"
-                      style={{
-                        borderRightColor: "transparent",
-                        transform: `rotate(${
-                          (attendance.filter((a) => a.status === "present").length /
-                            attendance.filter((a) => a.status !== "upcoming").length) *
-                          360
-                        }deg)`,
-                        transition: "transform 1s ease-in-out",
-                      }}
-                    ></div>
+            {attendanceRecords.length > 0 && (
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="p-4 rounded-lg bg-slate-800 border border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-400">Present</p>
+                      <p className="text-2xl font-bold text-white">
+                        {attendanceRecords.filter((a) => a.status === "PRESENT").length}
+                      </p>
+                    </div>
+                    <CheckCircle className="w-10 h-10 text-green-500 opacity-80" />
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Session Progress Visualization */}
-            <div className="mt-6 p-6 rounded-xl bg-slate-800 shadow-sm">
-              <h3 className="text-lg font-bold mb-4 text-white">Session Progress</h3>
-
-              <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-400">Sessions Completed</span>
-                  <span className="text-sm font-medium text-white">
-                    {currentEnrollment.actual_sessions_attended} of {currentEnrollment.target_sessions_to_complete}
-                  </span>
-                </div>
-                <div className="w-full h-4 rounded-full bg-slate-700 overflow-hidden">
-                  <div
-                    className="h-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500"
-                    style={{
-                      width: `${(currentEnrollment.actual_sessions_attended / currentEnrollment.target_sessions_to_complete) * 100}%`,
-                    }}
-                  ></div>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-gray-400">Maximum Sessions</span>
-                  <span className="text-sm font-medium text-white">
-                    {currentEnrollment.actual_sessions_attended} of {currentEnrollment.max_sessions_allowed}
-                  </span>
-                </div>
-                <div className="w-full h-4 rounded-full bg-slate-700 overflow-hidden">
-                  <div
-                    className="h-4 rounded-full bg-gradient-to-r from-green-500 to-emerald-500"
-                    style={{
-                      width: `${(currentEnrollment.actual_sessions_attended / currentEnrollment.max_sessions_allowed) * 100}%`,
-                    }}
-                  ></div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-10 gap-2 mt-6">
-                {Array.from({ length: currentEnrollment.target_sessions_to_complete }).map((_, index) => (
-                  <div
-                    key={index}
-                    className={`aspect-square rounded-md flex items-center justify-center text-xs font-medium ${
-                      index < currentEnrollment.actual_sessions_attended
-                        ? "bg-cyan-500 text-white"
-                        : "bg-slate-700 text-gray-400"
-                    }`}
-                  >
-                    {index + 1}
+                <div className="p-4 rounded-lg bg-slate-800 border border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-400">Late</p>
+                      <p className="text-2xl font-bold text-white">
+                        {attendanceRecords.filter((a) => a.status === "LATE").length}
+                      </p>
+                    </div>
+                    <Clock className="w-10 h-10 text-yellow-500 opacity-80" />
                   </div>
-                ))}
+                </div>
+                <div className="p-4 rounded-lg bg-slate-800 border border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-400">Absent</p>
+                      <p className="text-2xl font-bold text-white">
+                        {attendanceRecords.filter((a) => a.status === "ABSENT").length}
+                      </p>
+                    </div>
+                    <XCircle className="w-10 h-10 text-red-500 opacity-80" />
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg bg-slate-800 border border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-400">Attendance Rate</p>
+                      <p className="text-2xl font-bold text-white">
+                        {attendanceRecords.length > 0
+                          ? Math.round(
+                              (attendanceRecords.filter((a) => a.status === "PRESENT").length /
+                                attendanceRecords.length) *
+                                100,
+                            )
+                          : 0}
+                        %
+                      </p>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
+                      <div
+                        className="w-8 h-8 rounded-full border-4 border-green-500"
+                        style={{
+                          borderRightColor: "transparent",
+                          transform: `rotate(${
+                            attendanceRecords.length > 0
+                              ? (
+                                  attendanceRecords.filter((a) => a.status === "PRESENT").length /
+                                    attendanceRecords.length
+                                ) * 360
+                              : 0
+                          }deg)`,
+                          transition: "transform 1s ease-in-out",
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -875,6 +1036,18 @@ export default function EnrollmentDetailsPage() {
         }}
         onSave={handleSaveSession}
         session={currentSession}
+      />
+
+      {/* Attendance Modal */}
+      <AttendanceModal
+        isOpen={isAttendanceModalOpen}
+        onClose={() => {
+          setIsAttendanceModalOpen(false)
+          setCurrentAttendance(null)
+        }}
+        onSave={handleSaveAttendance}
+        attendance={currentAttendance}
+        enrollmentId={enrollmentId}
       />
     </div>
   )

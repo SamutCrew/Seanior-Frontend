@@ -266,6 +266,16 @@ export default function TeacherDashboard() {
 
         console.log("Instructor courses response:", instructorCoursesResponse)
 
+        // Add this after getting the courses data
+        console.log(
+          "Raw instructor data from API:",
+          instructorCoursesResponse.map((course) => ({
+            id: course.id || course.course_id,
+            name: course.course_name,
+            instructor: course.instructor,
+          })),
+        )
+
         // Process the courses data
         let instructorCourses = []
 
@@ -373,6 +383,9 @@ export default function TeacherDashboard() {
           instructorName = apiCourse.instructor.name || apiCourse.instructor.user_name || "Unknown"
           instructorId = apiCourse.instructor.user_id || apiCourse.instructor.id || instructorId
         }
+      } else if (user && user.name) {
+        // If instructor is not provided but we have the current user (who should be the instructor)
+        instructorName = user.name
       }
 
       // Use resource URL if available

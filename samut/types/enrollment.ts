@@ -9,6 +9,7 @@ export interface RequestedSlot {
 export interface CourseInRequest {
   course_id: string
   course_name: string
+  instructor_name?: string
 }
 
 export interface StudentInRequest {

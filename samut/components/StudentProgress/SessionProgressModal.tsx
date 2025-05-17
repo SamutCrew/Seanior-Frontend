@@ -5,7 +5,6 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/Common/Button"
 import { X } from "lucide-react"
-import { useAppSelector } from "@/app/redux"
 import type { SessionProgress } from "@/types/progress"
 
 interface SessionProgressModalProps {
@@ -15,117 +14,138 @@ interface SessionProgressModalProps {
   session: SessionProgress | null
 }
 
-export default function SessionProgressModal({ isOpen, onClose, onSave, session }: SessionProgressModalProps) {
-  const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
-  const [sessionNumber, setSessionNumber] = useState(1)
-  const [topicCovered, setTopicCovered] = useState("")
-  const [performanceNotes, setPerformanceNotes] = useState("")
-  const [sessionDate, setSessionDate] = useState("")
+const SessionProgressModal = ({ isOpen, onClose, onSave, session }: SessionProgressModalProps) => {
+  const [sessionNumber, setSessionNumber] = useState<number>(1)
+  const [topicCovered, setTopicCovered] = useState<string>("")
+  const [performanceNotes, setPerformanceNotes] = useState<string>("")
+  const [dateSession, setDateSession] = useState<string>(new Date().toISOString().split("T")[0])
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
   useEffect(() => {
     if (session) {
       setSessionNumber(session.session_number || 1)
       setTopicCovered(session.topic_covered || "")
       setPerformanceNotes(session.performance_notes || "")
-
-      // Format date for input
-      if (session.date_session) {
-        const date = new Date(session.date_session)
-        setSessionDate(date.toISOString().split("T")[0])
-      } else {
-        setSessionDate(new Date().toISOString().split("T")[0])
-      }
+      setDateSession(
+        session.date_session
+          ? new Date(session.date_session).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
+      )
     } else {
-      // Default values for new session
+      // Reset form for new session
       setSessionNumber(1)
       setTopicCovered("")
       setPerformanceNotes("")
-      setSessionDate(new Date().toISOString().split("T")[0])
+      setDateSession(new Date().toISOString().split("T")[0])
     }
-  }, [session])
+    setIsSubmitting(false)
+  }, [session, isOpen])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const sessionData: Partial<SessionProgress> = {
-      session_progress_id: session?.session_progress_id,
-      enrollment_id: session?.enrollment_id,
-      session_number: sessionNumber,
-      topic_covered: topicCovered,
-      performance_notes: performanceNotes,
-      date_session: new Date(sessionDate).toISOString(),
-    }
+    if (isSubmitting) return
 
-    onSave(sessionData)
+    setIsSubmitting(true)
+
+    try {
+      await onSave({
+        session_progress_id: session?.session_progress_id,
+        session_number: sessionNumber,
+        topic_covered: topicCovered,
+        performance_notes: performanceNotes,
+        date_session: dateSession,
+      })
+    } catch (error) {
+      console.error("Error saving session:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className={`w-full max-w-md p-6 rounded-lg ${isDarkMode ? "bg-slate-800" : "bg-white"} shadow-xl`}>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-white">
-            {session?.session_progress_id ? "Edit Session" : "Add New Session"}
-          </h3>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-slate-700 text-gray-400 hover:text-white">
-            <X className="w-5 h-5" />
+      <div className="w-full max-w-md rounded-lg bg-slate-800 p-6 shadow-xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-white">{session ? "Edit Session Progress" : "Add New Session"}</h3>
+          <button
+            onClick={onClose}
+            className="rounded-full p-1 text-gray-400 hover:bg-slate-700 hover:text-white"
+            disabled={isSubmitting}
+          >
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Session Number</label>
-              <input
-                type="number"
-                value={sessionNumber}
-                onChange={(e) => setSessionNumber(Number.parseInt(e.target.value))}
-                min="1"
-                className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Topic Covered</label>
-              <input
-                type="text"
-                value={topicCovered}
-                onChange={(e) => setTopicCovered(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Session Date</label>
-              <input
-                type="date"
-                value={sessionDate}
-                onChange={(e) => setSessionDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Performance Notes</label>
-              <textarea
-                value={performanceNotes}
-                onChange={(e) => setPerformanceNotes(e.target.value)}
-                rows={4}
-                className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-              ></textarea>
-            </div>
+          <div className="mb-4">
+            <label className="mb-1 block text-sm font-medium text-gray-300">Session Number</label>
+            <input
+              type="number"
+              value={sessionNumber}
+              onChange={(e) => setSessionNumber(Number.parseInt(e.target.value) || 1)}
+              className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              min="1"
+              required
+              disabled={isSubmitting}
+            />
           </div>
 
-          <div className="flex justify-end space-x-3 mt-6">
-            <Button variant="outline" type="button" onClick={onClose}>
+          <div className="mb-4">
+            <label className="mb-1 block text-sm font-medium text-gray-300">Topic Covered</label>
+            <input
+              type="text"
+              value={topicCovered}
+              onChange={(e) => setTopicCovered(e.target.value)}
+              className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              placeholder="e.g., Introduction to Freestyle Stroke"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="mb-1 block text-sm font-medium text-gray-300">Performance Notes</label>
+            <textarea
+              value={performanceNotes}
+              onChange={(e) => setPerformanceNotes(e.target.value)}
+              className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              rows={4}
+              placeholder="Notes about student performance..."
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="mb-6">
+            <label className="mb-1 block text-sm font-medium text-gray-300">Session Date</label>
+            <input
+              type="date"
+              value={dateSession}
+              onChange={(e) => setDateSession(e.target.value)}
+              className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" type="button" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button variant="gradient" type="submit">
-              {session?.session_progress_id ? "Update Session" : "Add Session"}
+            <Button variant="gradient" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <span className="flex items-center">
+                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                  {session ? "Updating..." : "Adding..."}
+                </span>
+              ) : session ? (
+                "Update Session"
+              ) : (
+                "Add Session"
+              )}
             </Button>
           </div>
         </form>
@@ -133,3 +153,5 @@ export default function SessionProgressModal({ isOpen, onClose, onSave, session 
     </div>
   )
 }
+
+export default SessionProgressModal

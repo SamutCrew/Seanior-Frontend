@@ -1,85 +1,128 @@
 "use client"
 
-import { motion } from "framer-motion"
-import Image from "next/image"
-import { Button } from "@/components/Common/Button"
-import { useAppSelector } from "@/app/redux"
+import type React from "react"
 
-interface StudentProgressCardProps {
-  studentName: string
-  studentImage: string
-  studentId: string
-  attendance: number
-  progress: number
-  onViewFullProfile?: () => void
+import { useState, useEffect } from "react"
+import { Button } from "@/components/Common/Button"
+import { X } from "lucide-react"
+import type { SessionProgress } from "@/types/progress"
+
+interface SessionProgressModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSave: (sessionData: Partial<SessionProgress>) => void
+  session: SessionProgress | null
 }
 
-export default function StudentProgressCard({
-  studentName,
-  studentImage,
-  studentId,
-  attendance,
-  progress,
-  onViewFullProfile
-}: StudentProgressCardProps) {
-  const isDarkMode = useAppSelector((state) => state.global.isDarkMode)
+const SessionProgressModal = ({ isOpen, onClose, onSave, session }: SessionProgressModalProps) => {
+  const [sessionNumber, setSessionNumber] = useState<number>(1)
+  const [topicCovered, setTopicCovered] = useState<string>("")
+  const [performanceNotes, setPerformanceNotes] = useState<string>("")
+  const [dateSession, setDateSession] = useState<string>(new Date().toISOString().split("T")[0])
+
+  useEffect(() => {
+    if (session) {
+      setSessionNumber(session.session_number || 1)
+      setTopicCovered(session.topic_covered || "")
+      setPerformanceNotes(session.performance_notes || "")
+      setDateSession(
+        session.date_session
+          ? new Date(session.date_session).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
+      )
+    } else {
+      // Reset form for new session
+      setSessionNumber(1)
+      setTopicCovered("")
+      setPerformanceNotes("")
+      setDateSession(new Date().toISOString().split("T")[0])
+    }
+  }, [session])
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    onSave({
+      session_progress_id: session?.session_progress_id,
+      session_number: sessionNumber,
+      topic_covered: topicCovered,
+      performance_notes: performanceNotes,
+      date_session: dateSession,
+    })
+  }
+
+  if (!isOpen) return null
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className={`col-span-1 ${
-        isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white border border-gray-200"
-      } rounded-lg shadow-sm overflow-hidden`}
-    >
-      <div className="relative h-40">
-        <Image src="/swimming-pool-water.png" alt="Background" fill className="object-cover" />
-        <div
-          className={`absolute inset-0 bg-gradient-to-t ${
-            isDarkMode ? "from-slate-900 to-transparent" : "from-black/60 to-transparent"
-          }`}
-        ></div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="w-full max-w-md rounded-lg bg-slate-800 p-6 shadow-xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-white">{session ? "Edit Session Progress" : "Add New Session"}</h3>
+          <button onClick={onClose} className="rounded-full p-1 text-gray-400 hover:bg-slate-700 hover:text-white">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
-        {/* Student Image - Prominently displayed */}
-        <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
-          <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-blue-500">
-            <Image
-              src={studentImage || "/placeholder.svg"}
-              alt={studentName}
-              fill
-              className="object-cover"
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="mb-1 block text-sm font-medium text-gray-300">Session Number</label>
+            <input
+              type="number"
+              value={sessionNumber}
+              onChange={(e) => setSessionNumber(Number.parseInt(e.target.value) || 1)}
+              className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              min="1"
+              required
             />
           </div>
-        </div>
-      </div>
 
-      <div className="pt-16 pb-6 px-6 text-center">
-        {/* Student Name - Made Outstanding */}
-        <h3 className={`text-xl font-bold mb-1 ${isDarkMode ? "text-cyan-400" : "text-blue-600"}`}>
-          {studentName}
-        </h3>
-        <p className={`text-sm mb-4 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-          Student ID: #{studentId}
-        </p>
-
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className={`p-3 rounded-lg ${isDarkMode ? "bg-slate-700" : "bg-gray-50"}`}>
-            <div className="text-sm text-gray-500">Attendance</div>
-            <div className="text-lg font-bold">{attendance}%</div>
+          <div className="mb-4">
+            <label className="mb-1 block text-sm font-medium text-gray-300">Topic Covered</label>
+            <input
+              type="text"
+              value={topicCovered}
+              onChange={(e) => setTopicCovered(e.target.value)}
+              className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              placeholder="e.g., Introduction to Freestyle Stroke"
+              required
+            />
           </div>
-          <div className={`p-3 rounded-lg ${isDarkMode ? "bg-slate-700" : "bg-gray-50"}`}>
-            <div className="text-sm text-gray-500">Completed</div>
-            <div className="text-lg font-bold">{progress}%</div>
-          </div>
-        </div>
 
-        {onViewFullProfile && (
-          <Button variant={isDarkMode ? "gradient" : "primary"} className="w-full" size="sm" onClick={onViewFullProfile}>
-            View Full Profile
-          </Button>
-        )}
+          <div className="mb-4">
+            <label className="mb-1 block text-sm font-medium text-gray-300">Performance Notes</label>
+            <textarea
+              value={performanceNotes}
+              onChange={(e) => setPerformanceNotes(e.target.value)}
+              className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              rows={4}
+              placeholder="Notes about student performance..."
+              required
+            />
+          </div>
+
+          <div className="mb-6">
+            <label className="mb-1 block text-sm font-medium text-gray-300">Session Date</label>
+            <input
+              type="date"
+              value={dateSession}
+              onChange={(e) => setDateSession(e.target.value)}
+              className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+              required
+            />
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" type="button" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button variant="gradient" type="submit">
+              {session ? "Update Session" : "Add Session"}
+            </Button>
+          </div>
+        </form>
       </div>
-    </motion.div>
+    </div>
   )
 }
+
+export default SessionProgressModal
