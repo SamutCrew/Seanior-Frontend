@@ -31,7 +31,7 @@ import type { SessionProgress } from "@/types/progress"
 import type { AttendanceRecord, AttendanceStatus } from "@/types/attendance"
 import SessionProgressModal from "@/components/StudentProgress/SessionProgressModal"
 import AttendanceModal from "@/components/StudentProgress/AttendanceModal"
-import ProgressTracker, { type SkillAssessment } from "@/components/StudentProgress/ProgressTracker"
+import type { SkillAssessment } from "@/components/StudentProgress/ProgressTracker"
 import { Toast } from "@/components/Responseback/Toast"
 import { auth } from "@/lib/firebase"
 
@@ -271,8 +271,6 @@ export default function EnrollmentDetailsPage() {
     if (window.confirm("Are you sure you want to delete this attendance record?")) {
       setIsSubmitting(true)
       try {
-
-
         // Update the attendance list
         setAttendanceRecords((prevRecords) => prevRecords.filter((record) => record.attendance_id !== attendanceId))
 
@@ -363,15 +361,22 @@ export default function EnrollmentDetailsPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-900 text-white p-6">
+      <div className={`min-h-screen ${isDarkMode ? "bg-slate-900 text-white" : "bg-white text-slate-900"} p-6`}>
         <div className="flex items-center mb-6">
-          <button onClick={() => router.push("/dashboard")} className="p-2 rounded-full hover:bg-slate-800">
+          <button
+            onClick={() => router.push("/dashboard")}
+            className={`p-2 rounded-full ${isDarkMode ? "hover:bg-slate-800" : "hover:bg-gray-100"}`}
+          >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-xl font-bold ml-2">Authentication Required</h1>
         </div>
 
-        <div className="p-8 text-center rounded-lg border-2 border-dashed border-slate-700 text-gray-400">
+        <div
+          className={`p-8 text-center rounded-lg border-2 border-dashed ${
+            isDarkMode ? "border-slate-700 text-gray-400" : "border-gray-200 text-gray-500"
+          }`}
+        >
           <p className="text-lg mb-4">You must be logged in to view enrollment details</p>
           <Button variant="gradient" onClick={handleLogin}>
             <LogIn className="w-4 h-4 mr-2" />
@@ -384,7 +389,11 @@ export default function EnrollmentDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
+      <div
+        className={`min-h-screen flex items-center justify-center ${
+          isDarkMode ? "bg-slate-900 text-white" : "bg-white text-slate-900"
+        }`}
+      >
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     )
@@ -393,15 +402,22 @@ export default function EnrollmentDetailsPage() {
   // If error or no enrollment found, show empty state
   if (error || !currentEnrollment) {
     return (
-      <div className="min-h-screen bg-slate-900 text-white p-6">
+      <div className={`min-h-screen ${isDarkMode ? "bg-slate-900 text-white" : "bg-white text-slate-900"} p-6`}>
         <div className="flex items-center mb-6">
-          <button onClick={() => router.push("/dashboard")} className="p-2 rounded-full hover:bg-slate-800">
+          <button
+            onClick={() => router.push("/dashboard")}
+            className={`p-2 rounded-full ${isDarkMode ? "hover:bg-slate-800" : "hover:bg-gray-100"}`}
+          >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-xl font-bold ml-2">Enrollment Management</h1>
         </div>
 
-        <div className="p-8 text-center rounded-lg border-2 border-dashed border-slate-700 text-gray-400">
+        <div
+          className={`p-8 text-center rounded-lg border-2 border-dashed ${
+            isDarkMode ? "border-slate-700 text-gray-400" : "border-gray-200 text-gray-500"
+          }`}
+        >
           <p className="text-lg mb-4">{error || `No enrollment found with ID: ${enrollmentId}`}</p>
           <Button variant="gradient" onClick={() => router.push("/dashboard")}>
             Return to Dashboard
@@ -423,12 +439,19 @@ export default function EnrollmentDetailsPage() {
       : 0
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className={`min-h-screen ${isDarkMode ? "bg-slate-900 text-white" : "bg-white text-slate-900"}`}>
       {/* Back button and page title */}
-      <div className="sticky top-0 z-30 bg-slate-900 border-b border-slate-800 shadow-sm">
+      <div
+        className={`sticky top-0 z-30 ${
+          isDarkMode ? "bg-slate-900 border-b border-slate-800" : "bg-white border-b border-gray-200"
+        } shadow-sm`}
+      >
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <button onClick={() => router.push("/dashboard")} className="p-2 rounded-full hover:bg-slate-800">
+            <button
+              onClick={() => router.push("/dashboard")}
+              className={`p-2 rounded-full ${isDarkMode ? "hover:bg-slate-800" : "hover:bg-gray-100"}`}
+            >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <h1 className="text-xl font-bold">Enrollment Details</h1>
@@ -443,15 +466,23 @@ export default function EnrollmentDetailsPage() {
       </div>
 
       {/* Tabs Navigation */}
-      <div className="sticky top-14 z-20 bg-slate-900 border-b border-slate-800">
+      <div
+        className={`sticky top-14 z-20 ${
+          isDarkMode ? "bg-slate-900 border-b border-slate-800" : "bg-white border-b border-gray-200"
+        }`}
+      >
         <div className="container mx-auto px-4">
           <div className="flex overflow-x-auto hide-scrollbar">
             <button
               onClick={() => setActiveTab("progress")}
               className={`px-4 py-3 flex items-center whitespace-nowrap ${
                 activeTab === "progress"
-                  ? "border-b-2 border-cyan-500 text-cyan-400 font-medium"
-                  : "text-gray-400 hover:text-gray-200"
+                  ? isDarkMode
+                    ? "border-b-2 border-cyan-500 text-cyan-400 font-medium"
+                    : "border-b-2 border-cyan-600 text-cyan-600 font-medium"
+                  : isDarkMode
+                    ? "text-gray-400 hover:text-gray-200"
+                    : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <BarChart2 className="w-4 h-4 mr-2" />
@@ -461,8 +492,12 @@ export default function EnrollmentDetailsPage() {
               onClick={() => setActiveTab("attendance")}
               className={`px-4 py-3 flex items-center whitespace-nowrap ${
                 activeTab === "attendance"
-                  ? "border-b-2 border-cyan-500 text-cyan-400 font-medium"
-                  : "text-gray-400 hover:text-gray-200"
+                  ? isDarkMode
+                    ? "border-b-2 border-cyan-500 text-cyan-400 font-medium"
+                    : "border-b-2 border-cyan-600 text-cyan-600 font-medium"
+                  : isDarkMode
+                    ? "text-gray-400 hover:text-gray-200"
+                    : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <Calendar className="w-4 h-4 mr-2" />
@@ -472,8 +507,12 @@ export default function EnrollmentDetailsPage() {
               onClick={() => setActiveTab("student")}
               className={`px-4 py-3 flex items-center whitespace-nowrap ${
                 activeTab === "student"
-                  ? "border-b-2 border-cyan-500 text-cyan-400 font-medium"
-                  : "text-gray-400 hover:text-gray-200"
+                  ? isDarkMode
+                    ? "border-b-2 border-cyan-500 text-cyan-400 font-medium"
+                    : "border-b-2 border-cyan-600 text-cyan-600 font-medium"
+                  : isDarkMode
+                    ? "text-gray-400 hover:text-gray-200"
+                    : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <User className="w-4 h-4 mr-2" />
@@ -483,8 +522,12 @@ export default function EnrollmentDetailsPage() {
               onClick={() => setActiveTab("settings")}
               className={`px-4 py-3 flex items-center whitespace-nowrap ${
                 activeTab === "settings"
-                  ? "border-b-2 border-cyan-500 text-cyan-400 font-medium"
-                  : "text-gray-400 hover:text-gray-200"
+                  ? isDarkMode
+                    ? "border-b-2 border-cyan-500 text-cyan-400 font-medium"
+                    : "border-b-2 border-cyan-600 text-cyan-600 font-medium"
+                  : isDarkMode
+                    ? "text-gray-400 hover:text-gray-200"
+                    : "text-gray-500 hover:text-gray-700"
               }`}
             >
               <Settings className="w-4 h-4 mr-2" />
@@ -497,23 +540,33 @@ export default function EnrollmentDetailsPage() {
       {/* Tab Content */}
       <div className="container mx-auto px-4 py-6">
         {/* Enrollment Summary - Always visible */}
-        <div className="mb-6 p-6 rounded-xl bg-slate-800/80 shadow-sm">
+        <div
+          className={`mb-6 p-6 rounded-xl ${
+            isDarkMode ? "bg-slate-800/80 shadow-sm" : "bg-gray-50 shadow-sm border border-gray-200"
+          }`}
+        >
           <div className="flex flex-col md:flex-row justify-between">
             <div>
-              <h2 className="text-xl font-bold text-white mb-2">
+              <h2 className={`text-xl font-bold ${isDarkMode ? "text-white" : "text-slate-900"} mb-2`}>
                 {currentEnrollment.request?.Course?.course_name || "Unnamed Course"}
               </h2>
               <div className="flex flex-wrap gap-2 mb-4">
-                <span className="px-2 py-1 text-xs rounded-full bg-cyan-900/30 text-cyan-300 border border-cyan-800">
+                <span
+                  className={`px-2 py-1 text-xs rounded-full ${
+                    isDarkMode
+                      ? "bg-cyan-900/30 text-cyan-300 border border-cyan-800"
+                      : "bg-cyan-100 text-cyan-800 border border-cyan-200"
+                  }`}
+                >
                   {currentEnrollment.status}
                 </span>
               </div>
-              <p className="text-sm text-gray-400">
+              <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
                 <span className="font-medium">Start Date:</span>{" "}
                 {new Date(currentEnrollment.start_date).toLocaleDateString()}
               </p>
               {currentEnrollment.end_date && (
-                <p className="text-sm text-gray-400">
+                <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
                   <span className="font-medium">End Date:</span>{" "}
                   {new Date(currentEnrollment.end_date).toLocaleDateString()}
                 </p>
@@ -522,20 +575,30 @@ export default function EnrollmentDetailsPage() {
             <div className="mt-4 md:mt-0">
               <div className="flex flex-col space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-400">Sessions Completed:</span>
-                  <span className="font-bold text-white">
+                  <span className={`text-sm font-medium ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+                    Sessions Completed:
+                  </span>
+                  <span className={`font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                     {currentEnrollment.actual_sessions_attended} / {currentEnrollment.target_sessions_to_complete}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-400">Maximum Sessions:</span>
-                  <span className="font-bold text-white">{currentEnrollment.max_sessions_allowed}</span>
+                  <span className={`text-sm font-medium ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+                    Maximum Sessions:
+                  </span>
+                  <span className={`font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                    {currentEnrollment.max_sessions_allowed}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-400">Overall Progress:</span>
-                  <span className="font-bold text-cyan-400">{overallProgress}%</span>
+                  <span className={`text-sm font-medium ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+                    Overall Progress:
+                  </span>
+                  <span className={`font-bold ${isDarkMode ? "text-cyan-400" : "text-cyan-600"}`}>
+                    {overallProgress}%
+                  </span>
                 </div>
-                <div className="w-full md:w-64 h-2 rounded-full bg-slate-700">
+                <div className={`w-full md:w-64 h-2 rounded-full ${isDarkMode ? "bg-slate-700" : "bg-gray-200"}`}>
                   <div className="h-2 rounded-full bg-cyan-500" style={{ width: `${overallProgress}%` }}></div>
                 </div>
               </div>
@@ -546,7 +609,7 @@ export default function EnrollmentDetailsPage() {
         {activeTab === "progress" && (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-white">Progress Tracking</h2>
+              <h2 className={`text-xl font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>Progress Tracking</h2>
               <Button variant="gradient" size="sm" onClick={handleAddSession}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Session
@@ -554,39 +617,76 @@ export default function EnrollmentDetailsPage() {
             </div>
 
             {sessionProgress.length > 0 ? (
-              <div className="mb-6 rounded-xl bg-slate-800 overflow-hidden">
+              <div
+                className={`mb-6 rounded-xl ${
+                  isDarkMode ? "bg-slate-800 overflow-hidden" : "bg-white border border-gray-200 overflow-hidden"
+                }`}
+              >
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-slate-700">
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      <tr className={isDarkMode ? "bg-slate-700" : "bg-gray-50"}>
+                        <th
+                          className={`px-6 py-3 text-left text-xs font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-gray-500"
+                          } uppercase tracking-wider`}
+                        >
                           Session #
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th
+                          className={`px-6 py-3 text-left text-xs font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-gray-500"
+                          } uppercase tracking-wider`}
+                        >
                           Date
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th
+                          className={`px-6 py-3 text-left text-xs font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-gray-500"
+                          } uppercase tracking-wider`}
+                        >
                           Topic
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th
+                          className={`px-6 py-3 text-left text-xs font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-gray-500"
+                          } uppercase tracking-wider`}
+                        >
                           Notes
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th
+                          className={`px-6 py-3 text-right text-xs font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-gray-500"
+                          } uppercase tracking-wider`}
+                        >
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-700">
+                    <tbody className={`divide-y ${isDarkMode ? "divide-slate-700" : "divide-gray-200"}`}>
                       {sessionProgress.map((session) => (
-                        <tr key={session.session_progress_id} className="hover:bg-slate-700/50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        <tr
+                          key={session.session_progress_id}
+                          className={isDarkMode ? "hover:bg-slate-700/50" : "hover:bg-gray-50"}
+                        >
+                          <td
+                            className={`px-6 py-4 whitespace-nowrap text-sm ${
+                              isDarkMode ? "text-gray-300" : "text-gray-700"
+                            }`}
+                          >
                             {session.session_number}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          <td
+                            className={`px-6 py-4 whitespace-nowrap text-sm ${
+                              isDarkMode ? "text-gray-300" : "text-gray-700"
+                            }`}
+                          >
                             {formatDate(session.date_session)}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-300">{session.topic_covered}</td>
-                          <td className="px-6 py-4 text-sm text-gray-300">
+                          <td className={`px-6 py-4 text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                            {session.topic_covered}
+                          </td>
+                          <td className={`px-6 py-4 text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
                             {session.performance_notes?.length > 50
                               ? `${session.performance_notes.substring(0, 50)}...`
                               : session.performance_notes}
@@ -595,13 +695,17 @@ export default function EnrollmentDetailsPage() {
                             <div className="flex justify-end space-x-2">
                               <button
                                 onClick={() => handleEditSession(session)}
-                                className="text-cyan-400 hover:text-cyan-300"
+                                className={
+                                  isDarkMode ? "text-cyan-400 hover:text-cyan-300" : "text-cyan-600 hover:text-cyan-500"
+                                }
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={() => handleDeleteSession(session.session_progress_id)}
-                                className="text-red-400 hover:text-red-300"
+                                className={
+                                  isDarkMode ? "text-red-400 hover:text-red-300" : "text-red-600 hover:text-red-500"
+                                }
                               >
                                 Delete
                               </button>
@@ -614,7 +718,11 @@ export default function EnrollmentDetailsPage() {
                 </div>
               </div>
             ) : (
-              <div className="p-8 text-center rounded-lg border-2 border-dashed border-slate-700 text-gray-400 mb-6">
+              <div
+                className={`p-8 text-center rounded-lg border-2 border-dashed ${
+                  isDarkMode ? "border-slate-700 text-gray-400" : "border-gray-200 text-gray-500"
+                } mb-6`}
+              >
                 <p className="text-lg mb-4">No session progress records found</p>
                 <Button variant="gradient" onClick={handleAddSession}>
                   <Plus className="w-4 h-4 mr-2" />
@@ -622,15 +730,15 @@ export default function EnrollmentDetailsPage() {
                 </Button>
               </div>
             )}
-
-
           </div>
         )}
 
         {activeTab === "attendance" && (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-white">Attendance Records</h2>
+              <h2 className={`text-xl font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                Attendance Records
+              </h2>
               <Button variant="gradient" size="sm" onClick={handleAddAttendance} disabled={isSubmitting}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Attendance
@@ -639,7 +747,13 @@ export default function EnrollmentDetailsPage() {
 
             {/* API error message */}
             {attendanceError && (
-              <div className="mb-6 p-4 rounded-lg bg-red-900/30 border border-red-800 text-red-200">
+              <div
+                className={`mb-6 p-4 rounded-lg ${
+                  isDarkMode
+                    ? "bg-red-900/30 border border-red-800 text-red-200"
+                    : "bg-red-50 border border-red-200 text-red-800"
+                }`}
+              >
                 <div className="flex items-start">
                   <AlertTriangle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
                   <div>
@@ -655,33 +769,72 @@ export default function EnrollmentDetailsPage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
               </div>
             ) : attendanceRecords.length > 0 ? (
-              <div className="rounded-xl bg-slate-800/80 shadow-sm overflow-hidden">
+              <div
+                className={`rounded-xl ${
+                  isDarkMode
+                    ? "bg-slate-800/80 shadow-sm overflow-hidden"
+                    : "bg-white border border-gray-200 shadow-sm overflow-hidden"
+                }`}
+              >
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="bg-slate-700">
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      <tr className={isDarkMode ? "bg-slate-700" : "bg-gray-50"}>
+                        <th
+                          className={`px-6 py-3 text-left text-xs font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-gray-500"
+                          } uppercase tracking-wider`}
+                        >
                           Session #
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th
+                          className={`px-6 py-3 text-left text-xs font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-gray-500"
+                          } uppercase tracking-wider`}
+                        >
                           Date
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th
+                          className={`px-6 py-3 text-left text-xs font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-gray-500"
+                          } uppercase tracking-wider`}
+                        >
                           Status
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th
+                          className={`px-6 py-3 text-left text-xs font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-gray-500"
+                          } uppercase tracking-wider`}
+                        >
                           Reason
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th
+                          className={`px-6 py-3 text-right text-xs font-medium ${
+                            isDarkMode ? "text-gray-300" : "text-gray-500"
+                          } uppercase tracking-wider`}
+                        >
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-700">
+                    <tbody className={`divide-y ${isDarkMode ? "divide-slate-700" : "divide-gray-200"}`}>
                       {attendanceRecords.map((record) => (
-                        <tr key={record.attendance_id} className="hover:bg-slate-700/50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{record.session_number}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                        <tr
+                          key={record.attendance_id}
+                          className={isDarkMode ? "hover:bg-slate-700/50" : "hover:bg-gray-50"}
+                        >
+                          <td
+                            className={`px-6 py-4 whitespace-nowrap text-sm ${
+                              isDarkMode ? "text-gray-300" : "text-gray-700"
+                            }`}
+                          >
+                            {record.session_number}
+                          </td>
+                          <td
+                            className={`px-6 py-4 whitespace-nowrap text-sm ${
+                              isDarkMode ? "text-gray-300" : "text-gray-700"
+                            }`}
+                          >
                             {formatDate(record.date_attendance)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -712,19 +865,25 @@ export default function EnrollmentDetailsPage() {
                               )}
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-300">{record.reason_for_absence || "-"}</td>
+                          <td className={`px-6 py-4 text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                            {record.reason_for_absence || "-"}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex justify-end space-x-2">
                               <button
                                 onClick={() => handleEditAttendance(record)}
-                                className="text-cyan-400 hover:text-cyan-300"
+                                className={
+                                  isDarkMode ? "text-cyan-400 hover:text-cyan-300" : "text-cyan-600 hover:text-cyan-500"
+                                }
                                 disabled={isSubmitting}
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={() => handleDeleteAttendance(record.attendance_id)}
-                                className="text-red-400 hover:text-red-300"
+                                className={
+                                  isDarkMode ? "text-red-400 hover:text-red-300" : "text-red-600 hover:text-red-500"
+                                }
                                 disabled={isSubmitting}
                               >
                                 Delete
@@ -738,7 +897,11 @@ export default function EnrollmentDetailsPage() {
                 </div>
               </div>
             ) : (
-              <div className="p-8 text-center rounded-lg border-2 border-dashed border-slate-700 text-gray-400">
+              <div
+                className={`p-8 text-center rounded-lg border-2 border-dashed ${
+                  isDarkMode ? "border-slate-700 text-gray-400" : "border-gray-200 text-gray-500"
+                }`}
+              >
                 <p className="text-lg mb-4">No attendance records found</p>
                 <Button variant="gradient" onClick={handleAddAttendance} disabled={isSubmitting}>
                   <Plus className="w-4 h-4 mr-2" />
@@ -750,44 +913,60 @@ export default function EnrollmentDetailsPage() {
             {/* Attendance Summary */}
             {attendanceRecords.length > 0 && (
               <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="p-4 rounded-lg bg-slate-800 border border-slate-700">
+                <div
+                  className={`p-4 rounded-lg ${
+                    isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white border border-gray-200 shadow-sm"
+                  }`}
+                >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-400">Present</p>
-                      <p className="text-2xl font-bold text-white">
+                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Present</p>
+                      <p className={`text-2xl font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                         {attendanceRecords.filter((a) => a.status === "PRESENT").length}
                       </p>
                     </div>
                     <CheckCircle className="w-10 h-10 text-green-500 opacity-80" />
                   </div>
                 </div>
-                <div className="p-4 rounded-lg bg-slate-800 border border-slate-700">
+                <div
+                  className={`p-4 rounded-lg ${
+                    isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white border border-gray-200 shadow-sm"
+                  }`}
+                >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-400">Late</p>
-                      <p className="text-2xl font-bold text-white">
+                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Late</p>
+                      <p className={`text-2xl font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                         {attendanceRecords.filter((a) => a.status === "LATE").length}
                       </p>
                     </div>
                     <Clock className="w-10 h-10 text-yellow-500 opacity-80" />
                   </div>
                 </div>
-                <div className="p-4 rounded-lg bg-slate-800 border border-slate-700">
+                <div
+                  className={`p-4 rounded-lg ${
+                    isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white border border-gray-200 shadow-sm"
+                  }`}
+                >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-400">Absent</p>
-                      <p className="text-2xl font-bold text-white">
+                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Absent</p>
+                      <p className={`text-2xl font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                         {attendanceRecords.filter((a) => a.status === "ABSENT").length}
                       </p>
                     </div>
                     <XCircle className="w-10 h-10 text-red-500 opacity-80" />
                   </div>
                 </div>
-                <div className="p-4 rounded-lg bg-slate-800 border border-slate-700">
+                <div
+                  className={`p-4 rounded-lg ${
+                    isDarkMode ? "bg-slate-800 border border-slate-700" : "bg-white border border-gray-200 shadow-sm"
+                  }`}
+                >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-400">Attendance Rate</p>
-                      <p className="text-2xl font-bold text-white">
+                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>Attendance Rate</p>
+                      <p className={`text-2xl font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                         {attendanceRecords.length > 0
                           ? Math.round(
                               (attendanceRecords.filter((a) => a.status === "PRESENT").length /
@@ -798,7 +977,11 @@ export default function EnrollmentDetailsPage() {
                         %
                       </p>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
+                    <div
+                      className={`w-10 h-10 rounded-full ${
+                        isDarkMode ? "bg-slate-700" : "bg-gray-100"
+                      } flex items-center justify-center`}
+                    >
                       <div
                         className="w-8 h-8 rounded-full border-4 border-green-500"
                         style={{
@@ -825,18 +1008,25 @@ export default function EnrollmentDetailsPage() {
         {activeTab === "student" && (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-white">Student Information</h2>
+              <h2 className={`text-xl font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                Student Information
+              </h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Student Profile Card */}
-              <div className="p-6 rounded-xl bg-slate-800 shadow-sm">
+              <div
+                className={`p-6 rounded-xl ${
+                  isDarkMode ? "bg-slate-800 shadow-sm" : "bg-white border border-gray-200 shadow-sm"
+                }`}
+              >
                 <div className="flex flex-col items-center">
                   <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-blue-500 mb-4">
                     <Image
                       src={
                         currentEnrollment.request?.student?.profile_img ||
                         "/placeholder.svg?height=128&width=128&query=student profile" ||
+                        "/placeholder.svg" ||
                         "/placeholder.svg" ||
                         "/placeholder.svg"
                       }
@@ -846,24 +1036,30 @@ export default function EnrollmentDetailsPage() {
                     />
                   </div>
 
-                  <h3 className="text-xl font-bold text-white">
+                  <h3 className={`text-xl font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
                     {currentEnrollment.request?.student?.name || "Unknown Student"}
                   </h3>
 
-                  <p className="text-sm text-gray-400 mb-4">
+                  <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"} mb-4`}>
                     {currentEnrollment.request?.student?.email || "No email provided"}
                   </p>
 
-                  <div className="w-full p-4 rounded-lg bg-slate-700 mb-4">
-                    <h4 className="font-medium mb-2 text-gray-200">Enrollment Info</h4>
-                    <p className="text-sm text-gray-300">
+                  <div
+                    className={`w-full p-4 rounded-lg ${
+                      isDarkMode ? "bg-slate-700" : "bg-gray-50 border border-gray-200"
+                    } mb-4`}
+                  >
+                    <h4 className={`font-medium mb-2 ${isDarkMode ? "text-gray-200" : "text-gray-700"}`}>
+                      Enrollment Info
+                    </h4>
+                    <p className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
                       <span className="font-medium">Status:</span> {currentEnrollment.status}
                     </p>
-                    <p className="text-sm text-gray-300">
+                    <p className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
                       <span className="font-medium">Sessions Attended:</span>{" "}
                       {currentEnrollment.actual_sessions_attended} of {currentEnrollment.target_sessions_to_complete}
                     </p>
-                    <p className="text-sm text-gray-300">
+                    <p className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
                       <span className="font-medium">Max Sessions:</span> {currentEnrollment.max_sessions_allowed}
                     </p>
                   </div>
@@ -876,49 +1072,89 @@ export default function EnrollmentDetailsPage() {
 
               {/* Student Details */}
               <div className="col-span-2">
-                <div className="p-6 rounded-xl bg-slate-800 shadow-sm mb-6">
-                  <h3 className="text-lg font-bold mb-4 text-white">Contact Information</h3>
+                <div
+                  className={`p-6 rounded-xl ${
+                    isDarkMode ? "bg-slate-800 shadow-sm" : "bg-white border border-gray-200 shadow-sm"
+                  } mb-6`}
+                >
+                  <h3 className={`text-lg font-bold mb-4 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                    Contact Information
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-gray-400 mb-1">Email</p>
-                      <p className="text-white">{currentEnrollment.request?.student?.email || "Not provided"}</p>
+                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"} mb-1`}>Email</p>
+                      <p className={isDarkMode ? "text-white" : "text-slate-900"}>
+                        {currentEnrollment.request?.student?.email || "Not provided"}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-400 mb-1">Phone</p>
-                      <p className="text-white">+66 98 765 4321</p>
+                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"} mb-1`}>Phone</p>
+                      <p className={isDarkMode ? "text-white" : "text-slate-900"}>+66 98 765 4321</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-400 mb-1">Address</p>
-                      <p className="text-white">123 Main Street, Bangkok, Thailand</p>
+                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"} mb-1`}>Address</p>
+                      <p className={isDarkMode ? "text-white" : "text-slate-900"}>123 Main Street, Bangkok, Thailand</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-400 mb-1">Emergency Contact</p>
-                      <p className="text-white">+66 91 234 5678 (Parent)</p>
+                      <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"} mb-1`}>
+                        Emergency Contact
+                      </p>
+                      <p className={isDarkMode ? "text-white" : "text-slate-900"}>+66 91 234 5678 (Parent)</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-6 rounded-xl bg-slate-800 shadow-sm">
-                  <h3 className="text-lg font-bold mb-4 text-white">Course History</h3>
+                <div
+                  className={`p-6 rounded-xl ${
+                    isDarkMode ? "bg-slate-800 shadow-sm" : "bg-white border border-gray-200 shadow-sm"
+                  }`}
+                >
+                  <h3 className={`text-lg font-bold mb-4 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                    Course History
+                  </h3>
                   <div className="space-y-3">
-                    <div className="p-3 rounded-lg bg-slate-700">
+                    <div
+                      className={`p-3 rounded-lg ${isDarkMode ? "bg-slate-700" : "bg-gray-50 border border-gray-200"}`}
+                    >
                       <div className="flex justify-between">
                         <div>
-                          <p className="font-medium text-white">Introduction to Swimming</p>
-                          <p className="text-sm text-gray-400">Jan 2023 - Mar 2023</p>
+                          <p className={`font-medium ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                            Introduction to Swimming
+                          </p>
+                          <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                            Jan 2023 - Mar 2023
+                          </p>
                         </div>
-                        <span className="px-2 py-1 h-fit text-xs rounded-full bg-green-900/30 text-green-300 border border-green-800">
+                        <span
+                          className={`px-2 py-1 h-fit text-xs rounded-full ${
+                            isDarkMode
+                              ? "bg-green-900/30 text-green-300 border border-green-800"
+                              : "bg-green-100 text-green-800 border border-green-200"
+                          }`}
+                        >
                           Completed
                         </span>
                       </div>
                     </div>
-                    <div className="p-3 rounded-lg bg-slate-700">
+                    <div
+                      className={`p-3 rounded-lg ${isDarkMode ? "bg-slate-700" : "bg-gray-50 border border-gray-200"}`}
+                    >
                       <div className="flex justify-between">
                         <div>
-                          <p className="font-medium text-white">Intermediate Swimming Techniques</p>
-                          <p className="text-sm text-gray-400">Apr 2023 - Present</p>
+                          <p className={`font-medium ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                            Intermediate Swimming Techniques
+                          </p>
+                          <p className={`text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                            Apr 2023 - Present
+                          </p>
                         </div>
-                        <span className="px-2 py-1 h-fit text-xs rounded-full bg-cyan-900/30 text-cyan-300 border border-cyan-800">
+                        <span
+                          className={`px-2 py-1 h-fit text-xs rounded-full ${
+                            isDarkMode
+                              ? "bg-cyan-900/30 text-cyan-300 border border-cyan-800"
+                              : "bg-cyan-100 text-cyan-800 border border-cyan-200"
+                          }`}
+                        >
                           Active
                         </span>
                       </div>
@@ -933,22 +1169,40 @@ export default function EnrollmentDetailsPage() {
         {activeTab === "settings" && (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-white">Enrollment Settings</h2>
+              <h2 className={`text-xl font-bold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                Enrollment Settings
+              </h2>
               <Button variant="gradient" size="sm">
                 Save Changes
               </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-6 rounded-lg bg-slate-800 border border-slate-700 shadow-sm">
-                <h3 className="text-lg font-bold mb-4 text-white">Enrollment Information</h3>
+              <div
+                className={`p-6 rounded-lg ${
+                  isDarkMode
+                    ? "bg-slate-800 border border-slate-700 shadow-sm"
+                    : "bg-white border border-gray-200 shadow-sm"
+                }`}
+              >
+                <h3 className={`text-lg font-bold mb-4 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                  Enrollment Information
+                </h3>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-300">Status</label>
+                    <label
+                      className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                    >
+                      Status
+                    </label>
                     <select
                       defaultValue={currentEnrollment.status}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                      className={`w-full px-3 py-2 rounded-lg ${
+                        isDarkMode
+                          ? "bg-slate-700 border border-slate-600 text-white focus:border-cyan-500"
+                          : "bg-white border border-gray-300 text-slate-900 focus:border-cyan-600"
+                      } focus:outline-none focus:ring-1 focus:ring-cyan-500`}
                     >
                       <option value="active">Active</option>
                       <option value="completed">Completed</option>
@@ -958,49 +1212,93 @@ export default function EnrollmentDetailsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-300">Target Sessions to Complete</label>
+                    <label
+                      className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                    >
+                      Target Sessions to Complete
+                    </label>
                     <input
                       type="number"
                       defaultValue={currentEnrollment.target_sessions_to_complete}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                      className={`w-full px-3 py-2 rounded-lg ${
+                        isDarkMode
+                          ? "bg-slate-700 border border-slate-600 text-white focus:border-cyan-500"
+                          : "bg-white border border-gray-300 text-slate-900 focus:border-cyan-600"
+                      } focus:outline-none focus:ring-1 focus:ring-cyan-500`}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-300">Maximum Sessions Allowed</label>
+                    <label
+                      className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                    >
+                      Maximum Sessions Allowed
+                    </label>
                     <input
                       type="number"
                       defaultValue={currentEnrollment.max_sessions_allowed}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                      className={`w-full px-3 py-2 rounded-lg ${
+                        isDarkMode
+                          ? "bg-slate-700 border border-slate-600 text-white focus:border-cyan-500"
+                          : "bg-white border border-gray-300 text-slate-900 focus:border-cyan-600"
+                      } focus:outline-none focus:ring-1 focus:ring-cyan-500`}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-300">Actual Sessions Attended</label>
+                    <label
+                      className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                    >
+                      Actual Sessions Attended
+                    </label>
                     <input
                       type="number"
                       defaultValue={currentEnrollment.actual_sessions_attended}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                      className={`w-full px-3 py-2 rounded-lg ${
+                        isDarkMode
+                          ? "bg-slate-700 border border-slate-600 text-white focus:border-cyan-500"
+                          : "bg-white border border-gray-300 text-slate-900 focus:border-cyan-600"
+                      } focus:outline-none focus:ring-1 focus:ring-cyan-500`}
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="p-6 rounded-lg bg-slate-800 border border-slate-700 shadow-sm">
-                <h3 className="text-lg font-bold mb-4 text-white">Dates and Schedule</h3>
+              <div
+                className={`p-6 rounded-lg ${
+                  isDarkMode
+                    ? "bg-slate-800 border border-slate-700 shadow-sm"
+                    : "bg-white border border-gray-200 shadow-sm"
+                }`}
+              >
+                <h3 className={`text-lg font-bold mb-4 ${isDarkMode ? "text-white" : "text-slate-900"}`}>
+                  Dates and Schedule
+                </h3>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-300">Start Date</label>
+                    <label
+                      className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                    >
+                      Start Date
+                    </label>
                     <input
                       type="date"
                       defaultValue={new Date(currentEnrollment.start_date).toISOString().split("T")[0]}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                      className={`w-full px-3 py-2 rounded-lg ${
+                        isDarkMode
+                          ? "bg-slate-700 border border-slate-600 text-white focus:border-cyan-500"
+                          : "bg-white border border-gray-300 text-slate-900 focus:border-cyan-600"
+                      } focus:outline-none focus:ring-1 focus:ring-cyan-500`}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-300">End Date</label>
+                    <label
+                      className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                    >
+                      End Date
+                    </label>
                     <input
                       type="date"
                       defaultValue={
@@ -1008,16 +1306,28 @@ export default function EnrollmentDetailsPage() {
                           ? new Date(currentEnrollment.end_date).toISOString().split("T")[0]
                           : ""
                       }
-                      className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                      className={`w-full px-3 py-2 rounded-lg ${
+                        isDarkMode
+                          ? "bg-slate-700 border border-slate-600 text-white focus:border-cyan-500"
+                          : "bg-white border border-gray-300 text-slate-900 focus:border-cyan-600"
+                      } focus:outline-none focus:ring-1 focus:ring-cyan-500`}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-300">Notes</label>
+                    <label
+                      className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}
+                    >
+                      Notes
+                    </label>
                     <textarea
                       defaultValue={currentEnrollment.request?.notes || ""}
                       rows={4}
-                      className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
+                      className={`w-full px-3 py-2 rounded-lg ${
+                        isDarkMode
+                          ? "bg-slate-700 border border-slate-600 text-white focus:border-cyan-500"
+                          : "bg-white border border-gray-300 text-slate-900 focus:border-cyan-600"
+                      } focus:outline-none focus:ring-1 focus:ring-cyan-500`}
                     ></textarea>
                   </div>
                 </div>
