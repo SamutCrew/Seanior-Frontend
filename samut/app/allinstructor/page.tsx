@@ -26,9 +26,9 @@ import { InstructorFiltersComponent } from "@/components/Searchpage/InstructorFi
 import type { Instructor, InstructorFilters, Location } from "@/types/instructor"
 import LoadingPage from "@/components/Common/LoadingPage"
 import { motion, AnimatePresence } from "framer-motion"
+import { API_BASE_URL } from "@/constants/apiEndpoints"
 
-// Direct API URL - no authentication needed
-const API_URL = "https://seanior-backend.onrender.com/users/retrieve/getAllInstructors"
+
 
 // Function to map API data to the format expected by the UI
 const mapApiDataToInstructors = (apiData: any[]): Instructor[] => {
@@ -111,8 +111,8 @@ export default function InstructorsDirectoryPage() {
         setIsLoading(true)
         setError(null)
 
-        console.log("Fetching instructors from API:", API_URL)
-        const response = await fetch(API_URL)
+        console.log("Fetching instructors from API:", API_BASE_URL)
+        const response = await fetch(API_BASE_URL)
 
         if (!response.ok) {
           throw new Error(`API request failed with status ${response.status}`)
