@@ -299,7 +299,7 @@ export default function EnrollmentDetailsPage() {
         // Update existing attendance
         updatedAttendance = await updateAttendance(enrollmentId, attendanceData.attendance_id, {
           sessionNumber: attendanceData.session_number,
-          status: attendanceData.status as AttendanceStatus,
+          status: (attendanceData.status?.toUpperCase() as AttendanceStatus) || "PRESENT",
           reasonForAbsence: attendanceData.reason_for_absence || "",
           dateAttendance: attendanceData.date_attendance,
         })
@@ -316,14 +316,14 @@ export default function EnrollmentDetailsPage() {
         // Create new attendance - format exactly as the API expects
         console.log("Creating new attendance with data:", {
           sessionNumber: attendanceData.session_number || 1,
-          status: (attendanceData.status as AttendanceStatus) || "PRESENT",
+          status: (attendanceData.status?.toUpperCase() as AttendanceStatus) || "PRESENT",
           reasonForAbsence: attendanceData.reason_for_absence || "",
           dateAttendance: attendanceData.date_attendance || new Date().toISOString().split("T")[0],
         })
 
         updatedAttendance = await recordAttendance(enrollmentId, {
           sessionNumber: attendanceData.session_number || 1,
-          status: (attendanceData.status as AttendanceStatus) || "PRESENT",
+          status: (attendanceData.status?.toUpperCase() as AttendanceStatus) || "PRESENT",
           reasonForAbsence: attendanceData.reason_for_absence || "",
           dateAttendance: attendanceData.date_attendance || new Date().toISOString().split("T")[0],
         })
@@ -842,25 +842,49 @@ export default function EnrollmentDetailsPage() {
                               {record.status === "PRESENT" && (
                                 <>
                                   <div className="w-3 h-3 rounded-full mr-2 bg-green-500"></div>
-                                  <span className="text-sm">Present</span>
+                                  <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                                    Present
+                                  </span>
                                 </>
                               )}
                               {record.status === "ABSENT" && (
                                 <>
                                   <div className="w-3 h-3 rounded-full mr-2 bg-red-500"></div>
-                                  <span className="text-sm">Absent</span>
+                                  <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                                    Absent
+                                  </span>
                                 </>
                               )}
                               {record.status === "LATE" && (
                                 <>
                                   <div className="w-3 h-3 rounded-full mr-2 bg-yellow-500"></div>
-                                  <span className="text-sm">Late</span>
+                                  <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                                    Late
+                                  </span>
                                 </>
                               )}
                               {record.status === "EXCUSED" && (
                                 <>
                                   <div className="w-3 h-3 rounded-full mr-2 bg-blue-500"></div>
-                                  <span className="text-sm">Excused</span>
+                                  <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                                    Excused
+                                  </span>
+                                </>
+                              )}
+                              {record.status && !["PRESENT", "ABSENT", "LATE", "EXCUSED"].includes(record.status) && (
+                                <>
+                                  <div className="w-3 h-3 rounded-full mr-2 bg-gray-500"></div>
+                                  <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                                    {record.status}
+                                  </span>
+                                </>
+                              )}
+                              {!record.status && (
+                                <>
+                                  <div className="w-3 h-3 rounded-full mr-2 bg-gray-500"></div>
+                                  <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                                    Unknown
+                                  </span>
                                 </>
                               )}
                             </div>
@@ -1026,6 +1050,8 @@ export default function EnrollmentDetailsPage() {
                       src={
                         currentEnrollment.request?.student?.profile_img ||
                         "/placeholder.svg?height=128&width=128&query=student profile" ||
+                        "/placeholder.svg" ||
+                        "/placeholder.svg" ||
                         "/placeholder.svg" ||
                         "/placeholder.svg" ||
                         "/placeholder.svg"

@@ -163,19 +163,9 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
   const navItems = userRoleState === "teacher" ? teacherNavItems : studentNavItems
 
   // Define class items for each role
-  const teacherClassItems = [
-    { icon: Users, label: "Beginner Swimming", href: "/classes/beginner" },
-    { icon: Users, label: "Advanced Techniques", href: "/classes/advanced" },
-    { icon: Users, label: "Intermediate Stroke", href: "/classes/intermediate" },
-    { icon: Users, label: "Kids Swimming", href: "/classes/kids" },
-    { icon: BarChart3, label: "Class Analytics", href: "/classes/analytics" },
-  ]
+  const teacherClassItems = [""]
 
-  const studentClassItems = [
-    { icon: BookOpen, label: "Current Courses", href: "/student/current-courses" },
-    { icon: Award, label: "Completed Courses", href: "/student/completed-courses" },
-    { icon: Compass, label: "Recommended", href: "/student/recommended" },
-  ]
+  const studentClassItems = [""]
 
   const classItems = userRoleState === "teacher" ? teacherClassItems : studentClassItems
 
@@ -539,7 +529,7 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
                   </button>
                 </div>
               )}
-
+              {/*
               <AnimatePresence>
                 {showClasses && (
                   <motion.div
@@ -552,10 +542,10 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
                     <div className="space-y-0.5">
                       {classItems.map((item, index) => (
                         <SidebarLink
-                          key={item.href}
-                          icon={item.icon}
-                          label={item.label}
-                          href={item.href}
+                          key={item}
+                          icon={""}
+                          label={item}
+                          href={item}
                           collapsed={!isMobile && isSidebarCollapsed}
                           isLandingPage={isLandingPage}
                           delay={0.1 + index * 0.05}
@@ -568,6 +558,7 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
                   </motion.div>
                 )}
               </AnimatePresence>
+              */}
             </div>
           </div>
 

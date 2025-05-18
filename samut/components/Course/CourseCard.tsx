@@ -44,7 +44,18 @@ const formatLocation = (location: any): string => {
         if (addressMatch && addressMatch[1]) {
           return addressMatch[1]
         }
-        return "Location format error"
+
+        // Try to extract address from the string directly
+        if (location.includes("address")) {
+          const parts = location.split("address")
+          if (parts.length > 1) {
+            // Try to extract the address part
+            const addressPart = parts[1].replace(/[":{}]/g, "").trim()
+            if (addressPart) return addressPart
+          }
+        }
+
+        return location.replace(/\{"lat":[^,]+,"lng":[^,]+,"address":"([^"]+)"\}/g, "$1")
       }
     }
 
@@ -252,9 +263,26 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
   }
 
   // Default instructor image if not provided
-  const instructorImage =
-    course.instructorImage ||
-    `/placeholder.svg?height=200&width=200&query=swimming instructor portrait ${instructorName}`
+  const instructorImage = (() => {
+    // First try to get the instructor image from the course object
+    if (course.instructorImage) return course.instructorImage
+
+    // If the instructor is an object with profile_img
+    if (course.instructor && typeof course.instructor === "object" && course.instructor.profile_img) {
+      return course.instructor.profile_img
+    }
+
+    // If the instructor is an object with profile_image
+    if (course.instructor && typeof course.instructor === "object" && course.instructor.profile_image) {
+      return course.instructor.profile_image
+    }
+
+    // Check for instructor_image property
+    if (course.instructor_image) return course.instructor_image
+
+    // Fall back to a placeholder with the instructor name
+    return `/placeholder.svg?height=200&width=200&query=swimming instructor portrait ${instructorName}`
+  })()
 
   // Default course image if not provided
   const courseImage =
@@ -480,7 +508,41 @@ export default function CourseCard({ course, onEdit, onDelete, variant = "standa
       <div
         className={`px-4 pt-3 pb-4 mt-auto ${isDarkMode ? "border-t border-slate-700" : "border-t border-gray-100"}`}
       >
-        
+        <div className="flex items-center mb-4">
+          <div
+            className={`relative h-10 w-10 rounded-full overflow-hidden border-2 shadow-md
+            ${isDarkMode ? "border-indigo-700" : "border-indigo-100"}`}
+          >
+            <div className="h-full w-full">
+              {typeof instructorName === "string" && instructorName ? (
+                <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-medium">
+                  {instructorName.charAt(0).toUpperCase()}
+                </div>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-medium">
+                  I
+                </div>
+              )}
+
+              {instructorImage && (
+                <Image
+                  src={instructorImage || "/placeholder.svg"}
+                  alt={`Instructor ${instructorName}`}
+                  fill
+                  className="object-cover"
+                  onError={(e) => {
+                    // If image fails to load, hide it to show the fallback initial
+                    e.currentTarget.style.display = "none"
+                  }}
+                />
+              )}
+            </div>
+          </div>
+          <div className="ml-3">
+            <p className={`text-xs ${isDarkMode ? "text-slate-400" : "text-gray-500"}`}>Instructor</p>
+            <h4 className={`text-sm font-bold ${isDarkMode ? "text-white" : "text-gray-800"}`}>{instructorName}</h4>
+          </div>
+        </div>
 
         {/* Action Buttons */}
         {(onEdit || onDelete) && (

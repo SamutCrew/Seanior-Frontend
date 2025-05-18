@@ -22,6 +22,7 @@ const AttendanceModal = ({ isOpen, onClose, onSave, attendance, enrollmentId }: 
   const [dateAttendance, setDateAttendance] = useState(new Date().toISOString().split("T")[0])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [isDarkMode, setIsDarkMode] = useState(false) // Assuming dark mode is managed elsewhere
 
   // Reset form when modal opens/closes or attendance changes
   useEffect(() => {
@@ -77,7 +78,7 @@ const AttendanceModal = ({ isOpen, onClose, onSave, attendance, enrollmentId }: 
       // Format the attendance data to match the API specification exactly
       const attendanceData: Partial<AttendanceRecord> = {
         session_number: sessionNumber,
-        status,
+        status, // Use the status exactly as selected
         reason_for_absence: reasonForAbsence,
         date_attendance: dateAttendance,
       }
@@ -130,13 +131,18 @@ const AttendanceModal = ({ isOpen, onClose, onSave, attendance, enrollmentId }: 
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Status</label>
+            <div className="mb-4">
+              <label className={`block text-sm font-medium mb-1 ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
+                Status
+              </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as AttendanceStatus)}
-                className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500"
-                required
+                className={`w-full px-3 py-2 rounded-lg ${
+                  isDarkMode
+                    ? "bg-slate-700 border border-slate-600 text-white focus:border-cyan-500"
+                    : "bg-white border border-gray-300 text-slate-900 focus:border-cyan-600"
+                } focus:outline-none focus:ring-1 focus:ring-cyan-500`}
               >
                 <option value="PRESENT">Present</option>
                 <option value="ABSENT">Absent</option>

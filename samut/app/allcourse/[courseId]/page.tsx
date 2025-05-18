@@ -24,7 +24,6 @@ import {
   Star,
   ChevronRight,
   ArrowLeft,
-  MessageCircle,
   CalendarDays,
   Waves,
   Timer,
@@ -74,6 +73,14 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
         console.log("Course data received:", JSON.stringify(courseData, null, 2))
 
         setCourse(courseData)
+
+        // After setting course data
+        if (courseData.instructor && typeof courseData.instructor === "object") {
+          // Make sure instructor_id is properly set
+          if (!courseData.instructor_id && courseData.instructor.user_id) {
+            courseData.instructor_id = courseData.instructor.user_id
+          }
+        }
 
         // Parse location JSON string if it exists
         if (courseData.location && typeof courseData.location === "string") {
@@ -327,6 +334,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                     course.course_image ||
                     course.pool_image ||
                     "/placeholder.svg?height=300&width=400&query=swimming course" ||
+                    "/placeholder.svg" ||
                     "/placeholder.svg" ||
                     "/placeholder.svg" ||
                     "/placeholder.svg"
@@ -770,7 +778,6 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                     </li>
                   </ul>
                 </div>
-
               </motion.div>
             )}
 
@@ -864,7 +871,6 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                     </p>
                   </div>
                 )}
-
               </motion.div>
             )}
 
@@ -887,6 +893,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                     src={
                       course.instructor?.profile_img ||
                       "/placeholder.svg?height=128&width=128&query=swimming instructor" ||
+                      "/placeholder.svg" ||
                       "/placeholder.svg" ||
                       "/placeholder.svg" ||
                       "/placeholder.svg"
@@ -983,7 +990,17 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   <Button
                     variant="outline"
                     className={`flex-1 ${isDarkMode ? "border-slate-700 text-white" : ""}`}
-                    onClick={() => router.push(`/allinstructor/${course.instructor_id}`)}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      if (course.instructor_id) {
+                        router.push(`/allinstructor/${course.instructor_id}`)
+                      } else {
+                        console.error("No instructor ID available")
+                        // Show a toast or alert to the user
+                        alert("Instructor profile not available")
+                      }
+                    }}
                   >
                     View Instructor Profile
                   </Button>
@@ -1221,14 +1238,10 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                 </div>
               </div>
 
-
-              <div className="mt-6">
-              </div>
+              <div className="mt-6"></div>
             </motion.div>
           </div>
         </div>
-
-        
       </div>
 
       {/* Enrollment Modal */}

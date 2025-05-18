@@ -8,7 +8,7 @@ const mapApiResponseToAttendanceRecord = (item: any): AttendanceRecord => ({
   attendance_id: item.attendance_id,
   enrollment_id: item.enrollment_id,
   session_number: item.session_number || item.sessionNumber,
-  status: item.status,
+  status: item.status || "PRESENT", // Preserve the exact case but provide a default
   reason_for_absence: item.reason_for_absence || item.reasonForAbsence || "",
   date_attendance: item.date_attendance || item.dateAttendance,
   created_at: item.created_at,
@@ -53,7 +53,7 @@ export const getEnrollmentAttendance = async (enrollmentId: string): Promise<Att
     }
 
     // Use the exact API endpoint from the documentation
-    const url = process.env.NEXT_PUBLIC_API_URL 
+    const url = process.env.NEXT_PUBLIC_API_URL
     const endpoint = `${url}/enrollments/${enrollmentId}/attendances`
 
     console.log(`Sending request to: ${endpoint}`)
@@ -97,7 +97,7 @@ export const recordAttendance = async (
   // Format the request body to match the API specification exactly
   const requestBody = {
     sessionNumber: data.sessionNumber,
-    status: data.status,
+    status: data.status, // Send the status exactly as is
     reasonForAbsence: data.reasonForAbsence || "",
     dateAttendance: data.dateAttendance,
   }
@@ -202,5 +202,3 @@ export const updateAttendance = async (
     throw error
   }
 }
-
-

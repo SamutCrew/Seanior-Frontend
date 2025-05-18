@@ -18,9 +18,9 @@ import {
   ClockIcon,
   AlertCircle,
   MapPin,
-  Calendar,
   User,
   Star,
+  Eye,
 } from "lucide-react"
 import { useAppSelector } from "@/app/redux"
 import { Button } from "@/components/Common/Button"
@@ -42,6 +42,7 @@ const getMyCourses = async (): Promise<{
   try {
     // Fetch enrollments from the API
     const enrollments = await getStudentEnrollments()
+    console.log("Raw enrollments data:", enrollments)
 
     // Transform enrollments into course data
     const currentCourses: Course[] = []
@@ -50,33 +51,48 @@ const getMyCourses = async (): Promise<{
     enrollments.forEach((enrollment) => {
       if (!enrollment.request?.Course) return
 
+      // Log the raw course data for debugging
+      console.log("Processing course:", enrollment.request.Course)
+
+      // Get instructor data
+      const instructorData = enrollment.request.Course.instructor || {}
+      let instructorName = "Unknown Instructor"
+      let instructorImage = null
+
+      if (typeof instructorData === "string") {
+        instructorName = instructorData
+      } else if (instructorData && typeof instructorData === "object") {
+        instructorName = instructorData.name || "Unknown Instructor"
+        instructorImage = instructorData.profile_img || instructorData.profile_image || null
+      }
+
+      // Process location data
+      const locationData = enrollment.request.Course.location || enrollment.request.request_location || null
+
       const course: Course = {
         id: enrollment.request.course_id,
         course_id: enrollment.request.course_id,
         title: enrollment.request.Course.course_name,
         course_name: enrollment.request.Course.course_name,
-        focus: "Swimming techniques", // Default focus if not available
-        level: "Intermediate", // Default level if not available
+        focus: enrollment.request.Course.description || "Swimming techniques",
+        level: enrollment.request.Course.level || "Intermediate",
         duration: `${enrollment.target_sessions_to_complete || 8} sessions`,
         course_duration: enrollment.target_sessions_to_complete || 8,
-        schedule: enrollment.request.requestedSlots
-          ? formatRequestedSlotsToSchedule(enrollment.request.requestedSlots)
-          : "Schedule not available",
+        schedule: enrollment.request.Course.schedule || "{}",
         instructor_id: enrollment.request.Course.instructor_id || "",
-        instructor: enrollment.request.Course.instructor_name || "Instructor",
-        instructorImage: enrollment.request.Course.instructor_image || "/swimming-instructor-portrait.png",
-        rating: 4.5, // Default rating if not available
-        students: 10, // Default number of students if not available
-        price: enrollment.request.request_price,
-        location: {
-          address: enrollment.request.request_location || "Location not specified",
-        },
-        courseType: "public-pool", // Default course type if not available
-        pool_type: "public-pool",
+        instructor: instructorName,
+        instructorImage: instructorImage || enrollment.request.Course.instructor_image,
+        rating: enrollment.request.Course.rating || 4.5,
+        students: enrollment.request.Course.students || 10,
+        price: enrollment.request.request_price || enrollment.request.Course.price,
+        location: locationData,
+        courseType: enrollment.request.Course.pool_type || "public-pool",
+        pool_type: enrollment.request.Course.pool_type || "public-pool",
         description: enrollment.request.Course.description || "No description available",
-        study_frequency: 3,
-        days_study: 3,
-        number_of_total_sessions: enrollment.target_sessions_to_complete || 8,
+        study_frequency: enrollment.request.Course.study_frequency || 3,
+        days_study: enrollment.request.Course.days_study || 3,
+        number_of_total_sessions:
+          enrollment.target_sessions_to_complete || enrollment.request.Course.number_of_total_sessions || 8,
         status: enrollment.status === "completed" ? "completed" : "in-progress",
         image: enrollment.request.Course.course_image || "/swimming-course.png",
         course_image: enrollment.request.Course.course_image || "/swimming-course.png",
@@ -96,6 +112,9 @@ const getMyCourses = async (): Promise<{
         currentCourses.push(course)
       }
     })
+
+    console.log("Processed current courses:", currentCourses)
+    console.log("Processed past courses:", pastCourses)
 
     return { currentCourses, pastCourses }
   } catch (error) {
@@ -810,11 +829,11 @@ export default function MyCoursesPage() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredCurrentCourses.map((course) => (
-                    <EnhancedCourseCard
-                      key={course.id}
+                    <CourseCardWithButtons
+                      key={course.id || course.course_id}
                       course={course}
-                      onClick={() => navigateToCourseDetail(course.course_id)}
                       isDarkMode={isDarkMode}
+                      onNavigate={() => navigateToCourseDetail(course.course_id)}
                       onReview={() => openReviewModal(course)}
                     />
                   ))}
@@ -829,11 +848,11 @@ export default function MyCoursesPage() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredPastCourses.map((course) => (
-                    <EnhancedCourseCard
-                      key={course.id}
+                    <CourseCardWithButtons
+                      key={course.id || course.course_id}
                       course={course}
-                      onClick={() => navigateToCourseDetail(course.course_id)}
                       isDarkMode={isDarkMode}
+                      onNavigate={() => navigateToCourseDetail(course.course_id)}
                       onReview={() => openReviewModal(course)}
                     />
                   ))}
@@ -857,273 +876,54 @@ export default function MyCoursesPage() {
   )
 }
 
-interface CourseCardProps {
+// CourseCardWithButtons component - Wraps CourseCard and adds buttons
+interface CourseCardWithButtonsProps {
   course: Course
-  onClick: () => void
   isDarkMode: boolean
+  onNavigate: () => void
   onReview: () => void
 }
 
-function CourseCardItem({ course, onClick, isDarkMode }: Omit<CourseCardProps, "onReview">) {
+function CourseCardWithButtons({ course, isDarkMode, onNavigate, onReview }: CourseCardWithButtonsProps) {
   return (
-    <div onClick={onClick} className="cursor-pointer">
-      <CourseCard course={course} variant="standard" />
-    </div>
-  )
-}
-
-function EnhancedCourseCard({ course, onClick, isDarkMode, onReview }: CourseCardProps) {
-  const router = useRouter()
-
-  // Format schedule for display
-  const formatSchedule = (schedule: any) => {
-    if (typeof schedule === "string") {
-      try {
-        schedule = JSON.parse(schedule)
-      } catch (e) {
-        return { days: [], times: [] }
-      }
-    }
-
-    // Extract days and times from schedule
-    const days: string[] = []
-    const times: { day: string; ranges: { start: string; end: string }[] } = []
-
-    if (schedule && typeof schedule === "object") {
-      Object.entries(schedule).forEach(([day, value]: [string, any]) => {
-        if (value.selected) {
-          days.push(day.charAt(0).toUpperCase() + day.slice(1))
-
-          if (value.ranges && Array.isArray(value.ranges)) {
-            times.push({
-              day: day.charAt(0).toUpperCase() + day.slice(1),
-              ranges: value.ranges,
-            })
-          }
-        }
-      })
-    }
-
-    return { days, times }
-  }
-
-  const { days, times } = formatSchedule(course.schedule)
-
-  return (
-    <div
-      onClick={onClick}
-      className={`rounded-lg overflow-hidden shadow-md cursor-pointer transition-transform hover:scale-[1.02] ${
-        isDarkMode ? "bg-slate-800 text-white" : "bg-white text-gray-900"
-      }`}
-    >
-      {/* Course Image */}
-      <div className="relative h-48 w-full overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
-        <Image
-          src={course.course_image || `/placeholder.svg?height=300&width=400&query=swimming course ${course.course_id}`}
-          alt={course.title || course.course_name}
-          fill
-          style={{ objectFit: "cover" }}
-          className="transition-transform hover:scale-110 duration-500"
-        />
-
-        {/* Level Tag */}
-        <div className="absolute top-3 left-3 z-20">
-          <span
-            className={`px-2 py-1 text-xs font-medium rounded-full ${
-              isDarkMode ? "bg-amber-700 text-amber-100" : "bg-amber-100 text-amber-800"
-            }`}
-          >
-            {course.level || "Intermediate"}
-          </span>
-        </div>
-
-        {/* Status Tag */}
-        <div className="absolute top-3 right-3 z-20">
-          <span
-            className={`px-2 py-1 text-xs font-medium rounded-full ${
-              course.status === "in-progress"
-                ? isDarkMode
-                  ? "bg-blue-700 text-blue-100"
-                  : "bg-blue-100 text-blue-800"
-                : isDarkMode
-                  ? "bg-green-700 text-green-100"
-                  : "bg-green-100 text-green-800"
-            }`}
-          >
-            {course.status === "in-progress" ? "in-progress" : "completed"}
-          </span>
-        </div>
+    <div className="relative">
+      {/* The CourseCard component */}
+      <div onClick={onNavigate} className="cursor-pointer">
+        <CourseCard course={course} variant="standard" />
       </div>
 
-      {/* Course Content */}
-      <div className="p-4">
-        <h3 className={`text-xl font-bold mb-2 ${isDarkMode ? "text-white" : "text-gray-900"}`}>
-          {course.title || course.course_name}
-        </h3>
+      {/* Action Buttons overlay */}
+      <div
+        className={`absolute bottom-0 left-0 right-0 p-4 ${isDarkMode ? "bg-slate-800" : "bg-white"} border-t ${isDarkMode ? "border-slate-700" : "border-gray-100"}`}
+      >
+        <div className="grid grid-cols-2 gap-2">
+          {/* Review Button */}
+          <Button
+            variant={isDarkMode ? "outline" : "secondary"}
+            size="sm"
+            className="flex items-center justify-center gap-2"
+            onClick={(e) => {
+              e.stopPropagation()
+              onReview()
+            }}
+          >
+            <Star className="w-4 h-4" />
+            Review
+          </Button>
 
-        {/* Rating */}
-        <div className="flex items-center mb-3">
-          <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-              <svg
-                key={i}
-                className={`w-4 h-4 ${i < Math.floor(course.rating || 4.5) ? "text-yellow-400" : "text-gray-300"}`}
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-            ))}
-          </div>
-          <span className={`ml-1 text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-            {course.rating || 4.5}
-          </span>
-          <span className={`mx-2 text-sm ${isDarkMode ? "text-gray-500" : "text-gray-400"}`}>•</span>
-          <span className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-            ฿{course.price?.toLocaleString()}
-          </span>
-        </div>
-
-        {/* Location */}
-        <div className="flex items-start gap-2 mb-2">
-          <MapPin className={`w-4 h-4 mt-0.5 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
-          <p className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
-            {typeof course.location === "object" && course.location?.address
-              ? typeof course.location.address === "string"
-                ? course.location.address
-                : JSON.stringify(course.location.address) === "[object Object]"
-                  ? "Location not specified"
-                  : typeof course.location.address === "object"
-                    ? `${course.location.address.address || ""}, ${course.location.address.city || ""}`
-                    : JSON.stringify(course.location.address)
-              : typeof course.location === "string"
-                ? course.location
-                : "Location not specified"}
-          </p>
-        </div>
-
-        {/* Schedule */}
-        <div className="flex items-start gap-2 mb-2">
-          <Calendar className={`w-4 h-4 mt-0.5 ${isDarkMode ? "text-gray-400" : "text-gray-500"}`} />
-          <div>
-            <div className={`text-sm ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
-              {times.map((time, index) => (
-                <div key={index} className="mb-1">
-                  <span className="font-medium">{time.day}:</span>
-                  {time.ranges.map((range, i) => (
-                    <span key={i} className="ml-1">
-                      {range.start} - {range.end}
-                      {i < time.ranges.length - 1 ? ", " : ""}
-                    </span>
-                  ))}
-                </div>
-              ))}
-            </div>
-            <div className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
-              Course duration: {course.course_duration || 8} sessions
-            </div>
-          </div>
-        </div>
-
-        {/* Instructor */}
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-700">
-          <div className="relative w-8 h-8 rounded-full overflow-hidden bg-gray-200">
-            {course.instructorImage ? (
-              <Image
-                src={course.instructorImage || "/placeholder.svg"}
-                alt={typeof course.instructor === "string" ? course.instructor : "Instructor"}
-                fill
-                style={{ objectFit: "cover" }}
-              />
-            ) : (
-              <User className="w-4 h-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-400" />
-            )}
-          </div>
-          <div>
-            <p className={`text-sm font-medium ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}>Instructor</p>
-            <p className={`text-xs ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
-              {typeof course.instructor === "string" ? course.instructor : "Instructor"}
-            </p>
-          </div>
-        </div>
-
-        {/* Progress Bar for in-progress courses */}
-        {course.status === "in-progress" && course.progress && (
-          <div className="mt-3">
-            <div className="flex justify-between items-center mb-1">
-              <span className={`text-xs font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>Progress</span>
-              <span className={`text-xs font-medium ${isDarkMode ? "text-gray-300" : "text-gray-700"}`}>
-                {course.progress.overallCompletion}%
-              </span>
-            </div>
-            <div className={`w-full h-2 rounded-full ${isDarkMode ? "bg-gray-700" : "bg-gray-200"}`}>
-              <div
-                className="h-2 rounded-full bg-blue-500"
-                style={{ width: `${course.progress.overallCompletion}%` }}
-              ></div>
-            </div>
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="mt-3 pt-3 border-t border-gray-700">
-          <div className="grid grid-cols-2 gap-2">
-            {/* Review Button */}
-            <Button
-              variant={isDarkMode ? "outline" : "secondary"}
-              size="sm"
-              className="flex items-center justify-center gap-2"
-              onClick={(e) => {
-                e.stopPropagation() // Prevent card click navigation
-                onReview() // Open the review modal
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-star"
-              >
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
-              Review
-            </Button>
-
-            {/* View Details Button */}
-            <Button
-              variant={isDarkMode ? "primary" : "default"}
-              size="sm"
-              className="flex items-center justify-center gap-2"
-              onClick={(e) => {
-                e.stopPropagation() // Prevent card click navigation
-                window.location.href = `http://localhost:3000/my-courses/${course.id}`
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="lucide lucide-eye"
-              >
-                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-              Details
-            </Button>
-          </div>
+          {/* View Details Button */}
+          <Button
+            variant={isDarkMode ? "primary" : "default"}
+            size="sm"
+            className="flex items-center justify-center gap-2"
+            onClick={(e) => {
+              e.stopPropagation()
+              onNavigate()
+            }}
+          >
+            <Eye className="w-4 h-4" />
+            Details
+          </Button>
         </div>
       </div>
     </div>
