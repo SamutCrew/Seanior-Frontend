@@ -10,18 +10,18 @@ const apiClient = axios.create({
   },
 })
 
-// Add a list of public endpoints that don't require authentication
+// List of public endpoints that don't require authentication
 const publicEndpoints = [
   "/instructors", // Instructor endpoints
-  "/courses", // Course endpoints
+  "/courses",     // Course endpoints
   "/instructors/all",
   "/courses/all",
   "/users/retrieve/getAllInstructors",
   "/about",
-  "/users/retrieve/"
+  "/users/retrieve/",
 ]
 
-// Add request interceptor for logging
+// Add request interceptor for logging and auth handling
 apiClient.interceptors.request.use(
   async (config) => {
     try {
@@ -30,12 +30,19 @@ apiClient.interceptors.request.use(
         data: config.data,
       })
 
-      const isPublicEndpoint = publicEndpoints.some((endpoint) => config.url && config.url.includes(endpoint))
+      const isPublicEndpoint = publicEndpoints.some((endpoint) =>
+        config.url?.includes(endpoint)
+      )
+
       if (!isPublicEndpoint) {
-        // Only add the authorization header for non-public endpoints
-        const token = await getAuthToken()
-        if (token) {
-          config.headers["Authorization"] = `Bearer ${token}`
+        try {
+          const token = await getAuthToken()
+          if (token) {
+            config.headers["Authorization"] = `Bearer ${token}`
+          }
+        } catch (tokenError) {
+          console.warn("No auth token available or error retrieving token:", tokenError)
+          // Continue without auth header
         }
       }
 
@@ -50,6 +57,7 @@ apiClient.interceptors.request.use(
     return Promise.reject(error)
   },
 )
+
 
 // Add response interceptor for better error handling
 apiClient.interceptors.response.use(

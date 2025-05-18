@@ -133,11 +133,12 @@ export const updateAttendance = async (
   }
 }
 
-/**
- * Get course image by course ID
- * @param courseId The ID of the course
- * @returns URL of the course image
- */
+
+
+///Get resourece to show in card enroll
+
+//Get course image by course ID
+
 export const getCourseImageById = async (courseId: string): Promise<string | null> => {
   try {
     // Get course data which should include the image URL
@@ -149,11 +150,9 @@ export const getCourseImageById = async (courseId: string): Promise<string | nul
   }
 }
 
-/**
- * Get pool image by course ID
- * @param courseId The ID of the course
- * @returns URL of the pool image
- */
+
+//Get pool image by course ID
+
 export const getPoolImageById = async (courseId: string): Promise<string | null> => {
   try {
     // Get course data which should include the pool image URL
@@ -165,11 +164,9 @@ export const getPoolImageById = async (courseId: string): Promise<string | null>
   }
 }
 
-/**
- * Get instructor image by instructor ID
- * @param instructorId The ID of the instructor
- * @returns URL of the instructor image
- */
+
+//Get instructor image by instructor ID
+
 export const getInstructorImageById = async (instructorId: string): Promise<string | null> => {
   try {
     // Get user data which should include the profile image URL
@@ -183,11 +180,9 @@ export const getInstructorImageById = async (instructorId: string): Promise<stri
   }
 }
 
-/**
- * Fetch course details including images
- * @param courseId The ID of the course
- * @returns Course details with image URLs
- */
+
+//Fetch course details including images
+
 export const getCourseWithImages = async (courseId: string) => {
   try {
     // Get the course details
