@@ -53,8 +53,8 @@ export const getEnrollmentAttendance = async (enrollmentId: string): Promise<Att
     }
 
     // Use the exact API endpoint from the documentation
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://seanior-backend.onrender.com"
-    const endpoint = `${baseUrl}/enrollments/${enrollmentId}/attendances`
+    const url = process.env.NEXT_PUBLIC_API_URL 
+    const endpoint = `${url}/enrollments/${enrollmentId}/attendances`
 
     console.log(`Sending request to: ${endpoint}`)
 
