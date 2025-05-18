@@ -394,6 +394,13 @@ export default function TeacherDashboard() {
         : apiCourse.course_image || apiCourse.image || "/person-swimming.png"
       const poolImageUrl = apiCourse.pool_image || null
 
+      // Generate a placeholder image URL using the instructor ID and name
+      const instructorImage =
+        apiCourse.instructor_image ||
+        (apiCourse.instructor && typeof apiCourse.instructor === "object" && apiCourse.instructor.profile_img) ||
+        (apiCourse.instructor && typeof apiCourse.instructor === "object" && apiCourse.instructor.profile_image) ||
+        `/placeholder.svg?height=200&width=200&query=swimming instructor ${instructorName.replace(/\s+/g, "+")}`
+
       // Create a course object that works with both the API and UI
       return {
         course_id: courseId,
@@ -425,6 +432,7 @@ export default function TeacherDashboard() {
         instructor: instructorName,
         created_at: apiCourse.created_at || new Date().toISOString(),
         updated_at: apiCourse.updated_at || new Date().toISOString(),
+        instructorImage: instructorImage,
       }
     } catch (err) {
       console.error("Error mapping course data:", err)
@@ -452,6 +460,7 @@ export default function TeacherDashboard() {
         course_image: apiCourse.course_image || apiCourse.image || "/person-swimming.png",
         image: apiCourse.course_image || apiCourse.image || "/person-swimming.png",
         instructor: "Unknown",
+        instructorImage: `/placeholder.svg?height=200&width=200&query=swimming instructor Unknown`,
       }
     }
   }

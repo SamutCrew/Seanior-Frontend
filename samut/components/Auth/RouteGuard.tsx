@@ -16,7 +16,8 @@ export default function RouteGuard({ children }: RouteGuardProps) {
   const router = useRouter()
   const pathname = usePathname()
   const [showLoginModal, setShowLoginModal] = useState(false)
-  const [authorized, setAuthorized] = useState(false)
+  const [authorized, setAuthorized] = useState(true) // Start with true to prevent flash
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false)
 
   useEffect(() => {
     // Check if the route is public
@@ -34,21 +35,24 @@ export default function RouteGuard({ children }: RouteGuardProps) {
       loading,
       pathname,
       isPublicRoute,
+      initialLoadComplete,
     })
 
-    // If not loading and user is authenticated, allow access
-    if (!loading && user) {
-      console.log("User is authenticated, allowing access")
-      setShowLoginModal(false)
-      setAuthorized(true)
+    // Don't make any decisions until the initial loading is complete
+    if (loading && !initialLoadComplete) {
       return
     }
 
-    // If not loading and not authenticated and not a public route
-    if (!loading && !user && !isPublicRoute) {
-      console.log("User is not authenticated, showing login modal")
-      setShowLoginModal(true)
-      setAuthorized(false)
+    // Mark initial load as complete after first auth check
+    if (!loading && !initialLoadComplete) {
+      setInitialLoadComplete(true)
+    }
+
+    // If user is authenticated, allow access
+    if (user) {
+      console.log("User is authenticated, allowing access")
+      setShowLoginModal(false)
+      setAuthorized(true)
       return
     }
 
@@ -60,9 +64,14 @@ export default function RouteGuard({ children }: RouteGuardProps) {
       return
     }
 
-    // Default case - while loading, maintain current state
-    console.log("Default case, maintaining current state")
-  }, [user, loading, pathname])
+    // If not authenticated and not a public route and initial load is complete
+    if (!user && !isPublicRoute && initialLoadComplete) {
+      console.log("User is not authenticated, showing login modal")
+      setShowLoginModal(true)
+      setAuthorized(false)
+      return
+    }
+  }, [user, loading, pathname, initialLoadComplete])
 
   const closeLoginModal = () => {
     setShowLoginModal(false)
@@ -73,7 +82,7 @@ export default function RouteGuard({ children }: RouteGuardProps) {
   }
 
   // Show loading indicator while checking authentication
-  if (loading) {
+  if (loading && !initialLoadComplete) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
 
