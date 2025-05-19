@@ -1037,10 +1037,7 @@ export default function CourseDetailsPage({ params }: { params: { courseId: stri
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className={`mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
-                        <span className="font-medium">Course ID: </span>
-                        {course.course_id}
-                      </p>
+
                       <p className={`mb-2 ${isDarkMode ? "text-gray-300" : "text-gray-600"}`}>
                         <span className="font-medium">Course Name: </span>
                         {course.course_name}
