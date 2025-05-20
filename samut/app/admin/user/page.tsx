@@ -212,7 +212,14 @@ const AdminUser = () => {
                       <p><strong>Bio:</strong> {(selectedUser.description as InstructorDescription).bio || 'N/A'}</p>
                       <p><strong>Specializations:</strong> {(selectedUser.description as InstructorDescription).specializations.map((s) => s.title).join(', ') || 'N/A'}</p>
                       <p><strong>Contact Hours:</strong> {(selectedUser.description as InstructorDescription).contactHours || 'N/A'}</p>
-                      {/* Add other InstructorDescription fields as needed */}
+                      <p><strong>Schedule:</strong>
+                        {Object.entries((selectedUser.description as InstructorDescription).schedule || {}).map(([day, slots]) => (
+                          <div key={day}>
+                            <strong>{day}:</strong>{' '}
+                            {slots.map((slot) => `${slot.startTime}-${slot.endTime}`).join(', ')}
+                          </div>
+                        ))}
+                      </p>
                     </div>
                   </div>
                 )}
