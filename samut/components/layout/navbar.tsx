@@ -270,7 +270,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
                   : "bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:from-cyan-700 hover:to-blue-700"
               }`}
             >
-              Become a Teacher
+              Become a Instructor
             </Link>
           </motion.div>
 
@@ -368,7 +368,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
                       onClick={() => setIsUserMenuOpen(false)}
                     >
                       <Settings className="w-4 h-4" />
-                      <span>Be a Teacher</span>
+                      <span>Be a instructor</span>
                     </Link>
                   ) : null}
                   <Link
@@ -596,7 +596,7 @@ const AnimatedMobileMenu: React.FC<AnimatedMobileMenuProps> = ({
                     : "bg-gradient-to-r from-cyan-600 to-blue-600 text-white"
                 } transition-colors duration-200`}
               >
-                Become a Teacher
+                Become a instructor
               </Link>
             </motion.div>
             <motion.div
@@ -663,7 +663,7 @@ const AnimatedMobileMenu: React.FC<AnimatedMobileMenuProps> = ({
                     : "bg-gradient-to-r from-cyan-600 to-blue-600 text-white"
                 } transition-colors duration-200`}
               >
-                Become a Teacher
+                Become a instructor
               </Link>
             </motion.div>
 
