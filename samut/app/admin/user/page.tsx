@@ -206,20 +206,20 @@ const AdminUser = () => {
                     <strong>Description:</strong>
                     <div className="ml-4 space-y-2">
                       <p><strong>Specialty:</strong> {(selectedUser.description as InstructorDescription).specialty || 'N/A'}</p>
-                      <p><strong>Styles:</strong> {(selectedUser.description as InstructorDescription).styles?.join(', ') || 'N/A'}</p>
-                      <p><strong>Levels:</strong> {(selectedUser.description as InstructorDescription).levels?.join(', ') || 'N/A'}</p>
-                      <p><strong>Certifications:</strong> {(selectedUser.description as InstructorDescription).certification?.join(', ') || 'N/A'}</p>
-                      <p><strong>Rating:</strong> {(selectedUser.description as InstructorDescription).rating || 'N/A'}</p>
+                      <p><strong>Styles:</strong> {(selectedUser.description as InstructorDescription).styles || 'N/A'}</p>
+                      <p><strong>Certifications:</strong> {(selectedUser.description as InstructorDescription).certification || 'N/A'}</p>
                       <p><strong>Experience (years):</strong> {(selectedUser.description as InstructorDescription).experience || 'N/A'}</p>
-                      <p><strong>Lesson Type:</strong> {(selectedUser.description as InstructorDescription).lessonType || 'N/A'}</p>
-                      <p><strong>Price:</strong> ${(selectedUser.description as InstructorDescription).price || 'N/A'}</p>
-                      <p>
-                        <strong>Location:</strong>{' '}
-                        {(selectedUser.description as InstructorDescription).location?.address || 'N/A'} (Lat:{' '}
-                        {(selectedUser.description as InstructorDescription).location?.lat}, Lng:{' '}
-                        {(selectedUser.description as InstructorDescription).location?.lng})
+                      <p><strong>Bio:</strong> {(selectedUser.description as InstructorDescription).bio || 'N/A'}</p>
+                      <p><strong>Specializations:</strong> {(selectedUser.description as InstructorDescription).specializations.map((s) => s.title).join(', ') || 'N/A'}</p>
+                      <p><strong>Contact Hours:</strong> {(selectedUser.description as InstructorDescription).contactHours || 'N/A'}</p>
+                      <p><strong>Schedule:</strong>
+                        {Object.entries((selectedUser.description as InstructorDescription).schedule || {}).map(([day, slots]) => (
+                          <div key={day}>
+                            <strong>{day}:</strong>{' '}
+                            {slots.map((slot) => `${slot.startTime}-${slot.endTime}`).join(', ')}
+                          </div>
+                        ))}
                       </p>
-                      {/* Add other InstructorDescription fields as needed */}
                     </div>
                   </div>
                 )}

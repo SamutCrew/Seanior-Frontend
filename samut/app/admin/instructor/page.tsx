@@ -168,45 +168,21 @@ const AdminInstructor = () => {
                   <strong>Description:</strong>
                   <div className="ml-4 space-y-2">
                     <p><strong>Specialty:</strong> {selectedInstructor.description.specialty || 'N/A'}</p>
-                    <p><strong>Styles:</strong> {selectedInstructor.description.styles?.join(', ') || 'N/A'}</p>
-                    <p><strong>Levels:</strong> {selectedInstructor.description.levels?.join(', ') || 'N/A'}</p>
-                    <p><strong>Certifications:</strong> {selectedInstructor.description.certification?.join(', ') || 'N/A'}</p>
-                    <p><strong>Rating:</strong> {selectedInstructor.description.rating || 'N/A'}</p>
+                    <p><strong>Styles:</strong> {selectedInstructor.description.styles || 'N/A'}</p>
+                    <p><strong>Certifications:</strong> {selectedInstructor.description.certification || 'N/A'}</p>
                     <p><strong>Experience (years):</strong> {selectedInstructor.description.experience || 'N/A'}</p>
-                    <p><strong>Lesson Type:</strong> {selectedInstructor.description.lessonType || 'N/A'}</p>
-                    <p><strong>Price:</strong> ${selectedInstructor.description.price || 'N/A'}</p>
-                    <p>
-                      <strong>Location:</strong>{' '}
-                      {selectedInstructor.description.location?.address || 'N/A'} (Lat:{' '}
-                      {selectedInstructor.description.location?.lat}, Lng:{' '}
-                      {selectedInstructor.description.location?.lng})
-                    </p>
                     <p><strong>Bio:</strong> {selectedInstructor.description.bio || 'N/A'}</p>
-                    <p><strong>Teaching Philosophy:</strong> {selectedInstructor.description.teachingPhilosophy || 'N/A'}</p>
-                    <p><strong>Phone:</strong> {selectedInstructor.description.phone || 'N/A'}</p>
-                    <p><strong>Contact Hours:</strong> {selectedInstructor.description.contactHours || 'N/A'}</p>
-                    <p>
-                      <strong>Specializations:</strong>{' '}
+                    <p><strong>Specializations:</strong>{' '}
                       {selectedInstructor.description.specializations?.map((s) => s.title).join(', ') || 'N/A'}
                     </p>
-                    <p>
-                      <strong>Certifications:</strong>{' '}
-                      {selectedInstructor.description.certifications?.map((c) => c.name).join(', ') || 'N/A'}
-                    </p>
-                    <p>
-                      <strong>Testimonials:</strong>{' '}
-                      {selectedInstructor.description.testimonials
-                        ?.map((t) => `${t.name}: ${t.text}`)
-                        .join('; ') || 'N/A'}
-                    </p>
-                    <p>
-                      <strong>Availability:</strong>{' '}
-                      {Object.entries(selectedInstructor.description.availability || {})
-                        .map(
-                          ([day, slots]) =>
-                            `${day}: ${slots.map((s) => `${s.startTime}-${s.endTime}`).join(', ')}`
-                        )
-                        .join('; ') || 'N/A'}
+                    <p><strong>Contact Hours:</strong> {selectedInstructor.description.contactHours || 'N/A'}</p>
+                    <p><strong>Schedule:</strong>
+                      {Object.entries(selectedInstructor.description.schedule || {}).map(([day, slots]) => (
+                        <div key={day}>
+                          <strong>{day}:</strong>{' '}
+                          {slots.map((slot) => `${slot.startTime}-${slot.endTime}`).join(', ')}
+                        </div>
+                      ))}
                     </p>
                   </div>
                 </div>
