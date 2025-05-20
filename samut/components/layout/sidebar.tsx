@@ -11,12 +11,8 @@ import {
   BookOpen,
   Settings,
   User,
-  Users,
   GraduationCap,
-  BarChart3,
   Search,
-  Compass,
-  Award,
   Menu,
   X,
 } from "lucide-react"
@@ -355,7 +351,7 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
                   transition={{ duration: 0.2 }}
                   className="flex items-center justify-center"
                 >
-                  <GraduationCap className="h-6 w-6 text-cyan-600" />
+                  <img src="/logo-DarkTheme.png" alt="SeaNior Logo" className="h-6 w-auto" />
                 </motion.div>
               ) : (
                 <motion.div
@@ -366,7 +362,7 @@ const Sidebar = ({ isLandingPage = false, scrollPosition = 0, userRole = "studen
                   transition={{ duration: 0.2 }}
                   className="flex items-center"
                 >
-                  <GraduationCap className="h-6 w-6 text-cyan-600 mr-2" />
+                  <img src="/logo-DarkTheme.png" alt="SeaNior Logo" className="h-6 w-auto mr-2" />
                   <span className="text-xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
                     SeaNior
                   </span>

@@ -227,7 +227,7 @@ const Navbar: React.FC<NavbarProps> = ({ pathname, isLandingPage = false, scroll
               marginRight: isLandingPage && isAtTop ? "2.5rem" : "2rem",
             }}
           >
-            <GraduationCap className={`${isLandingPage && isAtTop ? "h-7 w-7" : "h-6 w-6"} text-cyan-600 mr-2`} />
+            <img src="/logo-DarkTheme.png" alt="SeaNior Logo" className="h-6 w-auto" />
             <span
               className={`font-bold ${
                 isLandingPage && isAtTop
