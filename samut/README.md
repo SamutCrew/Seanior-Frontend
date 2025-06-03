@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## 📝 Description
+
+This frontend application serves as the user interface for the 'Online Platform for Connecting Learners with Swimming Coaches.' It enables learners to easily search for and connect with swimming coaches, and for coaches to manage their profiles and course offerings. By interacting with the dedicated backend API, this Next.js application aims to solve the problems of difficult searching and the unreliability of existing online channels, providing a convenient and user-friendly experience for both parties.
+
 ## Getting Started
 
 First, run the development server:
