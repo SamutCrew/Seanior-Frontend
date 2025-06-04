@@ -31,7 +31,7 @@ This frontend application serves as the user interface for the 'Online Platform 
    cd seanior-frontend
 
 2. **Install dependencies**
-
+   ```
    npm run dev
    # or
    yarn dev
