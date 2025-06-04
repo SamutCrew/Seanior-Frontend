@@ -29,8 +29,14 @@ This frontend application serves as the user interface for the 'Online Platform 
    ```bash
    git clone https://github.com/your-username/seanior-frontend.git
    cd seanior-frontend
-
+   ```
+   
 2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+   
+3. **Install dependencies**
    ```bash
    npm install
    ```
@@ -64,6 +70,9 @@ Create a `.env` file in the root directory with the following variables:
 # App
 NEXT_PUBLIC_API_URL="https://your-backend-api.com/api/v1"
 
+# Googlemap
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="AIzaSyBcccQ8qa79wobi04lgtcCtxhUjHTtMbdA"
+
 ##  Firebase Configuration
 NEXT_PUBLIC_FIREBASE_API_KEY="your-firebase-api-key"
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your-project.firebaseapp.com"
@@ -72,11 +81,22 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="your-app.appspot.com"
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="1234567890"
 NEXT_PUBLIC_FIREBASE_APP_ID="1:1234567890:web:abc123def456"
 NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="G-ABC123DEF4"
+FIREBASE_SERVICE_ACCOUNT_KEY='{
+  "type": "service_account",
+  "project_id": "your-project-id",
+  "private_key_id": "your-private-key-id",
+  "private_key": "-----BEGIN PRIVATE KEY-----\\nYOUR-PRIVATE-KEY\\n-----END PRIVATE KEY-----\\n",
+  "client_email": "your-client-email@your-project-id.iam.gserviceaccount.com",
+  "client_id": "your-client-id",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-xxx@your-project-id.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}'
 
 # Stripe
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_your_stripe_key_here"
-STRIPE_SECRET_KEY="sk_test_your_stripe_secret_here"  # Server-side only
-STRIPE_WEBHOOK_SECRET="whsec_your_webhook_secret"   # Server-side only
 ```
 
 ## 🙏 Acknowledgments
