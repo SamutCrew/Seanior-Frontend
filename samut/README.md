@@ -31,14 +31,18 @@ This frontend application serves as the user interface for the 'Online Platform 
    cd seanior-frontend
 
 2. **Install dependencies**
+   ```bash
+   npm install
    ```
-   npm run dev
-   # or
-   yarn dev
-   # or
-   pnpm dev
-   ```
+## 🏃‍♂️ Running the App
 
+```bash
+# Development mode with watch
+$ npm run dev
+
+# Production build
+$ npm run build
+```
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
