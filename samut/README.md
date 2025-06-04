@@ -60,8 +60,6 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 
 ## Frontend Environment Variables
-# Rename this file to .env.local and fill in your actual values
-# DO NOT COMMIT .env.local TO VERSION CONTROL
 
 ## Backend API Configuration
 NEXT_PUBLIC_API_URL="https://your-backend-api.com/api/v1"
