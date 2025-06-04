@@ -58,20 +58,15 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-# ========================
-# Frontend Environment Variables
-# ========================
+
+## Frontend Environment Variables
 # Rename this file to .env.local and fill in your actual values
 # DO NOT COMMIT .env.local TO VERSION CONTROL
 
-# ========================
-# Backend API Configuration
-# ========================
+## Backend API Configuration
 NEXT_PUBLIC_API_URL="https://your-backend-api.com/api/v1"
 
-# ========================
-# Firebase Configuration
-# ========================
+##  Firebase Configuration
 NEXT_PUBLIC_FIREBASE_API_KEY="your-firebase-api-key"
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="your-project.firebaseapp.com"
 NEXT_PUBLIC_FIREBASE_PROJECT_ID="your-project-id"
@@ -80,9 +75,8 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="1234567890"
 NEXT_PUBLIC_FIREBASE_APP_ID="1:1234567890:web:abc123def456"
 NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="G-ABC123DEF4"
 
-# ========================
-# Firebase Admin (Server-side only)
-# ========================
+
+##  Firebase Admin (Server-side only)
 FIREBASE_SERVICE_ACCOUNT_KEY='{
   "type": "service_account",
   "project_id": "your-project-id",
@@ -96,14 +90,11 @@ FIREBASE_SERVICE_ACCOUNT_KEY='{
   "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk%40your-project.iam.gserviceaccount.com"
 }'
 
-# ========================
-# Payment Gateway (Stripe)
-# ========================
+
+##  Payment Gateway (Stripe)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_your_stripe_key_here"
 STRIPE_SECRET_KEY="sk_test_your_stripe_secret_here"  # Server-side only
 STRIPE_WEBHOOK_SECRET="whsec_your_webhook_secret"   # Server-side only
 
-# ========================
-# Google Services
-# ========================
+## Google Services
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="your-google-maps-api-key"
