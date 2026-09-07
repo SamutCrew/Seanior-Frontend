@@ -15,13 +15,21 @@ This frontend application serves as the user interface for the 'Online Platform 
 - **Real-time Notifications**: Get updates on course changes and payments
 - **Profile Management**: Update personal information and preferences
 
+## 🧪 Demo Mode
+
+This app runs on its own with **no backend, no database, and no Firebase/Stripe account** as long as no `.env.local` is present (or `NEXT_PUBLIC_API_URL` is left unset). In that state it automatically switches to Demo Mode: every API call is answered by an in-browser mock "database" seeded with sample courses, instructors, and students (see `mocks/`), and login is done through three "Demo Login" buttons (Student / Instructor / Admin) on the login page instead of a real account.
+
+- `npm install && npm run dev` is all that's needed — nothing to configure.
+- Data you create during a demo (approving a request, uploading an image, paying for a course, etc.) is kept in the browser's `localStorage` so it survives a refresh. Use the "Reset demo data" link under the demo login buttons to start over.
+- To connect a real backend instead, set `NEXT_PUBLIC_API_URL` (and the Firebase/Stripe variables below) in a `.env.local` file — this turns Demo Mode off and restores the original real-auth/real-API behavior everywhere.
+
 ## 🛠 Prerequisites
 
 - Node.js (v16 or later)
 - npm or yarn
-- Backend API (Seanior Backend)
-- Firebase configuration (for authentication)
-- Stripe publishable key (for payment processing)
+- Backend API (Seanior Backend) — only needed if you're turning Demo Mode off
+- Firebase configuration (for authentication) — only needed if you're turning Demo Mode off
+- Stripe publishable key (for payment processing) — only needed if you're turning Demo Mode off
 
 ## 🚀 Installation
 

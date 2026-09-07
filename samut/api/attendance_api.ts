@@ -2,6 +2,8 @@
 import type { AttendanceRecord, AttendanceStatus } from "@/types/attendance"
 import { auth } from "@/lib/firebase"
 import { getAuthToken } from "@/context/authToken"
+import { isDemoMode } from "@/lib/demoMode"
+import * as demoStore from "@/mocks/store"
 
 // Map API response to our internal format
 const mapApiResponseToAttendanceRecord = (item: any): AttendanceRecord => ({
@@ -43,6 +45,9 @@ const getFirebaseToken = async (): Promise<string | null> => {
 
 // Get attendance history for an enrollment using the exact API endpoint
 export const getEnrollmentAttendance = async (enrollmentId: string): Promise<AttendanceRecord[]> => {
+  if (isDemoMode) {
+    return demoStore.listAttendanceForEnrollment(enrollmentId) as unknown as AttendanceRecord[]
+  }
   console.log(`Fetching attendance for enrollment ID: ${enrollmentId}`)
 
   try {
@@ -94,6 +99,9 @@ export const recordAttendance = async (
     dateAttendance: string
   },
 ): Promise<AttendanceRecord> => {
+  if (isDemoMode) {
+    return demoStore.addAttendanceRecord(enrollmentId, data) as unknown as AttendanceRecord
+  }
   // Format the request body to match the API specification exactly
   const requestBody = {
     sessionNumber: data.sessionNumber,
@@ -154,6 +162,9 @@ export const updateAttendance = async (
     dateAttendance?: string
   },
 ): Promise<AttendanceRecord> => {
+  if (isDemoMode) {
+    return demoStore.updateAttendanceRecord(attendanceId, data) as unknown as AttendanceRecord
+  }
   // Format the request body to match the API specification
   const requestBody = {
     sessionNumber: data.sessionNumber,

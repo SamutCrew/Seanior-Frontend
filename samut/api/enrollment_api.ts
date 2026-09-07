@@ -2,9 +2,16 @@ import apiClient from "./api_client"
 import type { EnrollmentWithDetails } from "@/types/enrollment"
 import { getUserData } from "@/api/user_api"
 import { getCourseById } from "@/api/course_api"
+import { isDemoMode } from "@/lib/demoMode"
+import * as demoStore from "@/mocks/store"
+import { getDemoSession } from "@/mocks/authMock"
 
 // Get all enrollments for the logged-in instructor
 export const getInstructorEnrollments = async (): Promise<EnrollmentWithDetails[]> => {
+  if (isDemoMode) {
+    const user = getDemoSession()
+    return demoStore.listInstructorEnrollments(user?.user_id || "") as unknown as EnrollmentWithDetails[]
+  }
   try {
     const response = await apiClient.get("/enrollments/instructor")
     return response.data
@@ -16,6 +23,10 @@ export const getInstructorEnrollments = async (): Promise<EnrollmentWithDetails[
 
 // Get all enrollments for the logged-in student
 export const getStudentEnrollments = async (): Promise<EnrollmentWithDetails[]> => {
+  if (isDemoMode) {
+    const user = getDemoSession()
+    return demoStore.listStudentEnrollments(user?.user_id || "") as unknown as EnrollmentWithDetails[]
+  }
   try {
     const response = await apiClient.get("/enrollments/my?include=request.Course")
     const enrollments = response.data
@@ -86,6 +97,9 @@ export const getEnrollmentById = async (enrollmentId: string): Promise<Enrollmen
 
 // Update enrollment status
 export const updateEnrollmentStatus = async (enrollmentId: string, status: string): Promise<EnrollmentWithDetails> => {
+  if (isDemoMode) {
+    return demoStore.updateEnrollmentById(enrollmentId, { status }) as unknown as EnrollmentWithDetails
+  }
   try {
     const response = await apiClient.patch(`/enrollments/${enrollmentId}`, { status })
     return response.data
@@ -108,6 +122,9 @@ export const updateEnrollment = async (
     notes?: string
   },
 ): Promise<EnrollmentWithDetails> => {
+  if (isDemoMode) {
+    return demoStore.updateEnrollmentById(enrollmentId, data) as unknown as EnrollmentWithDetails
+  }
   try {
     const response = await apiClient.patch(`/enrollments/${enrollmentId}`, data)
     return response.data
@@ -122,6 +139,11 @@ export const updateAttendance = async (
   enrollmentId: string,
   sessionsAttended: number,
 ): Promise<EnrollmentWithDetails> => {
+  if (isDemoMode) {
+    return demoStore.updateEnrollmentById(enrollmentId, {
+      actual_sessions_attended: sessionsAttended,
+    }) as unknown as EnrollmentWithDetails
+  }
   try {
     const response = await apiClient.patch(`/enrollments/${enrollmentId}/attendance`, {
       actual_sessions_attended: sessionsAttended,

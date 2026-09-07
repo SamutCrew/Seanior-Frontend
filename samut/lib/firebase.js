@@ -1,7 +1,14 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, fetchSignInMethodsForEmail } from 'firebase/auth';
+import { getDemoSession } from '@/mocks/authMock';
+
+// Demo mode (see lib/demoMode.ts) has no real Firebase project configured.
+// Skip talking to the real Firebase SDK entirely in that case so the app
+// never needs a NEXT_PUBLIC_FIREBASE_API_KEY to boot.
+const hasFirebaseConfig = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
 
 const checkIfAccountExists = async (email) => {
+  if (!hasFirebaseConfig) return false;
   const auth = getAuth();
   try {
     const signInMethods = await fetchSignInMethodsForEmail(auth, email);
@@ -26,7 +33,22 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+// A stub that satisfies the handful of properties this codebase reads
+// directly off `auth` (auth.currentUser, auth.signOut(), auth.onAuthStateChanged)
+// without ever touching the real Firebase SDK.
+const authStub = {
+  currentUser: null,
+  signOut: async () => {},
+  onAuthStateChanged: (callback) => {
+    const session = getDemoSession();
+    callback(session ? { uid: session.user_id } : null);
+    return () => {};
+  },
+};
+
+// Typed as `any`: in demo mode this is the plain stub above, not a real
+// firebase/auth `Auth` instance, so it can't carry that type.
+/** @type {any} */
+const auth = hasFirebaseConfig ? getAuth(initializeApp(firebaseConfig)) : authStub;
 
 export { auth, checkIfAccountExists };

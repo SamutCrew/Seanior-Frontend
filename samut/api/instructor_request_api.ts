@@ -1,8 +1,13 @@
 // instructor_request_api.ts
 import apiClient from "@/api/api_client";
 import { APIEndpoints } from "@/constants/apiEndpoints";
+import { isDemoMode } from "@/lib/demoMode";
+import * as demoStore from "@/mocks/store";
 
 export const submitInstructorRequest = async (userId: string, requestData: any) => {
+  if (isDemoMode) {
+    return demoStore.submitInstructorRequestEntry(userId, requestData);
+  }
   try {
     const response = await apiClient.post(
       APIEndpoints.INSTRUCTOR_REQUEST.SUBMIT.replace("[userId]", userId),
@@ -16,6 +21,9 @@ export const submitInstructorRequest = async (userId: string, requestData: any) 
 };
 
 export const updateInstructorRequest = async (requestId: string, requestData: any) => {
+  if (isDemoMode) {
+    return demoStore.updateInstructorRequestEntry(requestId, requestData);
+  }
   try {
     const response = await apiClient.patch(
       APIEndpoints.INSTRUCTOR_REQUEST.UPDATE.replace("[requestId]", requestId),
@@ -29,6 +37,9 @@ export const updateInstructorRequest = async (requestId: string, requestData: an
 };
 
 export const getAllInstructorRequests = async () => {
+  if (isDemoMode) {
+    return { requests: demoStore.listInstructorRequests() };
+  }
   try {
     const response = await apiClient.get(APIEndpoints.INSTRUCTOR_REQUEST.RETRIEVE.ALL);
     return response.data;
@@ -39,6 +50,9 @@ export const getAllInstructorRequests = async () => {
 };
 
 export const getInstructorRequestById = async (requestId: string) => {
+  if (isDemoMode) {
+    return demoStore.getInstructorRequestById(requestId);
+  }
   try {
     const response = await apiClient.get(
       APIEndpoints.INSTRUCTOR_REQUEST.RETRIEVE.BY_ID.replace("[requestId]", requestId)
@@ -51,6 +65,9 @@ export const getInstructorRequestById = async (requestId: string) => {
 };
 
 export const getInstructorRequestByUserId = async (userId: string) => {
+  if (isDemoMode) {
+    return demoStore.getInstructorRequestByUserId(userId);
+  }
   try {
     const response = await apiClient.get(
       APIEndpoints.INSTRUCTOR_REQUEST.RETRIEVE.BY_USER_ID.replace("[userId]", userId)
@@ -63,6 +80,9 @@ export const getInstructorRequestByUserId = async (userId: string) => {
 };
 
 export const approveInstructorRequest = async (requestId: string) => {
+  if (isDemoMode) {
+    return demoStore.approveInstructorRequestById(requestId);
+  }
   try {
     const response = await apiClient.patch(
       APIEndpoints.INSTRUCTOR_REQUEST.APPROVE.replace("[requestId]", requestId),
@@ -76,6 +96,9 @@ export const approveInstructorRequest = async (requestId: string) => {
 };
 
 export const rejectInstructorRequest = async (requestId: string, rejectionReason: string) => {
+  if (isDemoMode) {
+    return demoStore.rejectInstructorRequestById(requestId, rejectionReason);
+  }
   try {
     const response = await apiClient.patch(
       APIEndpoints.INSTRUCTOR_REQUEST.REJECT.replace("[requestId]", requestId),

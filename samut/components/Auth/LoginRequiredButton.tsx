@@ -1,4 +1,4 @@
-"use client"
+;"use client"
 import { useRouter } from "next/navigation"
 import Modal from "@/components/UI/Modal"
 import { FaSignInAlt } from "react-icons/fa"

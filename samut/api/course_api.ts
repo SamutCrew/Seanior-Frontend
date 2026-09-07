@@ -1,8 +1,14 @@
 import apiClient from "./api_client"
 import { APIEndpoints } from "@/constants/apiEndpoints"
+import { isDemoMode } from "@/lib/demoMode"
+import * as demoStore from "@/mocks/store"
+import { getDemoSession } from "@/mocks/authMock"
 
 // Modify the getAllCourses function to better handle network errors
 export const getAllCourses = async () => {
+  if (isDemoMode) {
+    return demoStore.listCourses()
+  }
   try {
     console.log("Fetching all courses...")
     const response = await apiClient.get(APIEndpoints.COURSE.RETRIEVE.ALL)
@@ -24,6 +30,9 @@ export const getAllCourses = async () => {
 
 // Get course by ID
 export const getCourseById = async (courseId: string) => {
+  if (isDemoMode) {
+    return demoStore.getCourseById(courseId)
+  }
   try {
     console.log(`Fetching course with ID: ${courseId}`)
     const response = await apiClient.get(`/courses/byCourse/${courseId}`)
@@ -58,6 +67,9 @@ export const getCourseById = async (courseId: string) => {
 
 // New function to get courses by instructor ID
 export const getCoursesByInstructorId = async (instructorId: string) => {
+  if (isDemoMode) {
+    return demoStore.listCoursesByInstructor(instructorId)
+  }
   try {
     // Use the endpoint from the documentation
     const url = `/courses/byInstructor/${instructorId}`
@@ -123,6 +135,9 @@ export const getCoursesByInstructorId = async (instructorId: string) => {
 
 // Create a new course
 export const createCourse = async (courseData: any) => {
+  if (isDemoMode) {
+    return demoStore.createCourseEntry(courseData)
+  }
   try {
     // Process schedule data if it exists
     const processedData = { ...courseData }
@@ -153,6 +168,9 @@ export const createCourse = async (courseData: any) => {
 
 // Update a course
 export const updateCourse = async (courseId: string, courseData: any) => {
+  if (isDemoMode) {
+    return demoStore.updateCourseById(courseId, courseData)
+  }
   try {
     // Create a deep copy of the data to avoid reference issues
     const processedData = JSON.parse(JSON.stringify(courseData))
@@ -284,6 +302,11 @@ export const updateCourse = async (courseId: string, courseData: any) => {
 
 // Upload course image
 export const uploadCourseImage = async (courseId: string, imageFile: File) => {
+  if (isDemoMode) {
+    const course_image = URL.createObjectURL(imageFile)
+    demoStore.updateCourseById(courseId, { course_image })
+    return { message: "ok", resource_url: course_image, resource_id: courseId }
+  }
   try {
     const url = APIEndpoints.RESOURCE.CREATE.UPLOAD_COURSE_IMAGE.replace("[courseId]", courseId)
     console.log(`Uploading course image to ${url}`)
@@ -329,6 +352,11 @@ export const uploadCourseImage = async (courseId: string, imageFile: File) => {
 
 // Upload pool image
 export const uploadPoolImage = async (courseId: string, imageFile: File) => {
+  if (isDemoMode) {
+    const pool_image = URL.createObjectURL(imageFile)
+    demoStore.updateCourseById(courseId, { pool_image })
+    return { message: "ok", resource_url: pool_image, resource_id: courseId }
+  }
   try {
     const url = APIEndpoints.RESOURCE.CREATE.UPLOAD_POOL_IMAGE.replace("[courseId]", courseId)
     console.log(`Uploading pool image to ${url}`)
@@ -374,6 +402,10 @@ export const uploadPoolImage = async (courseId: string, imageFile: File) => {
 
 // Delete a course
 export const deleteCourse = async (courseId: string) => {
+  if (isDemoMode) {
+    demoStore.deleteCourseById(courseId)
+    return { message: "deleted" }
+  }
   try {
     // Replace the placeholder in the URL with the actual courseId
     const url = APIEndpoints.COURSE.DELETE.replace("[courseId]", courseId)
@@ -406,6 +438,18 @@ export const createCourseRequest = async (requestData: {
   }>
   notes?: string
 }) => {
+  if (isDemoMode) {
+    const student = getDemoSession()
+    const course = demoStore.getCourseById(requestData.courseId)
+    return demoStore.createCourseRequestEntry({
+      course_id: requestData.courseId,
+      student_id: student?.user_id,
+      request_price: course?.price,
+      request_location: typeof course?.location === "string" ? course.location : course?.location?.address,
+      start_date_for_first_week: requestData.startDateForFirstWeek,
+      notes: requestData.notes,
+    })
+  }
   try {
     const response = await apiClient.post("/course-requests", requestData)
     return response.data

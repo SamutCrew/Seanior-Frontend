@@ -3,8 +3,13 @@ import apiClient from "@/api/api_client";
 import { getAuthToken } from "@/context/authToken";
 import { UserCreate } from "@/types/model/user"
 import { APIEndpoints } from "@/constants/apiEndpoints";
+import { isDemoMode } from "@/lib/demoMode";
+import * as demoStore from "@/mocks/store";
 
 export const checkAlreadyHaveUserInDb = async (firebase_uid: string) => {
+  if (isDemoMode) {
+    return demoStore.getUserByFirebaseUid(firebase_uid);
+  }
   const url = APIEndpoints.USER.RETRIEVE.CHECK_ISEXIST;
   try {
     const response = await apiClient.post(url, { firebase_uid });
@@ -38,6 +43,9 @@ export const checkAlreadyHaveUserInDb = async (firebase_uid: string) => {
 };
 
 export const getAllInstructors = async () => {
+  if (isDemoMode) {
+    return demoStore.listUsers().filter((u: any) => u.user_type === "instructor");
+  }
   const url = APIEndpoints.INSTRUCTOR.RETRIEVE.ALL;
   console.log('Attempting to fetch all instructors');
 
@@ -60,6 +68,9 @@ export const getAllInstructors = async () => {
 
 
 export const createUser = async (userData: UserCreate) => {
+    if (isDemoMode) {
+      return demoStore.createUserEntry(userData);
+    }
     const url = APIEndpoints.USER.CREATE;
     console.log('Attempting to create user with data:', userData);
     try {
@@ -79,6 +90,9 @@ export const createUser = async (userData: UserCreate) => {
   };
  
 export const verifyUserToken = async (): Promise<boolean> => {
+    if (isDemoMode) {
+      return true;
+    }
     const url = APIEndpoints.AUTH.VERIFY_TOKEN;
     try {
         const token = await getAuthToken();
@@ -92,6 +106,9 @@ export const verifyUserToken = async (): Promise<boolean> => {
 }
 
 export const getUserData = async (userId: string) => {
+  if (isDemoMode) {
+    return demoStore.getUserById(userId);
+  }
   const url = APIEndpoints.USER.RETRIEVE.DATA_BY_USERID.replace("[userId]", userId);
   try {
     const response = await apiClient.get(url, {
@@ -113,6 +130,9 @@ export const getUserData = async (userId: string) => {
 };
 
 export const updateUserData = async (userId: string, userData: any) => {
+  if (isDemoMode) {
+    return demoStore.updateUserById(userId, userData);
+  }
   const url = APIEndpoints.USER.UPDATE.USER.replace("[userId]", userId);
   try {
     const token = await getAuthToken();

@@ -1,9 +1,16 @@
 import apiClient from "./api_client"
 import { APIEndpoints } from "@/constants/apiEndpoints"
 import { getAuthToken } from "@/context/authToken"
+import { isDemoMode } from "@/lib/demoMode"
+import * as demoStore from "@/mocks/store"
+import { getDemoSession } from "@/mocks/authMock"
 
 // Get pending course requests for the instructor
 export const getPendingCourseRequests = async () => {
+  if (isDemoMode) {
+    const user = getDemoSession()
+    return demoStore.listPendingCourseRequestsForInstructor(user?.user_id || "")
+  }
   try {
     const response = await apiClient.get(APIEndpoints.COURSE_REQUESTS.INSTRUCTOR_PENDING)
     return response.data
@@ -16,6 +23,10 @@ export const getPendingCourseRequests = async () => {
 
 // Get all course requests for the logged-in student
 export const getMyRequests = async () => {
+  if (isDemoMode) {
+    const user = getDemoSession()
+    return demoStore.listCourseRequestsForStudent(user?.user_id || "")
+  }
   try {
     const token = await getAuthToken()
     if (!token) {
@@ -38,6 +49,9 @@ export const getMyRequests = async () => {
 
 // Approve a course request
 export const approveCourseRequest = async (requestId: string) => {
+  if (isDemoMode) {
+    return demoStore.setCourseRequestStatus(requestId, "approved")
+  }
   try {
     const response = await apiClient.put(`${APIEndpoints.COURSE_REQUESTS.BASE}/${requestId}/approve`)
     return response.data
@@ -56,6 +70,9 @@ export const approveCourseRequest = async (requestId: string) => {
 
 // Reject a course request
 export const rejectCourseRequest = async (requestId: string) => {
+  if (isDemoMode) {
+    return demoStore.setCourseRequestStatus(requestId, "rejected")
+  }
   try {
     const response = await apiClient.put(`${APIEndpoints.COURSE_REQUESTS.BASE}/${requestId}/reject`)
     return response.data

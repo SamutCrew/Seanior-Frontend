@@ -11,6 +11,8 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { GoogleProvider } from '@/provider/GoogleProvider';
 import { checkAlreadyHaveUserInDb, createUser, verifyUserToken } from '../api';
+import { isDemoMode } from '@/lib/demoMode';
+import { demoLogin, demoLogout, demoRoleForEmail, getDemoSession } from '@/mocks/authMock';
 
 const AuthContext = createContext();
 
@@ -106,6 +108,12 @@ export function AuthProvider({ children }) {
   };
 
   useEffect(() => {
+    if (isDemoMode) {
+      setUser(getDemoSession());
+      setLoading(false);
+      return;
+    }
+
     let isProcessing = false;
     let timeoutId = null;
 
@@ -155,7 +163,23 @@ export function AuthProvider({ children }) {
     };
   }, [isRegistering, pendingName]);
 
+  const loginAsDemo = (role) => {
+    const demoUser = demoLogin(role);
+    setUser(demoUser);
+    return demoUser;
+  };
+
   const signIn = async (email, password) => {
+    if (isDemoMode) {
+      const role = demoRoleForEmail(email);
+      if (!role) {
+        throw new Error('Unknown demo account. Use one of the demo login buttons below.');
+      }
+      setLoading(true);
+      loginAsDemo(role);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const userCredential = await EmailProvider(email, password);
@@ -168,6 +192,9 @@ export function AuthProvider({ children }) {
   };
 
   const registerWithEmail = async (email, password, name) => {
+    if (isDemoMode) {
+      throw new Error('Registration is disabled in demo mode. Use one of the demo login buttons instead.');
+    }
     setLoading(true);
     setIsRegistering(true);
     try {
@@ -186,6 +213,9 @@ export function AuthProvider({ children }) {
   };
 
   const googleSignIn = async () => {
+    if (isDemoMode) {
+      throw new Error('Google sign-in is disabled in demo mode. Use one of the demo login buttons instead.');
+    }
     setLoading(true);
     try {
       const result = await GoogleProvider();
@@ -201,7 +231,11 @@ export function AuthProvider({ children }) {
   const logOut = async () => {
     setLoading(true);
     try {
-      await auth.signOut();
+      if (isDemoMode) {
+        demoLogout();
+      } else {
+        await auth.signOut();
+      }
       setUser(null);
     } catch (error) {
       console.error("Error signing out:", error);
@@ -211,6 +245,9 @@ export function AuthProvider({ children }) {
   };
 
   const sendForgotPassword = async (email) => {
+    if (isDemoMode) {
+      throw new Error('Password reset is disabled in demo mode. Use one of the demo login buttons instead.');
+    }
     setLoading(true);
     try {
       await SendForgotPassword(email);
@@ -247,6 +284,7 @@ export function AuthProvider({ children }) {
         resetPassword,
         refreshUser,
         isAuthenticated,
+        loginAsDemo,
       }}
     >
       {children}

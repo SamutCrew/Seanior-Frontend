@@ -3,6 +3,8 @@
 import apiClient from "@/api/api_client";
 import { APIEndpoints } from "@/constants/apiEndpoints";
 import { getAuthToken } from "@/context/authToken";
+import { isDemoMode } from "@/lib/demoMode";
+import * as demoStore from "@/mocks/store";
 
   // List of public endpoints that don't require authentication
 const publicEndpoints = [
@@ -53,6 +55,9 @@ apiClient.interceptors.request.use(
 )
 
 export const getAllUsers = async () => {
+  if (isDemoMode) {
+    return demoStore.listUsers();
+  }
   const url = APIEndpoints.USER.RETRIEVE.ALL;
 
   try {

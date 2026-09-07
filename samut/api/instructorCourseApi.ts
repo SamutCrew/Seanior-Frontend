@@ -1,8 +1,22 @@
 import { APIEndpoints } from "@/constants/apiEndpoints"
 import type { Instructor, Course, InstructorAdmin } from "@/types"
 import apiClient from "@/api/api_client"
+import { isDemoMode } from "@/lib/demoMode"
+import * as demoStore from "@/mocks/store"
 
 export async function fetchInstructors(): Promise<Instructor[]> {
+  if (isDemoMode) {
+    return demoStore
+      .listUsers()
+      .filter((u: any) => u.user_type === "instructor")
+      .map((instructor: any) => ({
+        id: instructor.user_id,
+        name: instructor.name,
+        email: instructor.email,
+        profile_img: instructor.profile_img,
+        description: instructor.description,
+      })) as unknown as Instructor[]
+  }
   try {
     // Add error handling and fallback for unauthenticated requests
     const res = await apiClient.get(APIEndpoints.INSTRUCTOR.RETRIEVE.ALL)
@@ -23,6 +37,11 @@ export async function fetchInstructors(): Promise<Instructor[]> {
 }
 
 export async function fetchInstructorsAdmin(): Promise<InstructorAdmin[]> {
+  if (isDemoMode) {
+    return demoStore
+      .listUsers()
+      .filter((u: any) => u.user_type === "instructor") as unknown as InstructorAdmin[]
+  }
   try {
     const res = await apiClient.get(APIEndpoints.INSTRUCTOR.RETRIEVE.ALL)
     const data = res.data
@@ -48,6 +67,13 @@ export async function fetchInstructorsAdmin(): Promise<InstructorAdmin[]> {
 }
 
 export async function fetchCourses(instructorId?: string): Promise<Course[]> {
+  if (isDemoMode) {
+    const courses = demoStore.listCourses()
+    if (instructorId) {
+      return courses.filter((c: any) => c.instructor_id === instructorId) as unknown as Course[]
+    }
+    return courses as unknown as Course[]
+  }
   try {
     // Use the same endpoint as the dashboard
     const res = await apiClient.get(APIEndpoints.COURSE.RETRIEVE.ALL)

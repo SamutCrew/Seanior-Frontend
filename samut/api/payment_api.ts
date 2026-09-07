@@ -1,6 +1,7 @@
 import { getAuthToken } from "@/context/authToken"
 import { APIEndpoints } from "@/constants/apiEndpoints"
 import apiClient from "@/api/api_client";
+import { isDemoMode } from "@/lib/demoMode";
 interface CheckoutSessionResponse {
   url: string
   sessionId: string
@@ -15,6 +16,14 @@ interface CheckoutSessionResponse {
 export const createCheckoutSession = async (
   requestId: string
 ): Promise<CheckoutSessionResponse> => {
+  if (isDemoMode) {
+    const bookingId = `demo-booking-${Date.now()}`
+    return {
+      url: `/payment/mock-checkout?requestId=${requestId}&bookingId=${bookingId}`,
+      sessionId: bookingId,
+      bookingId,
+    }
+  }
   const url = APIEndpoints.PAYMENT.CREATE_PROMPTPAY_SESSION;
 
   try {

@@ -13,9 +13,11 @@ import { Mail, Lock, LogIn, Moon, Sun, Eye, EyeOff } from "lucide-react"
 import { useAppDispatch, useAppSelector } from "@/app/redux"
 import { setIsDarkmode } from "@/state"
 import AuthBackground from "@/components/Partial/PageAuth/AuthBackground"
+import { isDemoMode } from "@/lib/demoMode"
+import { resetDemoData } from "@/mocks/store"
 
 const Login = () => {
-  const { googleSignIn, signIn } = useAuth()
+  const { googleSignIn, signIn, loginAsDemo } = useAuth()
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -94,6 +96,11 @@ const Login = () => {
   // Toggle dark mode
   const toggleDarkMode = () => {
     dispatch(setIsDarkmode(!isDarkMode))
+  }
+
+  const onDemoLogin = (role: "student" | "instructor" | "admin") => {
+    loginAsDemo(role)
+    router.push("/")
   }
 
   return (
@@ -342,6 +349,53 @@ const Login = () => {
               </svg>
               Continue with Google
             </motion.button>
+
+            {isDemoMode && (
+              <div className="mt-6">
+                <div className="mb-3 flex items-center">
+                  <div className={`flex-grow border-t ${isDarkMode ? "border-gray-700" : "border-gray-200"}`}></div>
+                  <span className={`mx-4 text-sm ${isDarkMode ? "text-gray-400" : "text-gray-500"}`}>
+                    Demo mode - no account needed
+                  </span>
+                  <div className={`flex-grow border-t ${isDarkMode ? "border-gray-700" : "border-gray-200"}`}></div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onDemoLogin("student")}
+                    className="rounded-lg bg-blue-600 py-2 px-3 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    Student
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDemoLogin("instructor")}
+                    className="rounded-lg bg-teal-600 py-2 px-3 text-sm font-medium text-white hover:bg-teal-700"
+                  >
+                    Instructor
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDemoLogin("admin")}
+                    className="rounded-lg bg-slate-700 py-2 px-3 text-sm font-medium text-white hover:bg-slate-800"
+                  >
+                    Admin
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetDemoData()
+                    window.location.reload()
+                  }}
+                  className={`mt-3 w-full text-xs underline ${
+                    isDarkMode ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  Reset demo data
+                </button>
+              </div>
+            )}
 
             <div className="mt-6 text-center">
               <p className={isDarkMode ? "text-gray-400" : "text-gray-600"}>
